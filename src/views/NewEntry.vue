@@ -24,12 +24,13 @@
         </v-breadcrumbs-item>
       </template>
     </v-breadcrumbs>
+    <v-divider />
     <v-carousel
       v-model="currentStep"
       :show-arrows="false"
       hide-delimiters
       light
-      style="min-width: 300px;"
+      height="100%"
     >
       <v-carousel-item
         v-for="step in steps"
@@ -63,7 +64,7 @@
           </v-list-item>
         </v-list>
 
-        <v-form class="mt-auto" @submit.prevent="step.handleAdd(step)">
+        <v-form @submit.prevent="step.handleAdd(step)">
           <v-list-item>
             <v-list-item-title>
               <v-text-field
@@ -88,18 +89,33 @@
         </v-form>
       </v-carousel-item>
       <v-carousel-item>
-        <v-form class="pa-4" @submit.prevent>
+        <v-form class="my-auto pa-4" @submit.prevent="handleNewEntry(newEntryValue)">
           <v-text-field
+            ref="input"
+            v-model="newEntryValue"
             type="number"
-            outlined
-            hide-details
+            min="0"
+            rounded
+            solo
             placeholder="New Entry"
             aria-autocomplete="none"
-            class="mb-4"
-          />
-          <v-btn type="submit" color="primary" block x-large>
-            Submit
-          </v-btn>
+            class="mb-4 mx-auto"
+            style="max-width: 300px;"
+          >
+            <template #append>
+              <v-btn
+                type="submit"
+                fab
+                small
+                color="primary"
+                elevation="1"
+                :disabled="!newEntryValue"
+                class="mr-n5"
+              >
+                <v-icon>mdi-check</v-icon>
+              </v-btn>
+            </template>
+          </v-text-field>
         </v-form>
 
       </v-carousel-item>
@@ -109,7 +125,7 @@
 
 <script>
 import Vue from 'vue';
-import { db, idKey } from '@/plugins/firebase';
+import { db, idKey, firestore } from '@/plugins/firebase';
 
 function bindFirestore(type, collection, parent = undefined) {
   return {
@@ -119,6 +135,8 @@ function bindFirestore(type, collection, parent = undefined) {
         if (id && doc) {
           this[`${type}Doc`] = doc.collection(`${type}s`).doc(id);
         }
+
+        this.$localStorage.set(`${type}Id`, id || '');
       },
       immediate: true,
     },
@@ -136,19 +154,24 @@ function bindFirestore(type, collection, parent = undefined) {
 
 export default Vue.extend({
   name: 'NewEntry',
-  props: {
-  },
   data() {
+    const challengeId = this.$localStorage.get('challengeId');
+    const groupId = this.$localStorage.get('groupId');
+    const participantId = this.$localStorage.get('participantId');
+    const currentStep = [challengeId, groupId, participantId].filter(Boolean).length;
+
     return {
       idKey,
 
-      currentStep: 0,
+      currentStep,
       steps: [
         {
           [idKey]: 'challenges',
           getItems: () => this.challenges,
           handleSelect: (item) => {
             this.challengeId = item[idKey];
+            this.groupId = null;
+            this.participantId = null;
             this.currentStep += 1;
           },
           adding: undefined,
@@ -164,6 +187,7 @@ export default Vue.extend({
           getItems: () => this.groups,
           handleSelect: (item) => {
             this.groupId = item[idKey];
+            this.participantId = null;
             this.currentStep += 1;
           },
           adding: undefined,
@@ -190,10 +214,11 @@ export default Vue.extend({
           },
         },
       ],
+      newEntryValue: undefined,
 
-      challengeId: undefined,
-      groupId: undefined,
-      participantId: undefined,
+      challengeId,
+      groupId,
+      participantId,
 
       challengeDoc: null,
       groupDoc: null,
@@ -223,28 +248,43 @@ export default Vue.extend({
     ...bindFirestore('group', 'participants', 'challenge'),
     ...bindFirestore('participant', 'entries', 'group'),
 
-    // currentStep: {
-    //   async handler(currentStep) {
-    //     console.log(currentStep, this.steps.length, this.$refs.entryInput);
-    //     if (currentStep === this.steps.length) {
-    //       await this.$nextTick();
-    //       this.$refs.entryInput.focus();
-    //     }
-    //   },
-    //   immediate: true,
-    // },
+    currentStep: {
+      handler(currentStep) {
+        if (currentStep === this.steps.length) {
+          setTimeout(() => {
+            this.$refs.input.focus();
+          }, 300);
+        }
+      },
+      immediate: true,
+    },
   },
-  components: {
+  methods: {
+    handleNewEntry(value) {
+      this.participantDoc.collection('entries').add({
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        value: Number(value),
+      });
+      this.newEntryValue = null;
+    },
   },
 });
 </script>
 
 <style lang="scss">
 .NewEntry {
-  .v-carousel__item {
-    .v-responsive__content {
-      display: flex;
-      flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .v-carousel {
+    flex: auto;
+
+    .v-carousel__item {
+      .v-responsive__content {
+        display: flex;
+        flex-direction: column;
+      }
     }
   }
   .v-input {

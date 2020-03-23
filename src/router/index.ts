@@ -1,40 +1,31 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Challenges from '@/views/Challenges.vue';
-import Groups from '@/views/Groups.vue';
-import Participants from '@/views/Participants.vue';
+import Activity from '@/views/Activity.vue';
+import NewEntry from '@/views/NewEntry.vue';
+import Statistics from '@/views/Statistics.vue';
 
 Vue.use(VueRouter);
 
 const routes = [
   {
     path: '/',
-    redirect: '/challenges',
+    name: 'home',
+    // component: Home,
   },
   {
-    path: '/challenges',
-    name: 'challenges',
-    component: Challenges,
-    children: [
-      {
-        path: ':challengeId/groups',
-        name: 'groups',
-        component: Groups,
-        children: [
-          {
-            path: ':groupId/participants',
-            name: 'participants',
-            component: Participants,
-            children: [
-              {
-                path: ':participantId/entries',
-                name: 'entries',
-              },
-            ],
-          },
-        ],
-      },
-    ],
+    path: '/activity',
+    name: 'activity',
+    component: Activity,
+  },
+  {
+    path: '/new',
+    name: 'new',
+    component: NewEntry,
+  },
+  {
+    path: '/statistics',
+    name: 'statistics',
+    component: Statistics,
   },
 ];
 
