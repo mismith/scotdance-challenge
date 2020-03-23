@@ -2,6 +2,13 @@
   <v-app>
     <v-content>
       <router-view />
+
+      <v-bottom-navigation app grow>
+        <v-btn :to="{ name: 'new' }">
+          <span>New Entry</span>
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </v-bottom-navigation>
     </v-content>
   </v-app>
 </template>

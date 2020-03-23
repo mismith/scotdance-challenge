@@ -9,8 +9,11 @@
     "dev": "yarn run serve"
   },
   "dependencies": {
+    "firebase": "^7.12.0",
     "vue": "^2.6.11",
+    "vue-localstorage": "^0.6.2",
     "vue-router": "^3.1.5",
+    "vuefire": "^2.2.2",
     "vuetify": "^2.2.11",
     "vuex": "^3.1.2"
   },
@@ -27,6 +30,7 @@
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-vue": "^6.1.2",
+    "firebase-tools": "^7.15.1",
     "sass": "^1.25.0",
     "sass-loader": "^8.0.2",
     "typescript": "~3.7.5",
