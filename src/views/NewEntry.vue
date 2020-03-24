@@ -1,5 +1,5 @@
 <template>
-  <div class="NewEntry">
+  <div class="NewEntry flex-page">
     <v-form class="px-4 py-6" @submit.prevent="handleNewEntry()">
       <Picker
         v-model="challengeId"
@@ -43,7 +43,7 @@
         min="0"
         rounded
         outlined
-        placeholder="Add New"
+        placeholder="Add New Entry"
         :disabled="!has('challenge', 'group', 'participant')"
       />
 
@@ -54,6 +54,7 @@
         block
         color="primary"
         :disabled="!(has('challenge', 'group', 'participant') && value)"
+        :loading="loading"
       >
         Submit
       </v-btn>
@@ -98,6 +99,7 @@ export default Vue.extend({
       idKey,
 
       value: undefined,
+      loading: false,
     };
   },
   computed: {
@@ -114,6 +116,11 @@ export default Vue.extend({
     },
   },
   watch: {
+    relevantChallenges(challenges) {
+      if (challenges && challenges.length === 1) {
+        this.challengeId = challenges[0][idKey];
+      }
+    },
     challengeId() {
       this.groupId = null;
       this.participantId = null;
@@ -130,14 +137,21 @@ export default Vue.extend({
       return this.firestoreRefs[refKey].add(item);
     },
     async handleNewEntry() {
-      await this.firestoreRefs.entries.add({
-        challengeId: this.challengeId,
-        groupId: this.groupId,
-        participantId: this.participantId,
-        value: Number(this.value),
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      });
-      this.value = null;
+      try {
+        this.loading = true;
+        await this.firestoreRefs.entries.add({
+          challengeId: this.challengeId,
+          groupId: this.groupId,
+          participantId: this.participantId,
+          value: Number(this.value),
+          createdAt: firestore.FieldValue.serverTimestamp(),
+        });
+        this.value = null;
+      } finally {
+        setTimeout(() => {
+          this.loading = false;
+        }, 500);
+      }
     },
   },
   components: {
@@ -145,11 +159,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style lang="scss">
-.NewEntry {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-</style>

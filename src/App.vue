@@ -17,7 +17,7 @@
       </v-btn>
       <v-btn depressed x-large color="primary" :to="{ name: 'new' }">
         <span>New</span>
-        <v-icon>mdi-plus</v-icon>
+        <v-icon large>mdi-plus</v-icon>
       </v-btn>
       <v-btn :to="{ name: 'statistics' }">
         <span>Stats</span>
@@ -112,6 +112,12 @@ export default Vue.extend({
         }
       }
     }
+  }
+
+  .flex-page {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
   }
 }
 </style>

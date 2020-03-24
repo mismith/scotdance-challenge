@@ -6,7 +6,7 @@ module.exports = {
     config
       .plugin('html')
       .tap((args) => {
-        args[0].title = 'Challenge'; // eslint-disable-line no-param-reassign
+        args[0].title = 'challenge'; // eslint-disable-line no-param-reassign
         return args;
       });
   },

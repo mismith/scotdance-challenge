@@ -16,7 +16,7 @@
               </template>
 
               <p>
-                When enabled, all computed values will be averaged
+                When enabled, all logged values will be averaged
                 by the number of participants within a group.
               </p>
               <p>
@@ -35,13 +35,18 @@
         :data="groupData"
         :options="{ ...groupOptions, title: 'Overall' }"
         class="my-4"
+        @ready="loaded.overall = true;"
       />
+      <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.overall" />
       <v-divider />
       <GChart
         type="AreaChart"
         :data="aggregatedData"
         :options="{ ...options, title: 'Daily Progression' }"
         class="my-4"
+        @ready="loaded.progress = true;"
+      />
+      <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.progress" />
       />
       <v-divider />
       <GChart
@@ -49,6 +54,9 @@
         :data="data"
         :options="{ ...options, title: 'Daily Contributions' }"
         class="my-4"
+        @ready="loaded.aggregate = true;"
+      />
+      <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.aggregate" />
       />
     </div>
   </div>
@@ -84,6 +92,11 @@ export default Vue.extend({
   data() {
     return {
       idKey,
+      loaded: {
+        overall: false,
+        progress: false,
+        aggregate: false,
+      },
     };
   },
   computed: {

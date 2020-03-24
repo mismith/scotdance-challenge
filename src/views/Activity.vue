@@ -30,7 +30,7 @@
 <script>
 import Vue from 'vue';
 import { idKey } from '@/plugins/firebase';
-import { toDateStr } from '@/utils';
+// import { toDateStr } from '@/utils';
 
 export default Vue.extend({
   name: 'Activity',

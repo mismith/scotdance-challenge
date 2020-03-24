@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import Home from '@/views/Home.vue';
 import Activity from '@/views/Activity.vue';
 import NewEntry from '@/views/NewEntry.vue';
 import Statistics from '@/views/Statistics.vue';
@@ -10,7 +11,7 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    // component: Home,
+    component: Home,
   },
   {
     path: '/activity',
