@@ -59,6 +59,15 @@
         Submit
       </v-btn>
     </v-form>
+
+    <v-snackbar
+      v-model="isSuccess"
+      :timeout="3000"
+    >
+      <div class="flex title" style="text-align: center; text-transform: capitalize;">
+        {{ successMessage }}!
+      </div>
+    </v-snackbar>
   </div>
 </template>
 
@@ -79,6 +88,7 @@ export default Vue.extend({
     groups: Array,
     participants: Array,
     entries: Array,
+    compliments: Array,
   },
   localStorage: {
     challengeId: {
@@ -100,6 +110,7 @@ export default Vue.extend({
 
       value: undefined,
       loading: false,
+      successMessage: undefined,
     };
   },
   computed: {
@@ -114,6 +125,15 @@ export default Vue.extend({
         challengeId === this.challengeId && groupId === this.groupId
       ));
     },
+
+    isSuccess: {
+      get() {
+        return Boolean(this.successMessage);
+      },
+      set(on) {
+        if (!on) this.successMessage = null;
+      },
+    },
   },
   watch: {
     relevantChallenges: {
@@ -124,24 +144,22 @@ export default Vue.extend({
       },
       immediate: true,
     },
-    challengeId: {
-      handler() {
-        this.groupId = null;
-        this.participantId = null;
-      },
-      immediate: true,
+    challengeId() {
+      this.groupId = null;
+      this.participantId = null;
     },
-    groupId: {
-      handler() {
-        this.participantId = null;
-      },
-      immediate: true,
+    groupId() {
+      this.participantId = null;
     },
   },
   methods: {
     has(...keys) {
       return keys.every((key) => findByIdKey(this[`relevant${key[0].toUpperCase()}${key.split('').slice(1).join('')}s`], this[`${key}Id`]));
     },
+    getRandomCompliment() {
+      return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
+    },
+
     async handleAdd(item, refKey) {
       return this.firestoreRefs[refKey].add(item);
     },
@@ -156,6 +174,8 @@ export default Vue.extend({
           createdAt: firestore.FieldValue.serverTimestamp(),
         });
         this.value = null;
+
+        this.successMessage = this.getRandomCompliment().text;
       } finally {
         setTimeout(() => {
           this.loading = false;
@@ -168,3 +188,11 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style lang="scss">
+.NewEntry {
+  .v-snack {
+    margin-bottom: 64px;
+  }
+}
+</style>

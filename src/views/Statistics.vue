@@ -38,6 +38,7 @@
         @ready="loaded.overall = true;"
       />
       <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.overall" />
+
       <v-divider />
       <GChart
         type="AreaChart"
@@ -47,7 +48,7 @@
         @ready="loaded.progress = true;"
       />
       <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.progress" />
-      />
+
       <v-divider />
       <GChart
         type="ColumnChart"
@@ -57,7 +58,6 @@
         @ready="loaded.aggregate = true;"
       />
       <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.aggregate" />
-      />
     </div>
   </div>
 </template>
@@ -82,6 +82,7 @@ export default Vue.extend({
     groups: Array,
     participants: Array,
     entries: Array,
+    compliments: Array,
   },
   localStorage: {
     useParticipantRelativeValues: {

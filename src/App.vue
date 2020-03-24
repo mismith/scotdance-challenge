@@ -7,6 +7,7 @@
         groups,
         participants,
         entries,
+        compliments,
       }" />
     </v-content>
 
@@ -34,6 +35,7 @@ import {
   Group,
   Participant,
   Entry,
+  Compliments,
   db,
   findByIdKey,
 } from '@/plugins/firebase';
@@ -44,6 +46,7 @@ const firestoreRefs = {
   groups: db.collection('groups'),
   participants: db.collection('participants'),
   entries: db.collection('entries'),
+  compliments: db.collection('compliments'),
 };
 const colors = ['purple', 'blue', 'green', 'yellow', 'orange', 'red']
   .map((color) => (palette[color as keyof Colors] as Color).base);
@@ -56,12 +59,14 @@ export default Vue.extend({
     groupsRaw: [] as Group[],
     participantsRaw: [] as Participant[],
     entriesRaw: [] as Entry[],
+    complimentsRaw: [] as Compliments[],
   }),
   firestore: {
     challengesRaw: firestoreRefs.challenges.orderBy('name'),
     groupsRaw: firestoreRefs.groups.orderBy('name'),
     participantsRaw: firestoreRefs.participants.orderBy('name'),
     entriesRaw: firestoreRefs.entries.orderBy('createdAt'),
+    complimentsRaw: firestoreRefs.compliments,
   },
   computed: {
     challenges() {
@@ -85,6 +90,9 @@ export default Vue.extend({
         $group: findByIdKey<Group>(this.groupsRaw, item.groupId),
         $participant: findByIdKey<Participant>(this.participantsRaw, item.participantId),
       }));
+    },
+    compliments() {
+      return this.complimentsRaw;
     },
   },
 });

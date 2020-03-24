@@ -36,6 +36,9 @@ export interface Entry {
   $group?: Group;
   $participant?: Participant;
 }
+export interface Compliments {
+  text: string;
+}
 
 export const idKey = 'id';
 export function findByIdKey<T extends any>(items: T[], id: string) {
