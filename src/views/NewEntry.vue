@@ -116,17 +116,26 @@ export default Vue.extend({
     },
   },
   watch: {
-    relevantChallenges(challenges) {
-      if (challenges && challenges.length === 1) {
-        this.challengeId = challenges[0][idKey];
-      }
+    relevantChallenges: {
+      handler(challenges) {
+        if (challenges && challenges.length === 1) {
+          this.challengeId = challenges[0][idKey];
+        }
+      },
+      immediate: true,
     },
-    challengeId() {
-      this.groupId = null;
-      this.participantId = null;
+    challengeId: {
+      handler() {
+        this.groupId = null;
+        this.participantId = null;
+      },
+      immediate: true,
     },
-    groupId() {
-      this.participantId = null;
+    groupId: {
+      handler() {
+        this.participantId = null;
+      },
+      immediate: true,
     },
   },
   methods: {
