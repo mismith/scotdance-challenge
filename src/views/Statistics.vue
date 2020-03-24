@@ -5,10 +5,26 @@
       <v-toolbar-items>
         <v-switch
           v-model="useParticipantRelativeValues"
-          label="Participant-relative"
           hide-details
           class="align-center"
-        />
+        >
+          <template #label>
+            Participant-relative
+            <v-tooltip bottom max-width="300">
+              <template #activator="{ on }">
+                <v-icon class="ml-2" v-on="on" @click.stop>mdi-help-circle</v-icon>
+              </template>
+
+              <p>
+                When enabled, all computed values will be averaged
+                by the number of participants within a group.
+              </p>
+              <p>
+                <strong>This means small groups will be on even-footing with big ones.</strong>
+              </p>
+            </v-tooltip>
+          </template>
+        </v-switch>
       </v-toolbar-items>
       <v-spacer />
     </v-app-bar>
@@ -80,6 +96,7 @@ export default Vue.extend({
         isStacked: true,
         series: this.groups.map(({ color }) => ({ color })),
         legend: this.$vuetify.breakpoint.smAndDown ? 'top' : 'right',
+        height: 300,
       };
       // console.log(options);
       return options;
@@ -138,6 +155,7 @@ export default Vue.extend({
         hAxis: {
           minValue: 0,
         },
+        height: 300,
       };
       // console.log(groupOptions);
       return groupOptions;

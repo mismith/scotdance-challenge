@@ -48,19 +48,22 @@ export default Vue.extend({
   },
   computed: {
     groupedEntries() {
-      return this.entries.map((entry, i, a) => {
-        let dir = 'left';
-        if (i) {
-          const prev = a[i - 1];
-          if (toDateStr(prev.createdAt.toDate()) === toDateStr(entry.createdAt.toDate())) {
-            dir = prev.$direction;
-          } else {
-            dir = prev.$direction === 'left' ? 'right' : 'left';
+      return this.entries
+        .map((entry) => entry)
+        /* (entry, i, a) => {
+          let dir = 'left';
+          if (i) {
+            const prev = a[i - 1];
+            if (toDateStr(prev.createdAt.toDate()) === toDateStr(entry.createdAt.toDate())) {
+              dir = prev.$direction;
+            } else {
+              dir = prev.$direction === 'left' ? 'right' : 'left';
+            }
           }
-        }
-        entry.$direction = dir; // eslint-disable-line no-param-reassign
-        return entry;
-      }).reverse();
+          entry.$direction = dir; // eslint-disable-line no-param-reassign
+          return entry;
+        } */
+        .reverse();
     },
   },
 });
