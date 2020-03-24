@@ -8,7 +8,7 @@ export default new Vuetify({
   theme: {
     themes: {
       light: {
-        primary: colors.deepPurple as any, // @TODO: fix any typing
+        primary: colors.deepPurple.base,
       },
     },
   },

@@ -37,16 +37,6 @@
         :key="step[idKey]"
       >
         <v-list>
-          <!-- <v-subheader style="text-align: center; text-transform: capitalize;">
-            <v-btn v-if="currentStep" icon @click="currentStep -= 1">
-              <v-icon>mdi-chevron-left</v-icon>
-            </v-btn>
-            <div class="flex">{{step[idKey]}}</div>
-            <v-btn v-if="currentStep" icon style="visibility: hidden;">
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </v-subheader> -->
-
           <v-list-item
             v-for="item in step.getItems()"
             :key="item[idKey]"
@@ -89,7 +79,7 @@
         </v-form>
       </v-carousel-item>
       <v-carousel-item>
-        <v-form class="my-auto pa-4" @submit.prevent="handleNewEntry(newEntryValue)">
+        <v-form class="my-auto pa-4" @submit.prevent="handleNewEntry()">
           <v-text-field
             ref="input"
             v-model="newEntryValue"
@@ -97,7 +87,7 @@
             min="0"
             rounded
             solo
-            placeholder="New Entry"
+            placeholder="Add New"
             aria-autocomplete="none"
             class="mb-4 mx-auto"
             style="max-width: 300px;"
@@ -112,7 +102,7 @@
                 :disabled="!newEntryValue"
                 class="mr-n5"
               >
-                <v-icon>mdi-check</v-icon>
+                <v-icon>mdi-arrow-right</v-icon>
               </v-btn>
             </template>
           </v-text-field>
@@ -125,27 +115,18 @@
 
 <script>
 import Vue from 'vue';
-import { db, idKey, firestore } from '@/plugins/firebase';
+import {
+  firestore,
+  idKey,
+  findByIdKey,
+} from '@/plugins/firebase';
 
-function bindFirestore(type, collection, parent = undefined) {
+function bindFirestore(type) {
   return {
     [`${type}Id`]: {
       handler(id) {
-        const doc = parent ? this[`${parent}Doc`] : db;
-        if (id && doc) {
-          this[`${type}Doc`] = doc.collection(`${type}s`).doc(id);
-        }
-
         this.$localStorage.set(`${type}Id`, id || '');
-      },
-      immediate: true,
-    },
-    [`${type}Doc`]: {
-      handler(doc) {
-        // if (this[collection]) this.$unbind(collection);
-        if (doc) {
-          this.$bind(collection, doc.collection(collection));
-        }
+        this.computeCurrentStep();
       },
       immediate: true,
     },
@@ -154,16 +135,22 @@ function bindFirestore(type, collection, parent = undefined) {
 
 export default Vue.extend({
   name: 'NewEntry',
+  props: {
+    firestoreRefs: Object,
+    challenges: Array,
+    groups: Array,
+    participants: Array,
+    entries: Array,
+  },
   data() {
-    const challengeId = this.$localStorage.get('challengeId');
-    const groupId = this.$localStorage.get('groupId');
-    const participantId = this.$localStorage.get('participantId');
-    const currentStep = [challengeId, groupId, participantId].filter(Boolean).length;
+    const defaultChallengeId = this.$localStorage.get('challengeId');
+    const defaultGroupId = this.$localStorage.get('groupId');
+    const defaultParticipantId = this.$localStorage.get('participantId');
 
     return {
       idKey,
 
-      currentStep,
+      currentStep: 0,
       steps: [
         {
           [idKey]: 'challenges',
@@ -172,81 +159,81 @@ export default Vue.extend({
             this.challengeId = item[idKey];
             this.groupId = null;
             this.participantId = null;
-            this.currentStep += 1;
           },
           adding: undefined,
           handleAdd: async (step) => {
-            const { id } = await db.collection('challenges').add({ name: step.adding });
+            const { id } = await this.firestoreRefs.challenges.add({
+              name: step.adding,
+            });
             this.challengeId = id;
-            this.currentStep += 1;
+            this.groupId = null;
+            this.participantId = null;
             step.adding = null; // eslint-disable-line no-param-reassign
           },
         },
         {
           [idKey]: 'groups',
-          getItems: () => this.groups,
+          getItems: () => this.groups.filter(
+            ({ challengeId }) => challengeId === this.challengeId,
+          ),
           handleSelect: (item) => {
             this.groupId = item[idKey];
             this.participantId = null;
-            this.currentStep += 1;
           },
           adding: undefined,
           handleAdd: async (step) => {
-            const { id } = await this.challengeDoc.collection('groups').add({ name: step.adding });
+            const { id } = await this.firestoreRefs.groups.add({
+              challengeId: this.challengeId,
+              name: step.adding,
+            });
             this.groupId = id;
-            this.currentStep += 1;
+            this.participantId = null;
             step.adding = null; // eslint-disable-line no-param-reassign
           },
         },
         {
           [idKey]: 'participants',
-          getItems: () => this.participants,
+          getItems: () => this.participants.filter(
+            ({ challengeId, groupId }) => challengeId === this.challengeId
+              && groupId === this.groupId,
+          ),
           handleSelect: (item) => {
             this.participantId = item[idKey];
-            this.currentStep += 1;
           },
           adding: undefined,
           handleAdd: async (step) => {
-            const { id } = await this.groupDoc.collection('participants').add({ name: step.adding });
+            const { id } = await this.firestoreRefs.participants.add({
+              challengeId: this.challengeId,
+              groupId: this.groupId,
+              name: step.adding,
+            });
             this.participantId = id;
-            this.currentStep += 1;
             step.adding = null; // eslint-disable-line no-param-reassign
           },
         },
       ],
+
+      challengeId: defaultChallengeId,
+      groupId: defaultGroupId,
+      participantId: defaultParticipantId,
       newEntryValue: undefined,
-
-      challengeId,
-      groupId,
-      participantId,
-
-      challengeDoc: null,
-      groupDoc: null,
-      participantDoc: null,
-
-      challenges: [],
-      groups: [],
-      participants: [],
     };
-  },
-  firestore: {
-    challenges: db.collection('challenges'),
   },
   computed: {
     challenge() {
-      return this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
+      return findByIdKey(this.challenges, this.challengeId);
     },
     group() {
-      return this.groups.find(({ [idKey]: id }) => id === this.groupId);
+      return findByIdKey(this.groups, this.groupId);
     },
     participant() {
-      return this.participants.find(({ [idKey]: id }) => id === this.participantId);
+      return findByIdKey(this.participants, this.participantId);
     },
   },
   watch: {
-    ...bindFirestore('challenge', 'groups'),
-    ...bindFirestore('group', 'participants', 'challenge'),
-    ...bindFirestore('participant', 'entries', 'group'),
+    ...bindFirestore('challenge'),
+    ...bindFirestore('group'),
+    ...bindFirestore('participant'),
 
     currentStep: {
       handler(currentStep) {
@@ -260,13 +247,25 @@ export default Vue.extend({
     },
   },
   methods: {
-    handleNewEntry(value) {
-      this.participantDoc.collection('entries').add({
+    computeCurrentStep() {
+      this.currentStep = [this.challengeId, this.groupId, this.participantId]
+        .filter(Boolean)
+        .length;
+    },
+
+    async handleNewEntry() {
+      await this.firestoreRefs.entries.add({
+        challengeId: this.challengeId,
+        groupId: this.groupId,
+        participantId: this.participantId,
+        value: Number(this.newEntryValue),
         createdAt: firestore.FieldValue.serverTimestamp(),
-        value: Number(value),
       });
       this.newEntryValue = null;
     },
+  },
+  created() {
+    this.computeCurrentStep();
   },
 });
 </script>
