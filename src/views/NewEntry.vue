@@ -67,9 +67,12 @@
       v-model="isSuccess"
       :timeout="3000"
     >
-      <div class="flex title" style="text-align: center; text-transform: capitalize;">
+      <div class="title" style="text-transform: capitalize;">
         {{ successMessage }}!
       </div>
+      <v-btn text :to="{ name: 'activity' }">
+        View Activity
+      </v-btn>
     </v-snackbar>
   </div>
 </template>
