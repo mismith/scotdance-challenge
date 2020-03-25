@@ -100,6 +100,12 @@ export default Vue.extend({
 
 <style lang="scss">
 .App {
+  &,
+  .v-application--wrap {
+    // override Vuetify default (100vh) to solve Safari issue
+    // https://stackoverflow.com/a/55003985/888928
+    min-height: -webkit-fill-available;
+  }
   .v-content__wrap {
     display: flex;
     flex-direction: column;

@@ -1,27 +1,49 @@
 <template>
-  <div class="Statistics d-flex flex-column flex-grow">
-    <BarChart
-      :chart-data="groupDataPerParticipant"
-      :chart-options="chartOptions"
-      class="flex my-4"
-    />
-    <BarChart
-      :chart-data="groupData"
-      :chart-options="chartOptions"
-      class="flex my-4"
-    />
-    <HorizontalBarChart
-      :chart-data="participantData"
-      :chart-options="{
-        ...chartOptions,
-        elements: {
-          rectangle: {
-            backgroundColor: ({ dataIndex }) => get(participants, `${dataIndex}.$group.color`),
-          },
-        },
-      }"
-      class="flex my-4"
-    />
+  <div class="Statistics d-flex flex-column flex">
+    <v-carousel
+      :show-arrows="false"
+      hide-delimiter-background
+      light
+      height="100%"
+    >
+      <v-carousel-item>
+        <v-subheader class="primary--text subtitle-1 justify-center">
+          Participant Averages by Group
+        </v-subheader>
+        <BarChart
+          :chart-data="groupDataPerParticipant"
+          :chart-options="chartOptions"
+          class="flex"
+        />
+      </v-carousel-item>
+      <v-carousel-item>
+        <v-subheader class="primary--text subtitle-1 justify-center">
+          Group Totals
+        </v-subheader>
+        <BarChart
+          :chart-data="groupData"
+          :chart-options="chartOptions"
+          class="flex"
+        />
+      </v-carousel-item>
+      <v-carousel-item>
+        <v-subheader class="primary--text subtitle-1 justify-center">
+          Participants Totals
+        </v-subheader>
+        <HorizontalBarChart
+          :chart-data="participantData"
+          :chart-options="{
+            ...chartOptions,
+            elements: {
+              rectangle: {
+                backgroundColor: ({ dataIndex }) => get(participants, `${dataIndex}.$group.color`),
+              },
+            },
+          }"
+          class="flex"
+        />
+      </v-carousel-item>
+    </v-carousel>
   </div>
 </template>
 
@@ -63,7 +85,6 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-
       chartOptions: {
         legend: false,
         maintainAspectRatio: false,
@@ -125,3 +146,17 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style lang="scss">
+.Statistics {
+  height: 100%;
+
+  .v-carousel__item {
+    > .v-responsive__content {
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 50px; // for carousel delimeters
+    }
+  }
+}
+</style>
