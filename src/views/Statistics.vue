@@ -37,7 +37,7 @@
         class="my-4"
         @ready="loaded.overall = true;"
       />
-      <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.overall" />
+      <Loader class="ma-auto" v-if="!loaded.overall" />
 
       <v-divider />
       <GChart
@@ -47,7 +47,7 @@
         class="my-4"
         @ready="loaded.progress = true;"
       />
-      <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.progress" />
+      <Loader class="ma-auto" v-if="!loaded.progress" />
 
       <v-divider />
       <GChart
@@ -57,7 +57,7 @@
         class="my-4"
         @ready="loaded.aggregate = true;"
       />
-      <v-progress-circular indeterminate class="ma-auto" v-if="!loaded.aggregate" />
+      <Loader class="ma-auto" v-if="!loaded.aggregate" />
     </div>
   </div>
 </template>
@@ -68,6 +68,7 @@ import { GChart } from 'vue-google-charts';
 import groupBy from 'lodash.groupby';
 import { idKey } from '@/plugins/firebase';
 import { toDateStr } from '@/utils';
+import Loader from '@/components/Loader.vue';
 
 function getParticipantRelativeValue(value, groupParticipants, id) {
   const numGroupParticipants = (groupParticipants[id] || []).length;
@@ -200,6 +201,7 @@ export default Vue.extend({
     },
   },
   components: {
+    Loader,
     GChart,
   },
 });
