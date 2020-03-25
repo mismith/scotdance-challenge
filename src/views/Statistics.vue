@@ -2,25 +2,34 @@
   <div class="Statistics d-flex flex-column flex">
     <v-app-bar app dense class="flex-grow-0">
       <v-spacer />
-      <v-toolbar-items>
+      <v-toolbar-items class="align-center">
+        <label
+          for="toggle"
+          class="v-label theme--light mr-2"
+          style="cursor: pointer;"
+        >
+          Absolute
+        </label>
         <v-switch
           v-model="useParticipantRelativeValues"
+          id="toggle"
           hide-details
           class="align-center"
         >
           <template #label>
-            Participant-relative
+            Relative
             <v-tooltip bottom max-width="300">
               <template #activator="{ on }">
                 <v-icon class="ml-2" v-on="on" @click.stop>mdi-help-circle</v-icon>
               </template>
 
               <p>
-                When enabled, all logged values will be averaged
-                by the number of participants within a group.
+                <strong>Absolute</strong> values are the raw numbers as entered by participants.
               </p>
               <p>
-                <strong>This means small groups will be on even-footing with big ones.</strong>
+                <strong>Relative</strong> values are averaged by the number of
+                participants within a group; this allows small groups to be
+                <strong>on even footing</strong> with big ones.
               </p>
             </v-tooltip>
           </template>
