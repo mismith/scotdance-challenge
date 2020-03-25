@@ -11,5 +11,13 @@ import Vue from 'vue';
 
 export default Vue.extend({
   name: 'Home',
+  props: {
+    firestoreRefs: Object,
+    challenges: Array,
+    groups: Array,
+    participants: Array,
+    entries: Array,
+    compliments: Array,
+  },
 });
 </script>
