@@ -75,8 +75,8 @@
 import Vue from 'vue';
 import { GChart } from 'vue-google-charts';
 import groupBy from 'lodash.groupby';
+import { DateTime } from 'luxon';
 import { idKey } from '@/plugins/firebase';
-import { toDateStr } from '@/utils';
 import Loader from '@/components/Loader.vue';
 
 function getParticipantRelativeValue(value, groupParticipants, id) {
@@ -131,9 +131,10 @@ export default Vue.extend({
           'Date',
           ...this.groups.map(({ name }) => name),
         ],
-        ...Object.entries(
-          groupBy(this.entries, ({ createdAt }) => toDateStr(createdAt.toDate())),
-        )
+        ...Object.entries(groupBy(
+          this.entries,
+          ({ createdAt }) => DateTime.fromJSDate(createdAt.toDate()).toISODate(),
+        ))
           .map(([label, entries]) => [
             label,
             ...this.groups.map(
