@@ -10,11 +10,12 @@
     "deploy": "yarn run build && firebase deploy"
   },
   "dependencies": {
+    "chart.js": "^2.9.3",
     "firebase": "^7.12.0",
+    "lodash.get": "^4.4.2",
     "lodash.groupby": "^4.6.0",
-    "luxon": "^1.22.0",
     "vue": "^2.6.11",
-    "vue-google-charts": "^0.3.2",
+    "vue-chartjs": "^3.5.0",
     "vue-infinite-scroll": "^2.0.2",
     "vue-localstorage": "^0.6.2",
     "vue-router": "^3.1.5",
@@ -23,6 +24,7 @@
     "vuex": "^3.1.2"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.16",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
     "@vue/cli-plugin-eslint": "~4.2.0",
