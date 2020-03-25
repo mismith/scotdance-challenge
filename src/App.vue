@@ -14,7 +14,7 @@
     <v-bottom-navigation app grow shift color="primary">
       <v-btn :to="{ name: 'activity' }">
         <span>Activity</span>
-        <v-icon>mdi-progress-clock</v-icon>
+        <v-icon>mdi-chart-timeline-variant</v-icon>
       </v-btn>
       <v-btn depressed x-large color="primary" :to="{ name: 'new' }">
         <span>New</span>
@@ -22,7 +22,7 @@
       </v-btn>
       <v-btn :to="{ name: 'statistics' }">
         <span>Stats</span>
-        <v-icon>mdi-chart-line-variant</v-icon>
+        <v-icon>mdi-poll</v-icon>
       </v-btn>
     </v-bottom-navigation>
   </v-app>
