@@ -48,6 +48,7 @@
         outlined
         placeholder="Add New Entry"
         :disabled="!has('challenge', 'group', 'participant')"
+        :error="value <= 0"
       />
 
       <v-btn
@@ -56,7 +57,7 @@
         x-large
         block
         color="primary"
-        :disabled="!(has('challenge', 'group', 'participant') && value)"
+        :disabled="!(has('challenge', 'group', 'participant') && value > 0)"
         :loading="loading"
       >
         Submit
