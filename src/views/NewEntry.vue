@@ -3,7 +3,7 @@
     <v-form class="px-4 py-6" @submit.prevent="handleNewEntry()">
       <Picker
         v-model="challengeId"
-        label="Challenge"
+        :label="$root.labels.Challenge"
         outlined
         rounded
         clearable
@@ -14,7 +14,7 @@
       />
       <Picker
         v-model="groupId"
-        label="Group"
+        :label="$root.labels.Group"
         outlined
         rounded
         clearable
@@ -26,7 +26,7 @@
       />
       <Picker
         v-model="participantId"
-        label="Participant"
+        :label="$root.labels.Participant"
         outlined
         rounded
         clearable
@@ -46,7 +46,7 @@
         min="0"
         rounded
         outlined
-        placeholder="Add New Entry"
+        :placeholder="`Add New ${$root.labels.Entry}`"
         :disabled="!has('challenge', 'group', 'participant')"
         :error="value <= 0"
       />

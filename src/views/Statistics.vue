@@ -8,7 +8,7 @@
     >
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-center">
-          Participant Averages by Group
+          {{ $root.labels.Participant }} Averages by {{ $root.labels.Group }}
         </v-subheader>
         <BarChart
           :chart-data="groupDataPerParticipant"
@@ -18,7 +18,7 @@
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-center">
-          Group Totals
+          {{ $root.labels.Group }} Totals
         </v-subheader>
         <BarChart
           :chart-data="groupData"
@@ -28,7 +28,7 @@
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-center">
-          Participants Totals
+          {{ $root.labels.Participant }} Totals
         </v-subheader>
         <HorizontalBarChart
           :chart-data="participantData"

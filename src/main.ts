@@ -22,5 +22,13 @@ new Vue({
   router,
   store,
   vuetify,
+  data: () => ({
+    labels: {
+      Challenge: 'Challenge',
+      Group: 'Studio',
+      Participant: 'Dancer',
+      Entry: 'Entry',
+    },
+  }),
   render: (h) => h(App),
 }).$mount('#app');
