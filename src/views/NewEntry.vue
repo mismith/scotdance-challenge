@@ -6,6 +6,7 @@
         label="Challenge"
         outlined
         rounded
+        clearable
         :items="relevantChallenges"
         item-text="name"
         :item-value="idKey"
@@ -16,6 +17,7 @@
         label="Group"
         outlined
         rounded
+        clearable
         :items="relevantGroups"
         item-text="name"
         :item-value="idKey"
@@ -27,6 +29,7 @@
         label="Participant"
         outlined
         rounded
+        clearable
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
