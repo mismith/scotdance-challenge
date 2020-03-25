@@ -1,6 +1,10 @@
 <template>
   <div class="Activity pr-6" :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }">
-    <v-timeline :dense="$vuetify.breakpoint.smAndDown">
+    <v-timeline
+      :dense="$vuetify.breakpoint.smAndDown"
+      v-infinite-scroll="handleInfinite"
+      :infinite-scroll-distance="100"
+    >
       <v-timeline-item
         v-for="entry in groupedEntries"
         :key="entry[idKey]"
@@ -23,6 +27,10 @@
           </v-card-text>
         </v-card>
       </v-timeline-item>
+
+      <div v-if="!entries.length" class="d-flex pb-4">
+        <Loader class="ma-auto" />
+      </div>
     </v-timeline>
   </div>
 </template>
@@ -30,7 +38,9 @@
 <script>
 import Vue from 'vue';
 import { idKey } from '@/plugins/firebase';
-// import { toDateStr } from '@/utils';
+import Loader from '@/components/Loader.vue';
+
+const INCREMENT = 20;
 
 export default Vue.extend({
   name: 'Activity',
@@ -45,27 +55,25 @@ export default Vue.extend({
   data() {
     return {
       idKey,
+      offset: INCREMENT,
     };
   },
   computed: {
     groupedEntries() {
-      return this.entries
-        .map((entry) => entry)
-        /* (entry, i, a) => {
-          let dir = 'left';
-          if (i) {
-            const prev = a[i - 1];
-            if (toDateStr(prev.createdAt.toDate()) === toDateStr(entry.createdAt.toDate())) {
-              dir = prev.$direction;
-            } else {
-              dir = prev.$direction === 'left' ? 'right' : 'left';
-            }
-          }
-          entry.$direction = dir; // eslint-disable-line no-param-reassign
-          return entry;
-        } */
-        .reverse();
+      const groupedEntries = [...this.entries];
+      groupedEntries.reverse();
+      return groupedEntries.slice(0, this.offset);
     },
+  },
+  methods: {
+    handleInfinite() {
+      if (this.offset < this.entries.length) {
+        this.offset += INCREMENT;
+      }
+    },
+  },
+  components: {
+    Loader,
   },
 });
 </script>
