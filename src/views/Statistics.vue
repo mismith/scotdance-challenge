@@ -149,17 +149,23 @@ export default Vue.extend({
 
 <style lang="scss">
 .Statistics {
-  .v-carousel__item {
-    > .v-responsive__content {
-      display: flex;
-      flex-direction: column;
-      padding-bottom: 50px; // for carousel delimeters
+  height: 100%;
+
+  .v-carousel {
+    .v-carousel__item {
+      > .v-responsive__content {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 50px; // for carousel delimeters
+      }
     }
   }
 
   .chartjs-size-wrapper {
+    flex: auto;
     position: relative;
     overflow: hidden;
+    max-height: calc(100vh - 48px - 50px - 56px); // @HACK: title/carousel-delimiters/bottom-nav
   }
 }
 </style>
