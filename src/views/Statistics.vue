@@ -1,5 +1,5 @@
 <template>
-  <div class="Statistics d-flex flex-column flex">
+  <div class="Statistics flex-page">
     <v-carousel
       :show-arrows="false"
       hide-delimiter-background
@@ -13,7 +13,7 @@
         <BarChart
           :chart-data="groupDataPerParticipant"
           :chart-options="chartOptions"
-          class="flex"
+          class="chartjs-size-wrapper"
         />
       </v-carousel-item>
       <v-carousel-item>
@@ -23,7 +23,7 @@
         <BarChart
           :chart-data="groupData"
           :chart-options="chartOptions"
-          class="flex"
+          class="chartjs-size-wrapper"
         />
       </v-carousel-item>
       <v-carousel-item>
@@ -40,7 +40,7 @@
               },
             },
           }"
-          class="flex"
+          class="chartjs-size-wrapper"
         />
       </v-carousel-item>
     </v-carousel>
@@ -149,14 +149,17 @@ export default Vue.extend({
 
 <style lang="scss">
 .Statistics {
-  height: 100%;
-
   .v-carousel__item {
     > .v-responsive__content {
       display: flex;
       flex-direction: column;
       padding-bottom: 50px; // for carousel delimeters
     }
+  }
+
+  .chartjs-size-wrapper {
+    position: relative;
+    overflow: hidden;
   }
 }
 </style>
