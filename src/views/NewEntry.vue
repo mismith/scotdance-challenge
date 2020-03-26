@@ -48,7 +48,7 @@
         outlined
         :placeholder="`Add New ${$root.labels.Entry}`"
         :disabled="!has('challenge', 'group', 'participant')"
-        :error="value <= 0"
+        :error="value !== null && value <= 0"
       />
 
       <v-btn
