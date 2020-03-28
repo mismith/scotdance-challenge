@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import firebase from 'firebase/app';
+import 'firebase/analytics';
 import 'firebase/firestore';
 import { firestorePlugin } from 'vuefire';
 
@@ -8,8 +9,14 @@ Vue.use(firestorePlugin);
 const { firestore } = firebase;
 export { firestore };
 
-export const app = firebase.initializeApp({ projectId: 'scotdance-challenge' });
+export const app = firebase.initializeApp({
+  projectId: 'scotdance-challenge',
+  apiKey: 'AIzaSyDO7TA2MeaR90Fjc5wmcMumXWC9dDw_DSM',
+  appId: '1:925970077234:web:6ded4b043fe3ff76424e2b',
+  measurementId: 'G-4EKW3LECT3',
+});
 export const db = app.firestore();
+export const analytics = firebase.analytics();
 
 export const idKey = 'id';
 
