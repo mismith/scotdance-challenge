@@ -11,23 +11,28 @@ export { firestore };
 export const app = firebase.initializeApp({ projectId: 'scotdance-challenge' });
 export const db = app.firestore();
 
-export interface Challenge {
+export const idKey = 'id';
+
+export interface FirebaseObject {
+  [idKey]: string;
+}
+export interface Challenge extends FirebaseObject {
   name: string;
 }
-export interface Group {
+export interface Group extends FirebaseObject {
   challengeId: string;
   name: string;
   color?: string;
   $challenge?: Challenge;
 }
-export interface Participant {
+export interface Participant extends FirebaseObject {
   challengeId: string;
   groupId: string;
   name: string;
   $challenge?: Challenge;
   $group?: Group;
 }
-export interface Entry {
+export interface Entry extends FirebaseObject {
   challengeId: string;
   groupId: string;
   participantId: string;
@@ -36,11 +41,10 @@ export interface Entry {
   $group?: Group;
   $participant?: Participant;
 }
-export interface Compliments {
+export interface Compliments extends FirebaseObject {
   text: string;
 }
 
-export const idKey = 'id';
-export function findByIdKey<T extends any>(items: T[], id: string) {
+export function findByIdKey<T extends FirebaseObject>(items: T[], id: string) {
   return items.find((item) => item[idKey] === id);
 }
