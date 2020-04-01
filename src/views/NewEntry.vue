@@ -7,6 +7,7 @@
         outlined
         rounded
         clearable
+        autocapitalize="words"
         :items="relevantChallenges"
         item-text="name"
         :item-value="idKey"
@@ -18,6 +19,7 @@
         outlined
         rounded
         clearable
+        autocapitalize="words"
         :items="relevantGroups"
         item-text="name"
         :item-value="idKey"
@@ -30,6 +32,7 @@
         outlined
         rounded
         clearable
+        autocapitalize="words"
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
@@ -46,6 +49,7 @@
         min="0"
         rounded
         outlined
+        autocapitalize="words"
         :placeholder="`Add New ${$root.labels.Entry}`"
         :disabled="!has('challenge', 'group', 'participant')"
         :error="value !== null && value <= 0"
