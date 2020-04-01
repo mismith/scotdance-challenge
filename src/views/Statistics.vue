@@ -64,7 +64,7 @@ import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 
 function getParticipantRelativeValue(value, groupParticipants, id) {
   const numGroupParticipants = (groupParticipants[id] || []).length;
-  return numGroupParticipants ? value / numGroupParticipants : 0;
+  return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
 }
 function gatherData(allEntries, items, key, transformValue = (v) => v) {
   return {
