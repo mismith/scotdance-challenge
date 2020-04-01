@@ -11,7 +11,9 @@
         :items="relevantChallenges"
         item-text="name"
         :item-value="idKey"
-        :add-new="name => handleAdd({ name }, 'challenges')"
+        :add-new="name => handleAdd({
+          name: trim(name),
+        }, 'challenges')"
       />
       <Picker
         v-model="groupId"
@@ -24,7 +26,10 @@
         item-text="name"
         :item-value="idKey"
         :disabled="!has('challenge')"
-        :add-new="name => handleAdd({ name, challengeId: this.challengeId }, 'groups')"
+        :add-new="name => handleAdd({
+          name: trim(name),
+          challengeId: this.challengeId,
+        }, 'groups')"
       />
       <Picker
         v-model="participantId"
@@ -38,7 +43,7 @@
         :item-value="idKey"
         :disabled="!has('challenge', 'group')"
         :add-new="name => handleAdd({
-          name,
+          name: trim(name),
           challengeId: this.challengeId,
           groupId: this.groupId,
         }, 'participants')"
@@ -167,6 +172,9 @@ export default Vue.extend({
     },
     getRandomCompliment() {
       return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
+    },
+    trim(text) {
+      return (text || '').trim();
     },
 
     async handleAdd(item, refKey) {
