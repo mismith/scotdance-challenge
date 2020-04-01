@@ -7,12 +7,11 @@
         outlined
         rounded
         clearable
-        autocapitalize="words"
         :items="relevantChallenges"
         item-text="name"
         :item-value="idKey"
         :add-new="name => handleAdd({
-          name: trim(name),
+          name: capitalize(name),
         }, 'challenges')"
       />
       <Picker
@@ -21,13 +20,12 @@
         outlined
         rounded
         clearable
-        autocapitalize="words"
         :items="relevantGroups"
         item-text="name"
         :item-value="idKey"
         :disabled="!has('challenge')"
         :add-new="name => handleAdd({
-          name: trim(name),
+          name: capitalize(name),
           challengeId: this.challengeId,
         }, 'groups')"
       />
@@ -37,13 +35,12 @@
         outlined
         rounded
         clearable
-        autocapitalize="words"
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
         :disabled="!has('challenge', 'group')"
         :add-new="name => handleAdd({
-          name: trim(name),
+          name: capitalize(name),
           challengeId: this.challengeId,
           groupId: this.groupId,
         }, 'participants')"
@@ -54,7 +51,6 @@
         min="0"
         rounded
         outlined
-        autocapitalize="words"
         :placeholder="`Add New ${$root.labels.Entry}`"
         :disabled="!has('challenge', 'group', 'participant')"
         :error="value !== null && value <= 0"
@@ -173,8 +169,13 @@ export default Vue.extend({
     getRandomCompliment() {
       return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
     },
-    trim(text) {
-      return (text || '').trim();
+    capitalize(text) {
+      let str = (text || '').trim();
+      str = str.split(' ');
+      for (let i = 0, x = str.length; i < x; i += 1) {
+        str[i] = str[i][0].toUpperCase() + str[i].substr(1);
+      }
+      return str.join(' ');
     },
 
     async handleAdd(item, refKey) {
