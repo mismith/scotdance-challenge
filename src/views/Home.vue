@@ -18,6 +18,7 @@ export default Vue.extend({
     participants: Array,
     entries: Array,
     compliments: Array,
+    loading: Boolean,
   },
 });
 </script>

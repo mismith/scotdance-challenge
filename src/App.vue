@@ -8,6 +8,7 @@
         participants,
         entries,
         compliments,
+        loading,
       }" />
     </v-content>
 
@@ -60,6 +61,7 @@ export default Vue.extend({
     participantsRaw: [] as Participant[],
     entriesRaw: [] as Entry[],
     complimentsRaw: [] as Compliments[],
+    loading: true,
   }),
   firestore: {
     challengesRaw: firestoreRefs.challenges.orderBy('name'),
@@ -94,6 +96,10 @@ export default Vue.extend({
     compliments() {
       return this.complimentsRaw;
     },
+  },
+  async created() {
+    await Promise.all(Object.values(firestoreRefs).map((ref) => ref.get()));
+    this.loading = false;
   },
 });
 </script>

@@ -58,7 +58,7 @@
         block
         color="primary"
         :disabled="!(has('challenge', 'group', 'participant') && value > 0)"
-        :loading="loading"
+        :loading="adding"
       >
         Submit
       </v-btn>
@@ -93,6 +93,7 @@ export default Vue.extend({
     participants: Array,
     entries: Array,
     compliments: Array,
+    loading: Boolean,
   },
   localStorage: {
     challengeId: {
@@ -113,7 +114,7 @@ export default Vue.extend({
       idKey,
 
       value: undefined,
-      loading: false,
+      adding: false,
       successMessage: undefined,
     };
   },
@@ -169,7 +170,7 @@ export default Vue.extend({
     },
     async handleNewEntry() {
       try {
-        this.loading = true;
+        this.adding = true;
         await this.firestoreRefs.entries.add({
           challengeId: this.challengeId,
           groupId: this.groupId,
@@ -182,7 +183,7 @@ export default Vue.extend({
         this.successMessage = this.getRandomCompliment().text;
       } finally {
         setTimeout(() => {
-          this.loading = false;
+          this.adding = false;
         }, 500);
       }
     },

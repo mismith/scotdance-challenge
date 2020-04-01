@@ -1,6 +1,12 @@
 <template>
   <div class="Statistics flex-page">
+    <Loader v-if="loading" class="ma-auto" />
+    <div v-else-if="!entries.length" class="d-flex flex-column align-center ma-auto">
+      <v-icon x-large>mdi-cancel</v-icon>
+      No entries yet
+    </div>
     <v-carousel
+      v-else
       :show-arrows="false"
       hide-delimiter-background
       light
@@ -52,6 +58,7 @@ import Vue from 'vue';
 import get from 'lodash.get';
 import groupBy from 'lodash.groupby';
 import { idKey } from '@/plugins/firebase';
+import Loader from '@/components/Loader.vue';
 import BarChart from '@/components/BarChart.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 
@@ -81,6 +88,7 @@ export default Vue.extend({
     participants: Array,
     entries: Array,
     compliments: Array,
+    loading: Boolean,
   },
   data() {
     return {
@@ -141,6 +149,7 @@ export default Vue.extend({
     get,
   },
   components: {
+    Loader,
     BarChart,
     HorizontalBarChart,
   },

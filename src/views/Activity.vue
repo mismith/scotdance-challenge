@@ -1,6 +1,12 @@
 <template>
-  <div class="Activity pr-6" :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }">
+  <div class="Activity flex-page pr-6" :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }">
+    <Loader v-if="loading" class="ma-auto" />
+    <div v-else-if="!entries.length" class="d-flex flex-column align-center ma-auto">
+      <v-icon x-large>mdi-cancel</v-icon>
+      No entries yet
+    </div>
     <v-timeline
+      v-else
       :dense="$vuetify.breakpoint.smAndDown"
       v-infinite-scroll="handleInfinite"
       :infinite-scroll-distance="100"
@@ -27,10 +33,6 @@
           </v-card-text>
         </v-card>
       </v-timeline-item>
-
-      <div v-if="!entries.length" class="d-flex pb-4">
-        <Loader class="ma-auto" />
-      </div>
     </v-timeline>
   </div>
 </template>
@@ -51,6 +53,7 @@ export default Vue.extend({
     participants: Array,
     entries: Array,
     compliments: Array,
+    loading: Boolean,
   },
   data() {
     return {
