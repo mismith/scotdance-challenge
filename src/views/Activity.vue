@@ -39,28 +39,24 @@
       </v-timeline-item>
     </v-timeline>
 
-    <v-dialog v-model="isFlagging" max-width="400">
+    <v-dialog v-model="isFlagging" max-width="300">
       <v-card>
         <v-card-title>
           Report An Issue <v-icon color="primary" class="ml-2">mdi-flag</v-icon>
 
           <v-spacer />
-          <v-btn icon @click="isFlagging = false"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn icon class="mr-n2" @click="isFlagging = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text>
-          Do you:
-          <ul class="mb-3">
-            <li>realize you made a <strong>mistake</strong> entering something?</li>
-            <li>notice something that <strong>seems amiss</strong>?</li>
-            <li>have <strong>feedback or questions</strong> about this app?</li>
-          </ul>
-
-          Send a quick message to help out&mdash;and <strong>thanks</strong>!
+          Did you make a mistake, or does something seems wrong?
+          Help sort things out by sending a quick message.
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn text @click="isFlagging = false">Nevermind</v-btn>
-          <v-btn color="primary" @click="openLiveChat()">Open Live Chat</v-btn>
+          <v-btn rounded color="primary" @click="openLiveChat()">Open Live Chat</v-btn>
+          <v-spacer />
         </v-card-actions>
       </v-card>
     </v-dialog>
