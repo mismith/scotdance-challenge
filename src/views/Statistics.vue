@@ -7,6 +7,7 @@
     </div>
     <v-carousel
       v-else
+      v-model="currentSlide"
       :show-arrows="false"
       hide-delimiter-background
       light
@@ -120,6 +121,11 @@ export default Vue.extend({
     entries: Array,
     compliments: Array,
     loading: Boolean,
+  },
+  localStorage: {
+    currentSlide: {
+      type: Number,
+    },
   },
   data() {
     return {
