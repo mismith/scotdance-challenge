@@ -69,10 +69,7 @@
       </v-btn>
     </v-form>
 
-    <v-snackbar
-      v-model="isSuccess"
-      :timeout="3000"
-    >
+    <v-snackbar v-model="isSuccess">
       <div class="title ma-auto" style="text-transform: capitalize;">
         {{ successMessage }}!
       </div>
