@@ -147,5 +147,11 @@ export default Vue.extend({
     flex-direction: column;
     flex: auto;
   }
+
+  .scroll-y {
+    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 </style>

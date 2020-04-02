@@ -36,18 +36,49 @@
         <v-subheader class="primary--text subtitle-1 justify-center">
           {{ $root.labels.Participant }} Totals
         </v-subheader>
-        <HorizontalBarChart
-          :chart-data="participantData"
-          :chart-options="{
-            ...chartOptions,
-            elements: {
-              rectangle: {
-                backgroundColor: ({ dataIndex }) => get(participants, `${dataIndex}.$group.color`),
-              },
-            },
-          }"
-          class="chartjs-size-wrapper"
+        <v-select
+          v-model="currentGroupId"
+          outlined
+          rounded
+          dense
+          clearable
+          hide-details
+          placeholder="Overall"
+          :items="groups"
+          :item-value="idKey"
+          :label="`Filter by ${$root.labels.Group}`"
+          item-text="name"
+          class="mx-3 mb-3 flex-grow-0"
         />
+        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+          <div
+            v-if="!participantsInCurrentGroup.length"
+            class="d-flex flex-column align-center ma-auto"
+          >
+            <v-icon x-large>mdi-cancel</v-icon>
+            No entries yet
+          </div>
+          <HorizontalBarChart
+            v-else
+            :chart-data="participantData"
+            :chart-options="{
+              ...chartOptions,
+              elements: {
+                rectangle: {
+                  backgroundColor: ({ dataIndex }) => get(
+                    participantsInCurrentGroup,
+                    `${dataIndex}.$group.color`,
+                  ),
+                },
+              },
+            }"
+            class="flex-shrink-0"
+            :styles="{
+              position: 'relative',
+              height: `${Math.max(128, 32 * participantsInCurrentGroup.length + 1)}px`,
+            }"
+          />
+        </div>
       </v-carousel-item>
     </v-carousel>
   </div>
@@ -56,14 +87,14 @@
 <script>
 import Vue from 'vue';
 import get from 'lodash.get';
-import groupBy from 'lodash.groupby';
+import orderBy from 'lodash.orderby';
 import { idKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import BarChart from '@/components/BarChart.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 
-function getParticipantRelativeValue(value, groupParticipants, id) {
-  const numGroupParticipants = (groupParticipants[id] || []).length;
+function getParticipantRelativeValue(value, groupedParticipants, id) {
+  const numGroupParticipants = groupedParticipants.filter(({ groupId }) => groupId === id).length;
   return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
 }
 function gatherData(allEntries, items, key, transformValue = (v) => v) {
@@ -93,8 +124,10 @@ export default Vue.extend({
   data() {
     return {
       idKey,
+      currentGroupId: undefined,
       chartOptions: {
         legend: false,
+        responsive: true,
         maintainAspectRatio: false,
         scales: {
           xAxes: [{
@@ -119,28 +152,37 @@ export default Vue.extend({
     };
   },
   computed: {
+    groupedParticipants() {
+      return orderBy(this.participants, ['$group.name', 'name']);
+    },
+    participantsInCurrentGroup() {
+      if (this.currentGroupId) {
+        return this.groupedParticipants.filter(({ groupId }) => groupId === this.currentGroupId);
+      }
+      return this.groupedParticipants;
+    },
+
     groupData() {
       const groupData = gatherData(this.entries, this.groups, 'groupId');
       // console.log(groupData);
       return groupData;
-    },
-
-    groupParticipants() {
-      return groupBy(this.participants, ({ groupId }) => groupId);
     },
     groupDataPerParticipant() {
       const groupDataPerParticipant = gatherData(
         this.entries,
         this.groups,
         'groupId',
-        (sum, group) => getParticipantRelativeValue(sum, this.groupParticipants, group[idKey]),
+        (sum, group) => getParticipantRelativeValue(sum, this.groupedParticipants, group[idKey]),
       );
       // console.log(groupDataPerParticipant);
       return groupDataPerParticipant;
     },
-
     participantData() {
-      const participantData = gatherData(this.entries, this.participants, 'participantId');
+      const participantData = gatherData(
+        this.entries,
+        this.participantsInCurrentGroup,
+        'participantId',
+      );
       // console.log(participantData);
       return participantData;
     },
@@ -173,8 +215,13 @@ export default Vue.extend({
   .chartjs-size-wrapper {
     flex: auto;
     position: relative;
-    overflow: hidden;
-    max-height: calc(100vh - 48px - 50px - 56px); // @HACK: title/carousel-delimiters/bottom-nav
+    // @HACK: title/carousel-delimiters/bottom-nav
+    max-height: calc(100vh - 48px - 50px - 56px);
+
+    &.scroll-y {
+      // @HACK: title/select/carousel-delimiters/bottom-nav
+      max-height: calc(100vh - 48px - 52px - 50px - 56px);
+    }
   }
 }
 </style>
