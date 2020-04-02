@@ -105,6 +105,14 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
+@media (max-width: 768px) {
+  #crisp-chatbox {
+    a[data-cshid] {
+      margin-bottom: 56px !important;
+    }
+  }
+}
+
 .App {
   &,
   .v-application--wrap {
