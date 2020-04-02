@@ -26,6 +26,7 @@
         :disabled="!has('challenge')"
         :add-new="name => handleAdd({
           name: capitalize(name),
+          color: colors[relevantGroups.length % colors.length],
           challengeId: this.challengeId,
         }, 'groups')"
       />
@@ -79,6 +80,7 @@
 
 <script>
 import Vue from 'vue';
+import palette from 'vuetify/lib/util/colors';
 import {
   firestore,
   idKey,
@@ -114,6 +116,15 @@ export default Vue.extend({
   data() {
     return {
       idKey,
+      colors: [
+        'red',
+        'orange',
+        'yellow',
+        'green',
+        'blue',
+        'indigo',
+        'purple',
+      ].map((color) => palette[color].base),
 
       value: undefined,
       adding: false,

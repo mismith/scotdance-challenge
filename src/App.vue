@@ -40,7 +40,6 @@ import {
   db,
   findByIdKey,
 } from '@/plugins/firebase';
-import palette, { Colors, Color } from 'vuetify/lib/util/colors';
 
 const firestoreRefs = {
   challenges: db.collection('challenges'),
@@ -49,8 +48,6 @@ const firestoreRefs = {
   entries: db.collection('entries'),
   compliments: db.collection('compliments'),
 };
-const colors = ['purple', 'blue', 'green', 'yellow', 'orange', 'red']
-  .map((color) => (palette[color as keyof Colors] as Color).base);
 
 export default Vue.extend({
   name: 'App',
@@ -76,7 +73,6 @@ export default Vue.extend({
     },
     groups() {
       return this.groupsRaw.map((item, i) => Object.assign(item, {
-        color: item.color || colors[i % colors.length],
         $challenge: findByIdKey<Challenge>(this.challengesRaw, item.challengeId),
       }));
     },
