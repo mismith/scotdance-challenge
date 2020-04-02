@@ -37,20 +37,21 @@
         <v-subheader class="primary--text subtitle-1 justify-center">
           {{ $root.labels.Participant }} Totals
         </v-subheader>
-        <v-select
-          v-model="currentGroupId"
-          outlined
-          rounded
-          dense
-          clearable
-          hide-details
-          placeholder="Overall"
-          :items="groups"
-          :item-value="idKey"
-          :label="`Filter by ${$root.labels.Group}`"
-          item-text="name"
-          class="mx-3 mb-3 flex-grow-0"
-        />
+        <header class="d-flex px-3 pb-3">
+          <v-select
+            v-model="currentGroupId"
+            outlined
+            rounded
+            dense
+            clearable
+            hide-details
+            placeholder="Overall"
+            :items="groups"
+            :item-value="idKey"
+            :label="`Filter by ${$root.labels.Group}`"
+            item-text="name"
+          />
+        </header>
         <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
           <div
             v-if="!participantsInCurrentGroup.length"
@@ -89,7 +90,7 @@
 import Vue from 'vue';
 import get from 'lodash.get';
 import orderBy from 'lodash.orderby';
-import { idKey } from '@/plugins/firebase';
+import { idKey, findByIdKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import BarChart from '@/components/BarChart.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
@@ -126,11 +127,13 @@ export default Vue.extend({
     currentSlide: {
       type: Number,
     },
+    currentGroupId: {
+      type: String,
+    },
   },
   data() {
     return {
       idKey,
-      currentGroupId: undefined,
       chartOptions: {
         legend: false,
         responsive: true,
@@ -158,21 +161,19 @@ export default Vue.extend({
     };
   },
   computed: {
+    currentGroup() {
+      return findByIdKey(this.groups, this.currentGroupId);
+    },
     groupedParticipants() {
       return orderBy(this.participants, ['$group.name', 'name']);
     },
     participantsInCurrentGroup() {
-      if (this.currentGroupId) {
+      if (this.currentGroup) {
         return this.groupedParticipants.filter(({ groupId }) => groupId === this.currentGroupId);
       }
       return this.groupedParticipants;
     },
 
-    groupData() {
-      const groupData = gatherData(this.entries, this.groups, 'groupId');
-      // console.log(groupData);
-      return groupData;
-    },
     groupDataPerParticipant() {
       const groupDataPerParticipant = gatherData(
         this.entries,
@@ -182,6 +183,11 @@ export default Vue.extend({
       );
       // console.log(groupDataPerParticipant);
       return groupDataPerParticipant;
+    },
+    groupData() {
+      const groupData = gatherData(this.entries, this.groups, 'groupId');
+      // console.log(groupData);
+      return groupData;
     },
     participantData() {
       const participantData = gatherData(
