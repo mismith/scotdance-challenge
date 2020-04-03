@@ -50,7 +50,12 @@
             :item-value="idKey"
             :label="`Filter by ${$root.labels.Group}`"
             item-text="name"
-          />
+          >
+            <template #item="{ item }">
+              <v-avatar size="16" :color="item.color" class="mr-2" style="margin-top: -2px" />
+              {{ item.name }}
+            </template>
+          </v-select>
         </header>
         <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
           <div
