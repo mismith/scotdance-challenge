@@ -47,6 +47,7 @@ const firestoreRefs = {
   participants: db.collection('participants'),
   entries: db.collection('entries'),
   compliments: db.collection('compliments'),
+  complimentsSubmitted: db.collection('complimentsSubmitted'),
 };
 
 export default Vue.extend({

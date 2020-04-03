@@ -70,6 +70,64 @@
       </v-btn>
     </v-form>
 
+    <v-spacer />
+
+    <footer class="d-flex justify-center pa-6">
+      <v-btn text color="primary" @click="isSubmittingCompliment = true">
+        Submit a Compliment
+      </v-btn>
+
+      <v-dialog v-model="isSubmittingCompliment" max-width="300">
+        <v-card>
+          <v-form @submit.prevent="handleNewCompliment()">
+            <v-card-title>
+              <div class="flex">
+                Spread the Love
+                <v-icon color="primary" class="ml-1 mt-n1">mdi-heart</v-icon>
+              </div>
+              <v-btn icon class="mr-n2" @click="isSubmittingCompliment = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-card-title>
+            <v-card-text>
+              <p>
+                Want to help motivate others?<br />
+                Add your own compliments to the mix!
+              </p>
+
+              <v-text-field
+                v-model="newCompliment"
+                label="Your Compliment"
+                rounded
+                outlined
+                hide-details
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-btn
+                text
+                rounded
+                :disabled="!toCompliment(newCompliment)"
+                @click="successMessage = toCompliment(newCompliment)"
+              >
+                Preview It
+              </v-btn>
+              <v-spacer />
+              <v-btn
+                type="submit"
+                rounded
+                color="primary"
+                :disabled="!toCompliment(newCompliment)"
+                :loading="submitting"
+              >
+                Submit
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card>
+      </v-dialog>
+    </footer>
+
     <v-snackbar v-model="isSuccess">
       <div class="title ma-auto" style="text-transform: capitalize;">
         {{ successMessage }}!
@@ -129,6 +187,10 @@ export default Vue.extend({
       value: undefined,
       adding: false,
       successMessage: undefined,
+
+      isSubmittingCompliment: false,
+      newCompliment: undefined,
+      submitting: false,
     };
   },
   computed: {
@@ -179,11 +241,14 @@ export default Vue.extend({
     },
     capitalize(text) {
       let str = (text || '').trim();
-      str = str.split(' ');
-      for (let i = 0, x = str.length; i < x; i += 1) {
-        str[i] = str[i][0].toUpperCase() + str[i].substr(1);
+      if (str) {
+        str = str.split(' ');
+        for (let i = 0, x = str.length; i < x; i += 1) {
+          str[i] = str[i][0].toUpperCase() + str[i].substr(1);
+        }
+        return str.join(' ');
       }
-      return str.join(' ');
+      return str;
     },
 
     async handleAdd(item, refKey) {
@@ -205,6 +270,29 @@ export default Vue.extend({
       } finally {
         setTimeout(() => {
           this.adding = false;
+        }, 500);
+      }
+    },
+
+    toCompliment(text) {
+      return (text || '').trim().toLowerCase().replace(/!$/, '');
+    },
+    async handleNewCompliment() {
+      try {
+        this.submitting = true;
+        await this.firestoreRefs.complimentsSubmitted.add({
+          text: this.toCompliment(this.newCompliment),
+          createdAt: firestore.FieldValue.serverTimestamp(),
+        });
+        this.newCompliment = null;
+        this.isSubmittingCompliment = false;
+
+        this.successMessage = null;
+        await this.$nextTick();
+        this.successMessage = 'thanks';
+      } finally {
+        setTimeout(() => {
+          this.submitting = false;
         }, 500);
       }
     },
