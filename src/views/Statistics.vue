@@ -85,40 +85,7 @@
           <HorizontalBarChart
             v-else
             :chart-data="participantData"
-            :chart-options="{
-              ...chartOptions,
-              scales: {
-                ...chartOptions.scales,
-                xAxes: [{
-                  ...chartOptions.scales.xAxes[0],
-                  ticks: {
-                    ...chartOptions.scales.xAxes[0].ticks,
-                    callback: (value) => Math.round(value ** 2).toLocaleString(),
-                  },
-                }],
-              },
-              tooltips: {
-                ...chartOptions.tooltips,
-                callbacks: {
-                  afterTitle: ([{ index }]) => {
-                    if (currentGroup) return null;
-
-                    const participant = participantsInCurrentGroup[index] || {};
-                    return participant && `(${participant.$group.name})`;
-                  },
-                  // un-'flatten' value
-                  label: ({ xLabel }) => Math.round(xLabel ** 2).toLocaleString(),
-                },
-              },
-              elements: {
-                rectangle: {
-                  backgroundColor: ({ dataIndex }) => get(
-                    participantsInCurrentGroup,
-                    `${dataIndex}.$group.color`,
-                  ),
-                },
-              },
-            }"
+            :chart-options="participantChartOptions"
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
@@ -257,6 +224,9 @@ export default Vue.extend({
       ]
         .filter(({ byGroup }) => !this.currentGroup || !byGroup);
     },
+    orderParticipantsBy() {
+      return findByIdKey(this.orderParticipantsBys, this.orderParticipantsById);
+    },
 
     groupedParticipants() {
       const participantsWithValues = this.participants.map((item) => {
@@ -264,12 +234,14 @@ export default Vue.extend({
         item.$value = sumItemEntries(this.entries, item, 'participantId');
         return item;
       });
-      const orderedBy = findByIdKey(this.orderParticipantsBys, this.orderParticipantsById);
-      return orderBy(
-        participantsWithValues,
-        orderedBy.keys,
-        orderedBy.dirs,
-      );
+      if (this.orderParticipantsBy) {
+        return orderBy(
+          participantsWithValues,
+          this.orderParticipantsBy.keys,
+          this.orderParticipantsBy.dirs,
+        );
+      }
+      return participantsWithValues;
     },
     participantsInCurrentGroup() {
       if (this.currentGroup) {
@@ -302,6 +274,48 @@ export default Vue.extend({
       );
       // console.log(participantData);
       return participantData;
+    },
+    participantChartOptions() {
+      return {
+        ...this.chartOptions,
+        scales: {
+          ...this.chartOptions.scales,
+          xAxes: [{
+            ...this.chartOptions.scales.xAxes[0],
+            ticks: {
+              ...this.chartOptions.scales.xAxes[0].ticks,
+              callback: (value) => Math.round(value ** 2).toLocaleString(),
+            },
+          }],
+        },
+        tooltips: {
+          ...this.chartOptions.tooltips,
+          callbacks: {
+            title: ([{ yLabel, index }]) => {
+              if (this.orderParticipantsBy && this.orderParticipantsBy.keys.includes('$value')) {
+                return `${yLabel} [${index + 1}]`;
+              }
+              return yLabel;
+            },
+            afterTitle: ([{ index }]) => {
+              if (this.currentGroup) return null;
+
+              const participant = this.participantsInCurrentGroup[index] || {};
+              return participant && `(${participant.$group.name})`;
+            },
+            // un-'flatten' value
+            label: ({ xLabel }) => Math.round(xLabel ** 2).toLocaleString(),
+          },
+        },
+        elements: {
+          rectangle: {
+            backgroundColor: ({ dataIndex }) => get(
+              this.participantsInCurrentGroup,
+              `${dataIndex}.$group.color`,
+            ),
+          },
+        },
+      };
     },
   },
   methods: {
