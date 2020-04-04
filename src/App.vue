@@ -1,5 +1,23 @@
 <template>
   <v-app class="App">
+    <v-app-bar v-if="$route.name !== 'home'" app color="primary" height="56">
+      <Picker
+        v-model="challengeId"
+        :label="$root.labels.Challenge"
+        :placeholder="`All ${$root.labels.Challenge}s`"
+        dense
+        solo
+        outlined
+        rounded
+        clearable
+        hide-details
+        :items="challenges"
+        item-text="name"
+        :item-value="idKey"
+        :add-new="name => handleAddChallenge(name)"
+      />
+    </v-app-bar>
+
     <v-content>
       <router-view v-bind="{
         firestoreRefs,
@@ -9,6 +27,7 @@
         entries,
         compliments,
         loading,
+        currentChallengeId: challengeId,
       }" />
     </v-content>
 
@@ -37,9 +56,12 @@ import {
   Participant,
   Entry,
   Compliments,
+  firestore,
   db,
+  idKey,
   findByIdKey,
 } from '@/plugins/firebase';
+import Picker from '@/components/Picker.vue';
 
 const firestoreRefs = {
   challenges: db.collection('challenges'),
@@ -52,7 +74,13 @@ const firestoreRefs = {
 
 export default Vue.extend({
   name: 'App',
+  localStorage: {
+    challengeId: {
+      type: String,
+    },
+  },
   data: () => ({
+    idKey,
     firestoreRefs,
     challengesRaw: [] as Challenge[],
     groupsRaw: [] as Group[],
@@ -69,34 +97,99 @@ export default Vue.extend({
     complimentsRaw: firestoreRefs.compliments,
   },
   computed: {
-    challenges() {
+    challengesDebug() {
+      if (this.$root.isDebugging) {
+        return this.challengesRaw.concat({
+          [idKey]: 'test_challenge',
+          name: 'Test',
+        });
+      }
       return this.challengesRaw;
     },
+    groupsDebug() {
+      if (this.$root.isDebugging) {
+        return this.groupsRaw.concat({
+          [idKey]: 'test_group',
+          challengeId: 'test_challenge',
+          name: 'Test Group',
+        });
+      }
+      return this.groupsRaw;
+    },
+    participantsDebug() {
+      if (this.$root.isDebugging) {
+        return this.participantsRaw.concat({
+          [idKey]: 'test_participant',
+          challengeId: 'test_challenge',
+          groupId: 'test_group',
+          name: 'Test Participant',
+        });
+      }
+      return this.participantsRaw;
+    },
+    entriesDebug() {
+      if (this.$root.isDebugging) {
+        return this.entriesRaw.concat({
+          [idKey]: 'test_entry',
+          challengeId: 'test_challenge',
+          groupId: 'test_group',
+          participantId: 'test_participant',
+          value: 1000,
+          createdAt: firestore.Timestamp.now(),
+        });
+      }
+      return this.entriesRaw;
+    },
+
+    challenges() {
+      return this.challengesDebug;
+    },
     groups() {
-      return this.groupsRaw.map((item, i) => Object.assign(item, {
-        $challenge: findByIdKey<Challenge>(this.challengesRaw, item.challengeId),
+      return this.groupsDebug.map((item) => Object.assign(item, {
+        $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
       }));
     },
     participants() {
-      return this.participantsRaw.map((item) => Object.assign(item, {
-        $challenge: findByIdKey<Challenge>(this.challengesRaw, item.challengeId),
-        $group: findByIdKey<Group>(this.groupsRaw, item.groupId),
+      return this.participantsDebug.map((item) => Object.assign(item, {
+        $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
+        $group: findByIdKey<Group>(this.groupsDebug, item.groupId),
       }));
     },
     entries() {
-      return this.entriesRaw.map((item) => Object.assign(item, {
-        $challenge: findByIdKey<Challenge>(this.challengesRaw, item.challengeId),
-        $group: findByIdKey<Group>(this.groupsRaw, item.groupId),
-        $participant: findByIdKey<Participant>(this.participantsRaw, item.participantId),
+      return this.entriesDebug.map((item) => Object.assign(item, {
+        $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
+        $group: findByIdKey<Group>(this.groupsDebug, item.groupId),
+        $participant: findByIdKey<Participant>(this.participantsDebug, item.participantId),
       }));
     },
     compliments() {
       return this.complimentsRaw;
     },
   },
+  watch: {
+    challenges: {
+      handler(challenges) {
+        if (challenges && challenges.length === 1) {
+          // auto-pick first challenge if it's the only one
+          this.challengeId = challenges[0][idKey];
+        }
+      },
+      immediate: true,
+    },
+  },
+  methods: {
+    async handleAddChallenge(name: string) {
+      await this.firestoreRefs.challenges.add({
+        name,
+      });
+    },
+  },
   async created() {
     await Promise.all(Object.values(firestoreRefs).map((ref) => ref.get()));
     this.loading = false;
+  },
+  components: {
+    Picker,
   },
 });
 </script>

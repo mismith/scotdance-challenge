@@ -2,19 +2,6 @@
   <div class="NewEntry flex-page">
     <v-form class="px-4 py-6" @submit.prevent="handleNewEntry()">
       <Picker
-        v-model="challengeId"
-        :label="$root.labels.Challenge"
-        outlined
-        rounded
-        clearable
-        :items="relevantChallenges"
-        item-text="name"
-        :item-value="idKey"
-        :add-new="name => handleAdd({
-          name: capitalize(name),
-        }, 'challenges')"
-      />
-      <Picker
         v-model="groupId"
         :label="$root.labels.Group"
         outlined
@@ -149,19 +136,14 @@ export default Vue.extend({
     entries: Array,
     compliments: Array,
     loading: Boolean,
+    currentChallengeId: String,
   },
   localStorage: {
-    challengeId: {
-      type: String,
-      default: '',
-    },
     groupId: {
       type: String,
-      default: '',
     },
     participantId: {
       type: String,
-      default: '',
     },
   },
   data() {
@@ -187,6 +169,10 @@ export default Vue.extend({
     };
   },
   computed: {
+    challengeId() {
+      return this.currentChallengeId;
+    },
+
     relevantChallenges() {
       return this.challenges;
     },
@@ -209,14 +195,6 @@ export default Vue.extend({
     },
   },
   watch: {
-    relevantChallenges: {
-      handler(challenges) {
-        if (challenges && challenges.length === 1) {
-          this.challengeId = challenges[0][idKey];
-        }
-      },
-      immediate: true,
-    },
     challengeId() {
       this.groupId = null;
       this.participantId = null;
@@ -233,7 +211,10 @@ export default Vue.extend({
   },
   methods: {
     has(...keys) {
-      return keys.every((key) => findByIdKey(this[`relevant${key[0].toUpperCase()}${key.split('').slice(1).join('')}s`], this[`${key}Id`]));
+      return keys.every((key) => findByIdKey(
+        this[`relevant${key[0].toUpperCase()}${key.split('').slice(1).join('')}s`],
+        this[`${key}Id`],
+      ));
     },
     getRandomCompliment() {
       return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];

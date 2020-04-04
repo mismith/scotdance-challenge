@@ -43,7 +43,8 @@ export interface Entry extends FirebaseObject {
   challengeId: string;
   groupId: string;
   participantId: string;
-  name: string;
+  value: number;
+  createdAt: any; // @TODO: Timestamp
   $challenge?: Challenge;
   $group?: Group;
   $participant?: Participant;

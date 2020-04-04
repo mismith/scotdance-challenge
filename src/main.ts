@@ -30,5 +30,10 @@ new Vue({
       Entry: 'Entry',
     },
   }),
+  computed: {
+    isDebugging() {
+      return window.location.hostname === 'localhost';
+    },
+  },
   render: (h) => h(App),
 }).$mount('#app');

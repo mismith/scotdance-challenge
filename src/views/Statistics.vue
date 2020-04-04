@@ -1,7 +1,7 @@
 <template>
   <div class="Statistics flex-page">
     <Loader v-if="loading" class="ma-auto" />
-    <div v-else-if="!entries.length" class="d-flex flex-column align-center ma-auto">
+    <div v-else-if="!filteredEntries.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
@@ -46,7 +46,7 @@
             clearable
             hide-details
             :placeholder="`All ${$root.labels.Group}s`"
-            :items="groups"
+            :items="filteredGroups"
             :item-value="idKey"
             :label="`Filter by ${$root.labels.Group}`"
             item-text="name"
@@ -56,7 +56,7 @@
               {{ item.name }}
             </template>
           </v-select>
-          <v-menu>
+          <v-menu min-width="200">
             <template #activator="{ on }">
               <v-btn icon v-on="on" class="ml-3"><v-icon>mdi-sort-variant</v-icon></v-btn>
             </template>
@@ -135,6 +135,7 @@ export default Vue.extend({
     entries: Array,
     compliments: Array,
     loading: Boolean,
+    currentChallengeId: String,
   },
   localStorage: {
     currentSlide: {
@@ -177,7 +178,7 @@ export default Vue.extend({
         },
         elements: {
           rectangle: {
-            backgroundColor: ({ dataIndex }) => get(this.groups, `${dataIndex}.color`),
+            backgroundColor: ({ dataIndex }) => get(this.filteredGroups, `${dataIndex}.color`),
           },
         },
       },
@@ -192,8 +193,34 @@ export default Vue.extend({
     },
   },
   computed: {
+    currentChallenge() {
+      return findByIdKey(this.challenges, this.currentChallengeId);
+    },
+
+    filteredGroups() {
+      if (this.currentChallenge) {
+        return this.groups
+          .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
+      }
+      return this.groups;
+    },
+    filteredParticipants() {
+      if (this.currentChallenge) {
+        return this.participants
+          .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
+      }
+      return this.participants;
+    },
+    filteredEntries() {
+      if (this.currentChallenge) {
+        return this.entries
+          .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
+      }
+      return this.entries;
+    },
+
     currentGroup() {
-      return findByIdKey(this.groups, this.currentGroupId);
+      return findByIdKey(this.filteredGroups, this.currentGroupId);
     },
     orderParticipantsBys() {
       return [
@@ -229,9 +256,9 @@ export default Vue.extend({
     },
 
     groupedParticipants() {
-      const participantsWithValues = this.participants.map((item) => {
+      const participantsWithValues = this.filteredParticipants.map((item) => {
         // eslint-disable-next-line no-param-reassign
-        item.$value = sumItemEntries(this.entries, item, 'participantId');
+        item.$value = sumItemEntries(this.filteredEntries, item, 'participantId');
         return item;
       });
       if (this.orderParticipantsBy) {
@@ -245,15 +272,16 @@ export default Vue.extend({
     },
     participantsInCurrentGroup() {
       if (this.currentGroup) {
-        return this.groupedParticipants.filter(({ groupId }) => groupId === this.currentGroupId);
+        return this.groupedParticipants
+          .filter(({ groupId }) => groupId === this.currentGroup[idKey]);
       }
       return this.groupedParticipants;
     },
 
     groupDataPerParticipant() {
       const groupDataPerParticipant = gatherData(
-        this.entries,
-        this.groups,
+        this.filteredEntries,
+        this.filteredGroups,
         'groupId',
         (sum, group) => getParticipantRelativeValue(sum, this.groupedParticipants, group[idKey]),
       );
@@ -261,13 +289,13 @@ export default Vue.extend({
       return groupDataPerParticipant;
     },
     groupData() {
-      const groupData = gatherData(this.entries, this.groups, 'groupId');
+      const groupData = gatherData(this.filteredEntries, this.filteredGroups, 'groupId');
       // console.log(groupData);
       return groupData;
     },
     participantData() {
       const participantData = gatherData(
-        this.entries,
+        this.filteredEntries,
         this.participantsInCurrentGroup,
         'participantId',
         (v) => v ** (1 / 2), // 'flatten' the values to make outliers less prominent
@@ -312,6 +340,7 @@ export default Vue.extend({
             backgroundColor: ({ dataIndex }) => get(
               this.participantsInCurrentGroup,
               `${dataIndex}.$group.color`,
+              '#000000',
             ),
           },
         },
@@ -346,12 +375,12 @@ export default Vue.extend({
   .chartjs-size-wrapper {
     flex: auto;
     position: relative;
-    // @HACK: title/carousel-delimiters/bottom-nav
-    max-height: calc(100vh - 48px - 50px - 56px);
+    // @HACK: appbar/title/carousel-delimiters/bottom-nav
+    max-height: calc(100vh - 56px - 48px - 50px - 56px);
 
     &.scroll-y {
-      // @HACK: title/select/carousel-delimiters/bottom-nav
-      max-height: calc(100vh - 48px - 52px - 50px - 56px);
+      // @HACK: appbar/title/select/carousel-delimiters/bottom-nav
+      max-height: calc(100vh - 56px - 48px - 52px - 50px - 56px);
     }
   }
 }

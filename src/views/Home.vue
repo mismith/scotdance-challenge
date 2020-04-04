@@ -19,6 +19,7 @@ export default Vue.extend({
     entries: Array,
     compliments: Array,
     loading: Boolean,
+    currentChallengeId: String,
   },
 });
 </script>

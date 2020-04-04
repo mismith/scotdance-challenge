@@ -1,7 +1,7 @@
 <template>
   <div class="Activity flex-page pr-6" :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }">
     <Loader v-if="loading" class="ma-auto" />
-    <div v-else-if="!entries.length" class="d-flex flex-column align-center ma-auto">
+    <div v-else-if="!filteredEntries.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
@@ -23,7 +23,7 @@
         <v-card>
           <v-card-title class="d-flex align-center">
             <big class="flex">+{{ entry.value }}</big>
-            <small v-if="challenges.length > 1" class="overline">
+            <small v-if="!currentChallenge && challenges.length > 1" class="overline">
               {{ entry.$challenge.name }}
             </small>
             <v-btn small icon class="ml-2" @click="flaggedEntry = entry">
@@ -65,7 +65,7 @@
 
 <script>
 import Vue from 'vue';
-import { idKey } from '@/plugins/firebase';
+import { idKey, findByIdKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 
 const INCREMENT = 20;
@@ -80,6 +80,7 @@ export default Vue.extend({
     entries: Array,
     compliments: Array,
     loading: Boolean,
+    currentChallengeId: String,
   },
   data() {
     return {
@@ -90,8 +91,19 @@ export default Vue.extend({
     };
   },
   computed: {
+    currentChallenge() {
+      return findByIdKey(this.challenges, this.currentChallengeId);
+    },
+
+    filteredEntries() {
+      if (this.currentChallenge) {
+        return this.entries
+          .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
+      }
+      return this.entries;
+    },
     groupedEntries() {
-      const groupedEntries = [...this.entries];
+      const groupedEntries = [...this.filteredEntries];
       groupedEntries.reverse();
       return groupedEntries.slice(0, this.offset);
     },
@@ -108,7 +120,7 @@ export default Vue.extend({
   },
   methods: {
     handleInfinite() {
-      if (this.offset < this.entries.length) {
+      if (this.offset < this.filteredEntries.length) {
         this.offset += INCREMENT;
       }
     },
