@@ -70,6 +70,29 @@
             :chart-data="participantData"
             :chart-options="{
               ...chartOptions,
+              scales: {
+                ...chartOptions.scales,
+                xAxes: [{
+                  ...chartOptions.scales.xAxes[0],
+                  ticks: {
+                    ...chartOptions.scales.xAxes[0].ticks,
+                    callback: (value) => Math.round(value ** 2).toLocaleString(),
+                  },
+                }],
+              },
+              tooltips: {
+                ...chartOptions.tooltips,
+                callbacks: {
+                  afterTitle: ([{ index }]) => {
+                    if (currentGroup) return null;
+
+                    const participant = participantsInCurrentGroup[index] || {};
+                    return participant && `(${participant.$group.name})`;
+                  },
+                  // un-'flatten' value
+                  label: ({ xLabel }) => Math.round(xLabel ** 2).toLocaleString(),
+                },
+              },
               elements: {
                 rectangle: {
                   backgroundColor: ({ dataIndex }) => get(
@@ -146,16 +169,23 @@ export default Vue.extend({
         scales: {
           xAxes: [{
             ticks: {
-              min: 0,
               beginAtZero: true,
+              min: 0,
+              callback: (value) => (typeof value === 'number' ? value.toLocaleString() : value),
             },
           }],
           yAxes: [{
             ticks: {
-              min: 0,
               beginAtZero: true,
+              min: 0,
+              callback: (value) => (typeof value === 'number' ? value.toLocaleString() : value),
             },
           }],
+        },
+        tooltips: {
+          callbacks: {
+            label: ({ value }) => Number(value).toLocaleString(),
+          },
         },
         elements: {
           rectangle: {
@@ -199,6 +229,7 @@ export default Vue.extend({
         this.entries,
         this.participantsInCurrentGroup,
         'participantId',
+        (v) => v ** (1 / 2), // 'flatten' the values to make outliers less prominent
       );
       // console.log(participantData);
       return participantData;
