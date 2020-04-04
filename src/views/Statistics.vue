@@ -292,7 +292,7 @@ export default Vue.extend({
           ...this.chartOptions.tooltips,
           callbacks: {
             title: ([{ yLabel, index }]) => {
-              if (this.orderParticipantsBy && this.orderParticipantsBy.keys.includes('$value')) {
+              if (this.orderParticipantsBy && this.orderParticipantsBy.keys[0] === '$value') {
                 return `${yLabel} [${index + 1}]`;
               }
               return yLabel;
