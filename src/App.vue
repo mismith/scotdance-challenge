@@ -72,8 +72,10 @@ const firestoreRefs = {
   complimentsSubmitted: db.collection('complimentsSubmitted'),
 };
 
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default Vue.extend({
   name: 'App',
+  // @ts-ignore
   localStorage: {
     challengeId: {
       type: String,
@@ -98,15 +100,18 @@ export default Vue.extend({
   },
   computed: {
     challengesDebug() {
+      // @ts-ignore
       if (this.$root.isDebugging) {
         return this.challengesRaw.concat({
           [idKey]: 'test_challenge',
           name: 'Test',
         });
       }
+      // @ts-ignore
       return this.challengesRaw;
     },
     groupsDebug() {
+      // @ts-ignore
       if (this.$root.isDebugging) {
         return this.groupsRaw.concat({
           [idKey]: 'test_group',
@@ -114,9 +119,11 @@ export default Vue.extend({
           name: 'Test Group',
         });
       }
+      // @ts-ignore
       return this.groupsRaw;
     },
     participantsDebug() {
+      // @ts-ignore
       if (this.$root.isDebugging) {
         return this.participantsRaw.concat({
           [idKey]: 'test_participant',
@@ -125,9 +132,11 @@ export default Vue.extend({
           name: 'Test Participant',
         });
       }
+      // @ts-ignore
       return this.participantsRaw;
     },
     entriesDebug() {
+      // @ts-ignore
       if (this.$root.isDebugging) {
         return this.entriesRaw.concat({
           [idKey]: 'test_entry',
@@ -138,31 +147,43 @@ export default Vue.extend({
           createdAt: firestore.Timestamp.now(),
         });
       }
+      // @ts-ignore
       return this.entriesRaw;
     },
 
     challenges() {
+      // @ts-ignore
       return this.challengesDebug;
     },
     groups() {
+      // @ts-ignore
       return this.groupsDebug.map((item) => Object.assign(item, {
+        // @ts-ignore
         $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
       }));
     },
     participants() {
+      // @ts-ignore
       return this.participantsDebug.map((item) => Object.assign(item, {
+        // @ts-ignore
         $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
+        // @ts-ignore
         $group: findByIdKey<Group>(this.groupsDebug, item.groupId),
       }));
     },
     entries() {
+      // @ts-ignore
       return this.entriesDebug.map((item) => Object.assign(item, {
+        // @ts-ignore
         $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
+        // @ts-ignore
         $group: findByIdKey<Group>(this.groupsDebug, item.groupId),
+        // @ts-ignore
         $participant: findByIdKey<Participant>(this.participantsDebug, item.participantId),
       }));
     },
     compliments() {
+      // @ts-ignore
       return this.complimentsRaw;
     },
   },
@@ -171,6 +192,7 @@ export default Vue.extend({
       handler(challenges) {
         if (challenges && challenges.length === 1) {
           // auto-pick first challenge if it's the only one
+          // @ts-ignore
           this.challengeId = challenges[0][idKey];
         }
       },
@@ -179,6 +201,7 @@ export default Vue.extend({
   },
   methods: {
     async handleAddChallenge(name: string) {
+      // @ts-ignore
       await this.firestoreRefs.challenges.add({
         name,
       });

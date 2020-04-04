@@ -44,6 +44,7 @@ export interface Entry extends FirebaseObject {
   groupId: string;
   participantId: string;
   value: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createdAt: any; // @TODO: Timestamp
   $challenge?: Challenge;
   $group?: Group;
