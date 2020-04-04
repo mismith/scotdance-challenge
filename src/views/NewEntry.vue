@@ -73,8 +73,8 @@
     <v-spacer />
 
     <footer class="d-flex justify-center pa-6">
-      <v-btn text color="primary" @click="isSubmittingCompliment = true">
-        Submit a Compliment
+      <v-btn icon large color="primary" @click="isSubmittingCompliment = true">
+        <v-icon>mdi-heart-outline</v-icon>
       </v-btn>
 
       <v-dialog v-model="isSubmittingCompliment" max-width="300">
@@ -92,27 +92,20 @@
             <v-card-text>
               <p>
                 Want to help motivate others?<br />
-                Add your own compliments to the mix!
+                Add your own positivity to the mix!
               </p>
 
               <v-text-field
                 v-model="newCompliment"
-                label="Your Compliment"
+                label="Your Praise"
+                placeholder="e.g. well done"
                 rounded
                 outlined
                 hide-details
+                class="mt-6 mb-2"
               />
             </v-card-text>
-            <v-card-actions>
-              <v-btn
-                text
-                rounded
-                :disabled="!toCompliment(newCompliment)"
-                @click="successMessage = toCompliment(newCompliment)"
-              >
-                Preview It
-              </v-btn>
-              <v-spacer />
+            <v-card-actions class="justify-center">
               <v-btn
                 type="submit"
                 rounded
@@ -230,6 +223,12 @@ export default Vue.extend({
     },
     groupId() {
       this.participantId = null;
+    },
+
+    async newCompliment(newCompliment) {
+      this.successMessage = null;
+      await this.$nextTick();
+      this.successMessage = this.toCompliment(newCompliment);
     },
   },
   methods: {
