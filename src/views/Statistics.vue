@@ -45,7 +45,7 @@
             dense
             clearable
             hide-details
-            placeholder="Overall"
+            :placeholder="`All ${$root.labels.Group}s`"
             :items="groups"
             :item-value="idKey"
             :label="`Filter by ${$root.labels.Group}`"
@@ -56,6 +56,23 @@
               {{ item.name }}
             </template>
           </v-select>
+          <v-menu>
+            <template #activator="{ on }">
+              <v-btn icon v-on="on" class="ml-3"><v-icon>mdi-sort-variant</v-icon></v-btn>
+            </template>
+
+            <v-list>
+              <v-subheader>Sort by</v-subheader>
+              <v-list-item
+                v-for="by in orderParticipantsBys"
+                :key="by.name"
+                :class="{ 'v-list-item--active': orderParticipantsById === by[idKey] }"
+                @click="orderParticipantsById = by[idKey]"
+              >
+                {{ by.name }}
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </header>
         <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
           <div
@@ -127,15 +144,16 @@ function getParticipantRelativeValue(value, groupedParticipants, id) {
   const numGroupParticipants = groupedParticipants.filter(({ groupId }) => groupId === id).length;
   return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
 }
-function gatherData(allEntries, items, key, transformValue = (v) => v) {
+function sumItemEntries(allEntries, item, key, transformValue = (v) => v) {
+  const entries = allEntries.filter((entry) => entry[key] === item[idKey]);
+  const sum = entries.reduce((acc, { value }) => acc + value, 0);
+  return transformValue(sum, item);
+}
+function gatherData(allEntries, items, key, transformValue = undefined) {
   return {
     labels: items.map(({ name }) => name),
     datasets: [{
-      data: items.map((item) => {
-        const entries = allEntries.filter((entry) => entry[key] === item[idKey]);
-        const sum = entries.reduce((acc, { value }) => acc + value, 0);
-        return transformValue(sum, item);
-      }),
+      data: items.map((item) => sumItemEntries(allEntries, item, key, transformValue)),
     }],
   };
 }
@@ -156,6 +174,9 @@ export default Vue.extend({
       type: Number,
     },
     currentGroupId: {
+      type: String,
+    },
+    orderParticipantsById: {
       type: String,
     },
   },
@@ -195,12 +216,60 @@ export default Vue.extend({
       },
     };
   },
+  watch: {
+    orderParticipantsBys(orderParticipantsBys) {
+      const orderParticipantsBy = findByIdKey(orderParticipantsBys, this.orderParticipantsById);
+      if (!orderParticipantsBy) {
+        this.orderParticipantsById = this.orderParticipantsBys[0][idKey];
+      }
+    },
+  },
   computed: {
     currentGroup() {
       return findByIdKey(this.groups, this.currentGroupId);
     },
+    orderParticipantsBys() {
+      return [
+        {
+          [idKey]: 'group-participant',
+          name: `Name by ${this.$root.labels.Group}`,
+          keys: ['$group.name', 'name'],
+          byGroup: true,
+        },
+        {
+          [idKey]: 'group-value',
+          name: `Total by ${this.$root.labels.Group}`,
+          keys: ['$group.name', '$value'],
+          dirs: ['asc', 'desc'],
+          byGroup: true,
+        },
+        {
+          [idKey]: 'participant',
+          name: 'Name',
+          keys: ['name'],
+        },
+        {
+          [idKey]: 'value',
+          name: 'Total',
+          keys: ['$value'],
+          dirs: ['desc'],
+        },
+      ]
+        .filter(({ byGroup }) => !this.currentGroup || !byGroup);
+    },
+
     groupedParticipants() {
-      return orderBy(this.participants, ['$group.name', 'name']);
+      const participantsWithValues = this.participants.map((item) => {
+        // eslint-disable-next-line no-param-reassign
+        item.$value = sumItemEntries(this.entries, item, 'participantId');
+        return item;
+      });
+      const orderedBy = findByIdKey(this.orderParticipantsBys, this.orderParticipantsById);
+      return orderBy(
+        participantsWithValues,
+        orderedBy.keys,
+        orderedBy.dirs,
+      );
     },
     participantsInCurrentGroup() {
       if (this.currentGroup) {
