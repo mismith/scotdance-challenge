@@ -51,7 +51,7 @@
         </v-card-title>
         <v-card-text class="pb-0">
           <p>Did you make a mistake, or does something seem off?</p>
-          <p>Help sort things out with a super quick explaination of what you think is wrong.</p>
+          <p>Help sort things out with a super quick explanation of what you think is wrong.</p>
         </v-card-text>
         <v-card-actions class="justify-center pb-4">
           <v-btn rounded color="primary" @click="openLiveChat()">Submit Request</v-btn>
