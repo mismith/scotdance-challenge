@@ -58,55 +58,12 @@
     </v-form>
 
     <v-spacer />
-
-    <footer class="d-flex justify-center pa-6">
-      <v-btn icon large color="primary" @click="isSubmittingCompliment = true">
-        <v-icon>mdi-heart-outline</v-icon>
-      </v-btn>
-
-      <v-dialog v-model="isSubmittingCompliment" max-width="300">
-        <v-card>
-          <v-form @submit.prevent="handleNewCompliment()">
-            <v-card-title>
-              <div class="flex">
-                Spread the Love
-                <v-icon color="primary" class="ml-1 mt-n1">mdi-heart</v-icon>
-              </div>
-              <v-btn icon class="mr-n2" @click="isSubmittingCompliment = false">
-                <v-icon>mdi-close</v-icon>
-              </v-btn>
-            </v-card-title>
-            <v-card-text>
-              <p>
-                Want to help motivate others?<br />
-                Add your own positivity to the mix!
-              </p>
-
-              <v-text-field
-                v-model="newCompliment"
-                label="Your Praise"
-                placeholder="e.g. well done"
-                rounded
-                outlined
-                hide-details
-                class="mt-6 mb-2"
-              />
-            </v-card-text>
-            <v-card-actions class="justify-center pb-4">
-              <v-btn
-                type="submit"
-                rounded
-                color="primary"
-                :disabled="!toCompliment(newCompliment)"
-                :loading="submitting"
-              >
-                Submit
-              </v-btn>
-            </v-card-actions>
-          </v-form>
-        </v-card>
-      </v-dialog>
-    </footer>
+    <AddCompliment
+      :firestore-refs="firestoreRefs"
+      :compliments="compliments"
+      class="d-flex justify-center pa-6"
+      @input="msg => successMessage = msg"
+    />
 
     <v-snackbar v-model="hasSuccessMessage">
       <div class="title ma-auto" style="text-transform: capitalize;">
@@ -125,6 +82,7 @@ import {
   findByIdKey,
 } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
+import AddCompliment from '@/components/AddCompliment.vue';
 
 export default Vue.extend({
   name: 'NewEntry',
@@ -162,10 +120,6 @@ export default Vue.extend({
       value: undefined,
       isAddEntryLoading: false,
       successMessage: undefined,
-
-      isSubmittingCompliment: false,
-      newCompliment: undefined,
-      submitting: false,
     };
   },
   computed: {
@@ -202,12 +156,6 @@ export default Vue.extend({
     groupId() {
       this.participantId = null;
     },
-
-    async newCompliment(newCompliment) {
-      this.successMessage = null;
-      await this.$nextTick();
-      this.successMessage = this.toCompliment(newCompliment);
-    },
   },
   methods: {
     has(...keys) {
@@ -215,9 +163,6 @@ export default Vue.extend({
         this[`relevant${key[0].toUpperCase()}${key.split('').slice(1).join('')}s`],
         this[`${key}Id`],
       ));
-    },
-    getRandomCompliment() {
-      return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
     },
     capitalize(text) {
       let str = (text || '').trim();
@@ -253,32 +198,10 @@ export default Vue.extend({
         }, 500);
       }
     },
-
-    toCompliment(text) {
-      return (text || '').trim().toLowerCase().replace(/!$/, '');
-    },
-    async handleNewCompliment() {
-      try {
-        this.submitting = true;
-        await this.firestoreRefs.complimentsSubmitted.add({
-          text: this.toCompliment(this.newCompliment),
-          createdAt: firestore.FieldValue.serverTimestamp(),
-        });
-        this.newCompliment = null;
-        this.isSubmittingCompliment = false;
-
-        this.successMessage = null;
-        await this.$nextTick();
-        this.successMessage = 'thanks';
-      } finally {
-        setTimeout(() => {
-          this.submitting = false;
-        }, 500);
-      }
-    },
   },
   components: {
     Picker,
+    AddCompliment,
   },
 });
 </script>
