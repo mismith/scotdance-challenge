@@ -221,6 +221,8 @@ export default Vue.extend({
 <style lang="scss">
 @media (max-width: 768px) {
   #crisp-chatbox {
+    z-index: 200; // less than v-overlay
+
     a[data-cshid] {
       margin-bottom: 56px !important;
     }
