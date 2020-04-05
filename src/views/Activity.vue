@@ -27,7 +27,7 @@
               {{ entry.$challenge.name }}
             </small>
             <v-btn small icon class="ml-2" @click="flaggedEntry = entry">
-              <v-icon small>mdi-flag</v-icon>
+              <v-icon small>mdi-flag-outline</v-icon>
             </v-btn>
           </v-card-title>
           <v-card-text>
