@@ -32,10 +32,12 @@
               class="mt-6 mb-2"
             />
           </v-card-text>
-          <v-card-actions class="justify-center pb-4">
+          <v-card-actions class="justify-center pt-0 pa-4">
             <v-btn
               type="submit"
               rounded
+              block
+              x-large
               color="primary"
               :disabled="!toCompliment(newCompliment)"
               :loading="submitting"

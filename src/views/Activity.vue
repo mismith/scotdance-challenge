@@ -42,19 +42,21 @@
     <v-dialog v-model="isFlagging" max-width="320">
       <v-card>
         <v-card-title>
-          Report An Issue <v-icon color="primary" class="ml-2">mdi-flag</v-icon>
+          Flag An Issue <v-icon color="primary" class="ml-2">mdi-flag</v-icon>
 
           <v-spacer />
           <v-btn icon class="mr-n2" @click="isFlagging = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text class="pb-0">
+        <v-card-text class="pb-2">
           <p>Did you make a mistake, or does something seem off?</p>
           <p>Help sort things out with a super quick explanation of what you think is wrong.</p>
         </v-card-text>
-        <v-card-actions class="justify-center pb-4">
-          <v-btn rounded color="primary" @click="openLiveChat()">Submit Request</v-btn>
+        <v-card-actions class="justify-center pt-0 pa-4">
+          <v-btn rounded block x-large color="primary" @click="openLiveChat()">
+            Flag
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
