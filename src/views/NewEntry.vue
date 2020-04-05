@@ -1,6 +1,6 @@
 <template>
   <div class="NewEntry flex-page">
-    <v-form class="px-4 py-6" @submit.prevent="handleNewEntry()">
+    <v-form class="px-4 py-6" @submit.prevent="handleAddEntry()">
       <Picker
         v-model="groupId"
         :label="$root.labels.Group"
@@ -51,7 +51,7 @@
         block
         color="primary"
         :disabled="!(has('challenge', 'group', 'participant') && value > 0)"
-        :loading="adding"
+        :loading="isAddEntryLoading"
       >
         Submit
       </v-btn>
@@ -108,7 +108,7 @@
       </v-dialog>
     </footer>
 
-    <v-snackbar v-model="isSuccess">
+    <v-snackbar v-model="hasSuccessMessage">
       <div class="title ma-auto" style="text-transform: capitalize;">
         {{ successMessage }}!
       </div>
@@ -160,7 +160,7 @@ export default Vue.extend({
       ].map((color) => palette[color].base),
 
       value: undefined,
-      adding: false,
+      isAddEntryLoading: false,
       successMessage: undefined,
 
       isSubmittingCompliment: false,
@@ -185,7 +185,7 @@ export default Vue.extend({
       ));
     },
 
-    isSuccess: {
+    hasSuccessMessage: {
       get() {
         return Boolean(this.successMessage);
       },
@@ -234,9 +234,9 @@ export default Vue.extend({
     async handleAdd(item, refKey) {
       return this.firestoreRefs[refKey].add(item);
     },
-    async handleNewEntry() {
+    async handleAddEntry() {
       try {
-        this.adding = true;
+        this.isAddEntryLoading = true;
         await this.firestoreRefs.entries.add({
           challengeId: this.challengeId,
           groupId: this.groupId,
@@ -249,7 +249,7 @@ export default Vue.extend({
         this.successMessage = this.getRandomCompliment().text;
       } finally {
         setTimeout(() => {
-          this.adding = false;
+          this.isAddEntryLoading = false;
         }, 500);
       }
     },
