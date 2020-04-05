@@ -190,7 +190,8 @@ export default Vue.extend({
   watch: {
     challenges: {
       handler(challenges) {
-        if (challenges && challenges.length === 1) {
+        // @ts-ignore
+        if (!this.loading && challenges && challenges.length === 1) {
           // auto-pick first challenge if it's the only one
           // @ts-ignore
           this.challengeId = challenges[0][idKey];

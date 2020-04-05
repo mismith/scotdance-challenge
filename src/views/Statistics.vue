@@ -17,26 +17,41 @@
         <v-subheader class="primary--text subtitle-1 justify-center">
           {{ $root.labels.Participant }} Averages by {{ $root.labels.Group }}
         </v-subheader>
-        <BarChart
-          :chart-data="groupDataPerParticipant"
-          :chart-options="chartOptions"
-          class="chartjs-size-wrapper"
-        />
+
+        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+          <HorizontalBarChart
+            :chart-data="groupDataPerParticipant"
+            :chart-options="chartOptions"
+            class="flex-shrink-0"
+            :styles="{
+              position: 'relative',
+              height: `${Math.max(128, 32 * filteredGroups.length + 1)}px`,
+            }"
+          />
+        </div>
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-center">
           {{ $root.labels.Group }} Totals
         </v-subheader>
-        <BarChart
-          :chart-data="groupData"
-          :chart-options="chartOptions"
-          class="chartjs-size-wrapper"
-        />
+
+        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+          <HorizontalBarChart
+            :chart-data="groupData"
+            :chart-options="chartOptions"
+            class="flex-shrink-0"
+            :styles="{
+              position: 'relative',
+              height: `${Math.max(128, 32 * filteredGroups.length + 1)}px`,
+            }"
+          />
+        </div>
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-center">
           {{ $root.labels.Participant }} Totals
         </v-subheader>
+
         <header class="d-flex px-3 pb-3">
           <v-select
             v-model="currentGroupId"
@@ -74,7 +89,8 @@
             </v-list>
           </v-menu>
         </header>
-        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+
+        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y has-header">
           <div
             v-if="!participantsInCurrentGroup.length"
             class="d-flex flex-column align-center ma-auto"
@@ -104,7 +120,6 @@ import get from 'lodash.get';
 import orderBy from 'lodash.orderby';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
-import BarChart from '@/components/BarChart.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 
 function getParticipantRelativeValue(value, groupedParticipants, id) {
@@ -124,6 +139,10 @@ function gatherData(allEntries, items, key, transformValue = undefined) {
     }],
   };
 }
+
+// exponentially curb values to that outliers are less prominent in chart axes
+const flatten = (v) => v ** (1 / 2);
+const unflatten = (v) => Math.round(v ** 2);
 
 export default Vue.extend({
   name: 'Statistics',
@@ -160,25 +179,22 @@ export default Vue.extend({
             ticks: {
               beginAtZero: true,
               min: 0,
-              callback: (value) => (typeof value === 'number' ? value.toLocaleString() : value),
-            },
-          }],
-          yAxes: [{
-            ticks: {
-              beginAtZero: true,
-              min: 0,
-              callback: (value) => (typeof value === 'number' ? value.toLocaleString() : value),
+              callback: (value) => unflatten(value).toLocaleString(),
             },
           }],
         },
         tooltips: {
           callbacks: {
-            label: ({ value }) => Number(value).toLocaleString(),
+            label: ({ xLabel }) => unflatten(xLabel).toLocaleString(),
           },
         },
         elements: {
           rectangle: {
-            backgroundColor: ({ dataIndex }) => get(this.filteredGroups, `${dataIndex}.color`),
+            backgroundColor: ({ dataIndex }) => get(
+              this.filteredGroups,
+              `${dataIndex}.color`,
+              '#000000',
+            ),
           },
         },
       },
@@ -283,13 +299,20 @@ export default Vue.extend({
         this.filteredEntries,
         this.filteredGroups,
         'groupId',
-        (sum, group) => getParticipantRelativeValue(sum, this.groupedParticipants, group[idKey]),
+        (sum, group) => flatten(
+          getParticipantRelativeValue(sum, this.groupedParticipants, group[idKey]),
+        ),
       );
       // console.log(groupDataPerParticipant);
       return groupDataPerParticipant;
     },
     groupData() {
-      const groupData = gatherData(this.filteredEntries, this.filteredGroups, 'groupId');
+      const groupData = gatherData(
+        this.filteredEntries,
+        this.filteredGroups,
+        'groupId',
+        flatten,
+      );
       // console.log(groupData);
       return groupData;
     },
@@ -298,7 +321,7 @@ export default Vue.extend({
         this.filteredEntries,
         this.participantsInCurrentGroup,
         'participantId',
-        (v) => v ** (1 / 2), // 'flatten' the values to make outliers less prominent
+        flatten,
       );
       // console.log(participantData);
       return participantData;
@@ -306,19 +329,10 @@ export default Vue.extend({
     participantChartOptions() {
       return {
         ...this.chartOptions,
-        scales: {
-          ...this.chartOptions.scales,
-          xAxes: [{
-            ...this.chartOptions.scales.xAxes[0],
-            ticks: {
-              ...this.chartOptions.scales.xAxes[0].ticks,
-              callback: (value) => Math.round(value ** 2).toLocaleString(),
-            },
-          }],
-        },
         tooltips: {
           ...this.chartOptions.tooltips,
           callbacks: {
+            ...this.chartOptions.tooltips.callbacks,
             title: ([{ yLabel, index }]) => {
               if (this.orderParticipantsBy && this.orderParticipantsBy.keys[0] === '$value') {
                 return `${yLabel} [${index + 1}]`;
@@ -331,8 +345,6 @@ export default Vue.extend({
               const participant = this.participantsInCurrentGroup[index] || {};
               return participant && `(${participant.$group.name})`;
             },
-            // un-'flatten' value
-            label: ({ xLabel }) => Math.round(xLabel ** 2).toLocaleString(),
           },
         },
         elements: {
@@ -352,7 +364,6 @@ export default Vue.extend({
   },
   components: {
     Loader,
-    BarChart,
     HorizontalBarChart,
   },
 });
@@ -378,7 +389,7 @@ export default Vue.extend({
     // @HACK: appbar/title/carousel-delimiters/bottom-nav
     max-height: calc(100vh - 56px - 48px - 50px - 56px);
 
-    &.scroll-y {
+    &.has-header {
       // @HACK: appbar/title/select/carousel-delimiters/bottom-nav
       max-height: calc(100vh - 56px - 48px - 52px - 50px - 56px);
     }
