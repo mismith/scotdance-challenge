@@ -39,7 +39,7 @@
       </v-timeline-item>
     </v-timeline>
 
-    <v-dialog v-model="isFlagging" max-width="300">
+    <v-dialog v-model="isFlagging" max-width="320">
       <v-card>
         <v-card-title>
           Report An Issue <v-icon color="primary" class="ml-2">mdi-flag</v-icon>
@@ -49,14 +49,12 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text>
-          Did you make a mistake, or does something seems wrong?
-          Help sort things out by sending a quick message.
+        <v-card-text class="pb-0">
+          <p>Did you make a mistake, or does something seem off?</p>
+          <p>Help sort things out with a super quick explaination of what you think is wrong.</p>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn rounded color="primary" @click="openLiveChat()">Open Live Chat</v-btn>
-          <v-spacer />
+        <v-card-actions class="justify-center pb-4">
+          <v-btn rounded color="primary" @click="openLiveChat()">Submit Request</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
