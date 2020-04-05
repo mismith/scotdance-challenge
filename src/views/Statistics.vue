@@ -134,6 +134,17 @@ function gatherData(allEntries, items, key = '$total', transformValue = flatten)
   };
 }
 
+const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E'];
+function abbreviateNumber(number) {
+  const tier = Math.log10(number) / 3 | 0; // eslint-disable-line
+  if (!tier) return number;
+
+  const suffix = SI_SYMBOL[tier];
+  const scale = 10 ** (tier * 3);
+  const scaled = number / scale;
+  return `${scaled.toFixed(1)}${suffix}`;
+}
+
 export default Vue.extend({
   name: 'Statistics',
   props: {
@@ -229,7 +240,7 @@ export default Vue.extend({
             ticks: {
               beginAtZero: true,
               min: 0,
-              callback: (value) => unflatten(value).toLocaleString(),
+              callback: (value) => abbreviateNumber(unflatten(value)),
             },
           }],
         },
