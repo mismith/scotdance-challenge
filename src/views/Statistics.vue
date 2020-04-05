@@ -14,8 +14,10 @@
       height="100%"
     >
       <v-carousel-item>
-        <v-subheader class="primary--text subtitle-1 justify-center">
-          {{ $root.labels.Participant }} Averages by {{ $root.labels.Group }}
+        <v-subheader class="primary--text subtitle-1 justify-space-between">
+          <v-btn icon style="visibility: hidden;" />
+          {{ $root.labels.Group }} Averages
+          <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
         <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
@@ -25,14 +27,16 @@
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
-              height: `${Math.max(128, 32 * filteredGroups.length + 1)}px`,
+              height: `${Math.max(128, 32 * sortedGroups.length + 1)}px`,
             }"
           />
         </div>
       </v-carousel-item>
       <v-carousel-item>
-        <v-subheader class="primary--text subtitle-1 justify-center">
+        <v-subheader class="primary--text subtitle-1 justify-space-between">
+          <v-btn icon style="visibility: hidden;" />
           {{ $root.labels.Group }} Totals
+          <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
         <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
@@ -42,14 +46,16 @@
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
-              height: `${Math.max(128, 32 * filteredGroups.length + 1)}px`,
+              height: `${Math.max(128, 32 * sortedGroups.length + 1)}px`,
             }"
           />
         </div>
       </v-carousel-item>
       <v-carousel-item>
-        <v-subheader class="primary--text subtitle-1 justify-center">
+        <v-subheader class="primary--text subtitle-1 justify-space-between">
+          <v-btn icon style="visibility: hidden;" />
           {{ $root.labels.Participant }} Totals
+          <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
         <header class="d-flex px-3 pb-3">
@@ -71,23 +77,6 @@
               {{ item.name }}
             </template>
           </v-select>
-          <v-menu min-width="200">
-            <template #activator="{ on }">
-              <v-btn icon v-on="on" class="ml-3"><v-icon>mdi-sort-variant</v-icon></v-btn>
-            </template>
-
-            <v-list>
-              <v-subheader>Sort by</v-subheader>
-              <v-list-item
-                v-for="by in orderParticipantsBys"
-                :key="by.name"
-                :class="{ 'v-list-item--active': orderParticipantsById === by[idKey] }"
-                @click="orderParticipantsById = by[idKey]"
-              >
-                {{ by.name }}
-              </v-list-item>
-            </v-list>
-          </v-menu>
         </header>
 
         <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y has-header">
@@ -121,28 +110,29 @@ import orderBy from 'lodash.orderby';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
-
-function getParticipantRelativeValue(value, groupedParticipants, id) {
-  const numGroupParticipants = groupedParticipants.filter(({ groupId }) => groupId === id).length;
-  return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
-}
-function sumItemEntries(allEntries, item, key, transformValue = (v) => v) {
-  const entries = allEntries.filter((entry) => entry[key] === item[idKey]);
-  const sum = entries.reduce((acc, { value }) => acc + value, 0);
-  return transformValue(sum, item);
-}
-function gatherData(allEntries, items, key, transformValue = undefined) {
-  return {
-    labels: items.map(({ name }) => name),
-    datasets: [{
-      data: items.map((item) => sumItemEntries(allEntries, item, key, transformValue)),
-    }],
-  };
-}
+import SortBy from '@/components/SortBy.vue';
 
 // exponentially curb values to that outliers are less prominent in chart axes
 const flatten = (v) => v ** (1 / 2);
 const unflatten = (v) => Math.round(v ** 2);
+
+function getParticipantRelativeValue(value, sortedParticipants, id) {
+  const numGroupParticipants = sortedParticipants.filter(({ groupId }) => groupId === id).length;
+  return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
+}
+function sumItemEntries(allEntries, item, key) {
+  const entries = allEntries.filter((entry) => entry[key] === item[idKey]);
+  const sum = entries.reduce((acc, { value }) => acc + value, 0);
+  return sum;
+}
+function gatherData(allEntries, items, key = '$total', transformValue = flatten) {
+  return {
+    labels: items.map(({ name }) => name),
+    datasets: [{
+      data: items.map((item) => transformValue(item[key])),
+    }],
+  };
+}
 
 export default Vue.extend({
   name: 'Statistics',
@@ -163,48 +153,20 @@ export default Vue.extend({
     currentGroupId: {
       type: String,
     },
-    orderParticipantsById: {
+    orderDataById: {
       type: String,
     },
   },
   data() {
     return {
       idKey,
-      chartOptions: {
-        legend: false,
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          xAxes: [{
-            ticks: {
-              beginAtZero: true,
-              min: 0,
-              callback: (value) => unflatten(value).toLocaleString(),
-            },
-          }],
-        },
-        tooltips: {
-          callbacks: {
-            label: ({ xLabel }) => unflatten(xLabel).toLocaleString(),
-          },
-        },
-        elements: {
-          rectangle: {
-            backgroundColor: ({ dataIndex }) => get(
-              this.filteredGroups,
-              `${dataIndex}.color`,
-              '#000000',
-            ),
-          },
-        },
-      },
     };
   },
   watch: {
-    orderParticipantsBys(orderParticipantsBys) {
-      const orderParticipantsBy = findByIdKey(orderParticipantsBys, this.orderParticipantsById);
-      if (!orderParticipantsBy) {
-        this.orderParticipantsById = this.orderParticipantsBys[0][idKey];
+    orderDataBys(orderDataBys) {
+      const orderDataBy = findByIdKey(orderDataBys, this.orderDataById);
+      if (!orderDataBy) {
+        this.orderDataById = this.orderDataBys[0][idKey];
       }
     },
   },
@@ -238,93 +200,60 @@ export default Vue.extend({
     currentGroup() {
       return findByIdKey(this.filteredGroups, this.currentGroupId);
     },
-    orderParticipantsBys() {
+    orderDataBys() {
       return [
         {
-          [idKey]: 'group-participant',
-          name: `Name by ${this.$root.labels.Group}`,
-          keys: ['$group.name', 'name'],
-          byGroup: true,
-        },
-        {
-          [idKey]: 'group-value',
-          name: `Total by ${this.$root.labels.Group}`,
-          keys: ['$group.name', '$value'],
-          dirs: ['asc', 'desc'],
-          byGroup: true,
-        },
-        {
-          [idKey]: 'participant',
+          [idKey]: 'name',
           name: 'Name',
           keys: ['name'],
         },
         {
           [idKey]: 'value',
-          name: 'Total',
-          keys: ['$value'],
+          name: this.currentSlide === 0 ? 'Average' : 'Total',
+          keys: [this.currentSlide === 0 ? '$average' : '$total'],
           dirs: ['desc'],
         },
-      ]
-        .filter(({ byGroup }) => !this.currentGroup || !byGroup);
+      ];
     },
-    orderParticipantsBy() {
-      return findByIdKey(this.orderParticipantsBys, this.orderParticipantsById);
-    },
-
-    groupedParticipants() {
-      const participantsWithValues = this.filteredParticipants.map((item) => {
-        // eslint-disable-next-line no-param-reassign
-        item.$value = sumItemEntries(this.filteredEntries, item, 'participantId');
-        return item;
-      });
-      if (this.orderParticipantsBy) {
-        return orderBy(
-          participantsWithValues,
-          this.orderParticipantsBy.keys,
-          this.orderParticipantsBy.dirs,
-        );
-      }
-      return participantsWithValues;
-    },
-    participantsInCurrentGroup() {
-      if (this.currentGroup) {
-        return this.groupedParticipants
-          .filter(({ groupId }) => groupId === this.currentGroup[idKey]);
-      }
-      return this.groupedParticipants;
+    orderDataBy() {
+      return findByIdKey(this.orderDataBys, this.orderDataById);
     },
 
-    groupDataPerParticipant() {
-      const groupDataPerParticipant = gatherData(
-        this.filteredEntries,
-        this.filteredGroups,
-        'groupId',
-        (sum, group) => flatten(
-          getParticipantRelativeValue(sum, this.groupedParticipants, group[idKey]),
-        ),
-      );
-      // console.log(groupDataPerParticipant);
-      return groupDataPerParticipant;
-    },
-    groupData() {
-      const groupData = gatherData(
-        this.filteredEntries,
-        this.filteredGroups,
-        'groupId',
-        flatten,
-      );
-      // console.log(groupData);
-      return groupData;
-    },
-    participantData() {
-      const participantData = gatherData(
-        this.filteredEntries,
-        this.participantsInCurrentGroup,
-        'participantId',
-        flatten,
-      );
-      // console.log(participantData);
-      return participantData;
+    chartOptions() {
+      return {
+        legend: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          xAxes: [{
+            ticks: {
+              beginAtZero: true,
+              min: 0,
+              callback: (value) => unflatten(value).toLocaleString(),
+            },
+          }],
+        },
+        tooltips: {
+          callbacks: {
+            label: ({ xLabel }) => unflatten(xLabel).toLocaleString(),
+            title: ([{ yLabel, index }]) => {
+              if (this.orderDataBy && this.orderDataBy[idKey] === 'value') {
+                return `${yLabel} [${index + 1}]`;
+              }
+              return yLabel;
+            },
+          },
+        },
+        elements: {
+          rectangle: {
+            backgroundColor: ({ dataIndex }) => get(
+              this.sortedGroups,
+              `${dataIndex}.color`,
+              '#000000',
+            ),
+          },
+        },
+      };
     },
     participantChartOptions() {
       return {
@@ -333,12 +262,6 @@ export default Vue.extend({
           ...this.chartOptions.tooltips,
           callbacks: {
             ...this.chartOptions.tooltips.callbacks,
-            title: ([{ yLabel, index }]) => {
-              if (this.orderParticipantsBy && this.orderParticipantsBy.keys[0] === '$value') {
-                return `${yLabel} [${index + 1}]`;
-              }
-              return yLabel;
-            },
             afterTitle: ([{ index }]) => {
               if (this.currentGroup) return null;
 
@@ -358,6 +281,67 @@ export default Vue.extend({
         },
       };
     },
+
+    sortedParticipants() {
+      const participantsWithValues = this.filteredParticipants.map((item) => {
+        // eslint-disable-next-line no-param-reassign
+        item.$total = sumItemEntries(this.filteredEntries, item, 'participantId');
+        return item;
+      });
+      if (this.orderDataBy) {
+        return orderBy(
+          participantsWithValues,
+          this.orderDataBy.keys,
+          this.orderDataBy.dirs,
+        );
+      }
+      return participantsWithValues;
+    },
+    sortedGroups() {
+      const groupsWithValues = this.filteredGroups.map((item) => {
+        const sum = sumItemEntries(this.filteredEntries, item, 'groupId');
+        // eslint-disable-next-line no-param-reassign
+        item.$total = sum;
+        // eslint-disable-next-line no-param-reassign
+        item.$average = getParticipantRelativeValue(sum, this.sortedParticipants, item[idKey]);
+        return item;
+      });
+      if (this.orderDataBy) {
+        return orderBy(
+          groupsWithValues,
+          this.orderDataBy.keys,
+          this.orderDataBy.dirs,
+        );
+      }
+      return groupsWithValues;
+    },
+    participantsInCurrentGroup() {
+      if (this.currentGroup) {
+        return this.sortedParticipants
+          .filter(({ groupId }) => groupId === this.currentGroup[idKey]);
+      }
+      return this.sortedParticipants;
+    },
+
+    groupDataPerParticipant() {
+      const groupDataPerParticipant = gatherData(
+        this.filteredEntries,
+        this.sortedGroups,
+        '$average',
+      );
+      // console.log(groupDataPerParticipant);
+      return groupDataPerParticipant;
+    },
+    groupData() {
+      const groupData = gatherData(this.filteredEntries, this.sortedGroups);
+      // console.log(groupData);
+      return groupData;
+    },
+    participantData() {
+      const participantData = gatherData(this.filteredEntries, this.participantsInCurrentGroup);
+      // console.log(participantData);
+      return participantData;
+    },
   },
   methods: {
     get,
@@ -365,6 +349,7 @@ export default Vue.extend({
   components: {
     Loader,
     HorizontalBarChart,
+    SortBy,
   },
 });
 </script>
