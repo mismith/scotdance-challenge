@@ -11,12 +11,17 @@
         item-text="name"
         :item-value="idKey"
         :disabled="!has('challenge')"
-        :add-new="name => handleAdd({
+        :add-new="name => groupToEdit = {
           name: capitalize(name),
           color: colors[relevantGroups.length % colors.length],
           challengeId: this.challengeId,
-        }, 'groups')"
+        }"
       />
+      <EditGroup
+        v-model="groupToEdit"
+        @done="group => handleAdd(group, 'groups')"
+      />
+
       <Picker
         v-model="participantId"
         :label="$root.labels.Participant"
@@ -82,6 +87,7 @@ import {
   findByIdKey,
 } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
+import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
 
 export default Vue.extend({
@@ -116,6 +122,8 @@ export default Vue.extend({
         'indigo',
         'purple',
       ].map((color) => palette[color].base),
+
+      groupToEdit: undefined,
 
       value: undefined,
       isAddEntryLoading: false,
@@ -201,6 +209,7 @@ export default Vue.extend({
   },
   components: {
     Picker,
+    EditGroup,
     AddCompliment,
   },
 });
