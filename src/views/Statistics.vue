@@ -294,11 +294,14 @@ export default Vue.extend({
     },
 
     sortedParticipants() {
-      const participantsWithValues = this.filteredParticipants.map((item) => {
-        // eslint-disable-next-line no-param-reassign
-        item.$total = sumItemEntries(this.filteredEntries, item, 'participantId');
-        return item;
-      });
+      const participantsWithValues = this.filteredParticipants
+        .map((item) => {
+          // eslint-disable-next-line no-param-reassign
+          item.$total = sumItemEntries(this.filteredEntries, item, 'participantId');
+          return item;
+        })
+        .filter(({ $total }) => $total);
+
       if (this.orderDataBy) {
         return orderBy(
           participantsWithValues,
@@ -309,14 +312,17 @@ export default Vue.extend({
       return participantsWithValues;
     },
     sortedGroups() {
-      const groupsWithValues = this.filteredGroups.map((item) => {
-        const sum = sumItemEntries(this.filteredEntries, item, 'groupId');
-        // eslint-disable-next-line no-param-reassign
-        item.$total = sum;
-        // eslint-disable-next-line no-param-reassign
-        item.$average = getParticipantRelativeValue(sum, this.sortedParticipants, item[idKey]);
-        return item;
-      });
+      const groupsWithValues = this.filteredGroups
+        .map((item) => {
+          const sum = sumItemEntries(this.filteredEntries, item, 'groupId');
+          // eslint-disable-next-line no-param-reassign
+          item.$total = sum;
+          // eslint-disable-next-line no-param-reassign
+          item.$average = getParticipantRelativeValue(sum, this.sortedParticipants, item[idKey]);
+          return item;
+        })
+        .filter(({ $total }) => $total);
+
       if (this.orderDataBy) {
         return orderBy(
           groupsWithValues,
