@@ -8,7 +8,11 @@ export default VAutocomplete.extend({
   props: {
     hideNoData: {
       type: Boolean,
-      default: true, // @mismith: default to true
+      default: true, // @mismith: default to true // @TODO: make true only if addNew is set
+    },
+    noDataText: {
+      type: String,
+      default: 'No matches',
     },
     addNew: {
       type: Function,
@@ -49,6 +53,8 @@ export default VAutocomplete.extend({
       if (this.addNew && value === ADD_NEW_KEY) {
         newItem = await this.addNew(this.internalSearch);
       }
+
+      this.internalSearch = null; // @mismith: reset input field
 
       // 'super'
       VAutocomplete.options.methods.selectItem.call(this, newItem);
