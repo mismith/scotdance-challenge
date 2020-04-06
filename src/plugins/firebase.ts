@@ -30,6 +30,7 @@ export interface Group extends FirebaseObject {
   challengeId: string;
   name: string;
   color?: string;
+  country?: string;
   $challenge?: Challenge;
 }
 export interface Participant extends FirebaseObject {

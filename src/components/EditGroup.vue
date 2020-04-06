@@ -31,6 +31,7 @@
                 v-model="isPickingColor"
                 :close-on-content-click="false"
                 left
+                :nudge-bottom="16"
                 :nudge-right="20"
                 offset-y
               >
@@ -46,6 +47,22 @@
               </v-menu>
             </template>
           </v-text-field>
+          <Picker
+            v-model="value.country"
+            label="Country"
+            outlined
+            rounded
+            :menu-props="{ maxWidth: 288 }"
+            :hide-no-data="false"
+            :items="countries"
+            :item-value="idKey"
+            item-text="name"
+          >
+            <template #item="{ item }">
+              <big class="mr-2" style="font-size: 24px;">{{ item.emoji }}</big>
+              {{ item.name }}
+            </template>
+          </Picker>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn
@@ -66,7 +83,10 @@
 
 <script>
 import Vue from 'vue';
+import orderBy from 'lodash.orderby';
+import { countries, fetchCountryCode } from '@/services/country';
 import { idKey } from '@/plugins/firebase';
+import Picker from '@/components/Picker.vue';
 
 export default Vue.extend({
   name: 'EditGroup',
@@ -101,11 +121,28 @@ export default Vue.extend({
       }
       return true;
     },
+    countries() {
+      return orderBy(
+        Object.entries(countries)
+          .map(([code, data]) => ({ [idKey]: code, ...data }))
+          .filter(({ languages }) => languages.includes('en')),
+        ['name'],
+      );
+    },
   },
   watch: {
     isOpen(isOpen) {
       if (!isOpen) {
         this.isPickingColor = false;
+      }
+    },
+    async value(value) {
+      if (value && value.country === undefined) {
+        this.$set(value, 'country', null);
+        const country = await fetchCountryCode();
+        if (!value.country) {
+          this.$set(value, 'country', country);
+        }
       }
     },
   },
@@ -114,6 +151,9 @@ export default Vue.extend({
       this.$emit('done', this.value);
       this.$emit('input', null);
     },
+  },
+  components: {
+    Picker,
   },
 });
 </script>
