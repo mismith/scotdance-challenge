@@ -26,6 +26,8 @@
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.16",
+    "@types/lodash.get": "^4.4.6",
+    "@types/lodash.orderby": "^4.6.6",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
     "@vue/cli-plugin-eslint": "~4.2.0",
