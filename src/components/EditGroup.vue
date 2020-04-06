@@ -24,20 +24,21 @@
             outlined
             rounded
             required
+            @click="isPickingColor = true"
           >
             <template #append>
               <v-menu
                 v-model="isPickingColor"
                 :close-on-content-click="false"
                 left
-                :nudge-right="19"
+                :nudge-right="20"
                 offset-y
               >
                 <template #activator="{ on }">
                   <v-avatar size="32" :color="value.color" v-on="on" />
                 </template>
                 <v-card>
-                  <v-color-picker v-model="value.color" hide-inputs flat />
+                  <v-color-picker v-model="value.color" hide-inputs flat :canvas-height="100" />
                   <v-card-actions class="justify-end">
                     <v-btn text @click="isPickingColor = false">Done</v-btn>
                   </v-card-actions>
@@ -99,6 +100,13 @@ export default Vue.extend({
         if (!this.value.color || !/^#[a-f0-9]{6}$/i.test(this.value.color.trim())) return false;
       }
       return true;
+    },
+  },
+  watch: {
+    isOpen(isOpen) {
+      if (!isOpen) {
+        this.isPickingColor = false;
+      }
     },
   },
   methods: {
