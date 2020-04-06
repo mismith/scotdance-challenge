@@ -67,6 +67,7 @@
             clearable
             hide-details
             :placeholder="`All ${$root.labels.Group}s`"
+            :menu-props="{ offsetY: true }"
             :items="filteredGroups"
             :item-value="idKey"
             :label="`Filter by ${$root.labels.Group}`"

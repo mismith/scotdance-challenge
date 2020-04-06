@@ -1,5 +1,5 @@
 <template>
-  <v-menu min-width="128">
+  <v-menu min-width="128" offset-y>
     <template #activator="{ on }">
       <v-btn icon v-on="on"><v-icon>mdi-sort-variant</v-icon></v-btn>
     </template>
