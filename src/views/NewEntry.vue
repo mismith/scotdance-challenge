@@ -19,7 +19,7 @@
       />
       <EditGroup
         v-model="groupToEdit"
-        @done="group => handleAdd(group, 'groups')"
+        @done="group => handleAddGroup(group)"
       />
 
       <Picker
@@ -189,6 +189,10 @@ export default Vue.extend({
 
     async handleAdd(item, refKey) {
       return this.firestoreRefs[refKey].add(item);
+    },
+    async handleAddGroup(group) {
+      const { id } = await this.handleAdd(group, 'groups');
+      this.groupId = id;
     },
     async handleAddEntry() {
       try {
