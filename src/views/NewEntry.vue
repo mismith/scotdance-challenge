@@ -8,7 +8,7 @@
         rounded
         clearable
         :items="relevantGroups"
-        item-text="name"
+        item-text="$name"
         :item-value="idKey"
         :disabled="!has('challenge')"
         :add-new="name => groupToEdit = {

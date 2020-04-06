@@ -31,9 +31,9 @@
             </v-btn>
           </v-card-title>
           <v-card-text>
-            by <strong>{{ entry.$participant.name }}</strong>
-            of <strong>{{ entry.$group.name }}</strong>
-            at <strong>{{ entry.createdAt.toDate().toLocaleString() }}</strong>
+            <span>by <strong>{{ entry.$participant.name }}</strong></span>
+            <span>of <strong>{{ entry.$group.$name }}</strong></span>
+            <span>at <strong>{{ entry.createdAt.toDate().toLocaleString() }}</strong></span>
           </v-card-text>
         </v-card>
       </v-timeline-item>
@@ -65,6 +65,7 @@
 
 <script>
 import Vue from 'vue';
+import { getEmojiFlag } from '@/services/country';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 
@@ -119,6 +120,8 @@ export default Vue.extend({
     },
   },
   methods: {
+    getEmojiFlag,
+
     handleInfinite() {
       if (this.offset < this.filteredEntries.length) {
         this.offset += INCREMENT;
@@ -144,3 +147,19 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style lang="scss">
+.Activity {
+  .v-timeline-item {
+    .v-card__text {
+      > span {
+        white-space: nowrap;
+
+        &:after {
+          content: " ";
+        }
+      }
+    }
+  }
+}
+</style>

@@ -70,11 +70,11 @@
             :items="filteredGroups"
             :item-value="idKey"
             :label="`Filter by ${$root.labels.Group}`"
-            item-text="name"
+            item-text="$name"
           >
             <template #item="{ item }">
               <v-avatar size="16" :color="item.color" class="mr-2" style="margin-top: -2px" />
-              {{ item.name }}
+              {{ item.$name }}
             </template>
           </v-select>
         </header>
@@ -127,7 +127,7 @@ function sumItemEntries(allEntries, item, key) {
 }
 function gatherData(allEntries, items, key = '$total', transformValue = flatten) {
   return {
-    labels: items.map(({ name }) => name),
+    labels: items.map(({ $name, name }) => $name || name),
     datasets: [{
       data: items.map((item) => transformValue(item[key])),
     }],
@@ -277,7 +277,7 @@ export default Vue.extend({
               if (this.currentGroup) return null;
 
               const participant = this.participantsInCurrentGroup[index] || {};
-              return participant && `(${participant.$group.name})`;
+              return participant && `${participant.$group.$name}`;
             },
           },
         },

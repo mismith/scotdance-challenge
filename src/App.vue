@@ -62,6 +62,7 @@ import {
   findByIdKey,
 } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
+import { getEmojiFlag } from 'countries-list';
 
 const firestoreRefs = {
   challenges: db.collection('challenges'),
@@ -158,6 +159,7 @@ export default Vue.extend({
     groups() {
       // @ts-ignore
       return this.groupsDebug.map((item) => Object.assign(item, {
+        $name: `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`,
         // @ts-ignore
         $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
       }));
