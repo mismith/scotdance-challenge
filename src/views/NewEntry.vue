@@ -1,74 +1,77 @@
 <template>
   <div class="NewEntry flex-page">
-    <v-form class="px-4 py-6" @submit.prevent="handleAddEntry()">
-      <Picker
-        v-model="groupId"
-        :label="$root.labels.Group"
-        outlined
-        rounded
-        clearable
-        :items="relevantGroups"
-        item-text="$name"
-        :item-value="idKey"
-        :disabled="!has('challenge')"
-        :add-new="name => groupToEdit = {
-          name: capitalize(name),
-          color: colors[relevantGroups.length % colors.length],
-          challengeId: this.challengeId,
-        }"
-      />
-      <EditGroup
-        v-model="groupToEdit"
-        @done="group => handleAddGroup(group)"
-      />
+    <Loader v-if="loading" class="ma-auto" />
+    <template v-else>
+      <v-form class="px-4 py-6" @submit.prevent="handleAddEntry()">
+        <Picker
+          v-model="groupId"
+          :label="$root.labels.Group"
+          outlined
+          rounded
+          clearable
+          :items="relevantGroups"
+          item-text="$name"
+          :item-value="idKey"
+          :disabled="!has('challenge')"
+          :add-new="name => groupToEdit = {
+            name: capitalize(name),
+            color: colors[relevantGroups.length % colors.length],
+            challengeId: this.challengeId,
+          }"
+        />
+        <EditGroup
+          v-model="groupToEdit"
+          @done="group => handleAddGroup(group)"
+        />
 
-      <Picker
-        v-model="participantId"
-        :label="$root.labels.Participant"
-        outlined
-        rounded
-        clearable
-        :items="relevantParticipants"
-        item-text="name"
-        :item-value="idKey"
-        :disabled="!has('challenge', 'group')"
-        :add-new="name => handleAdd({
-          name: capitalize(name),
-          challengeId: this.challengeId,
-          groupId: this.groupId,
-        }, 'participants')"
-      />
-      <v-text-field
-        v-model="value"
-        type="number"
-        min="0"
-        rounded
-        outlined
-        :placeholder="`Add New ${$root.labels.Entry}`"
-        :disabled="!has('challenge', 'group', 'participant')"
-        :error="value !== null && value <= 0"
-      />
+        <Picker
+          v-model="participantId"
+          :label="$root.labels.Participant"
+          outlined
+          rounded
+          clearable
+          :items="relevantParticipants"
+          item-text="name"
+          :item-value="idKey"
+          :disabled="!has('challenge', 'group')"
+          :add-new="name => handleAdd({
+            name: capitalize(name),
+            challengeId: this.challengeId,
+            groupId: this.groupId,
+          }, 'participants')"
+        />
+        <v-text-field
+          v-model="value"
+          type="number"
+          min="0"
+          rounded
+          outlined
+          :placeholder="`Add New ${$root.labels.Entry}`"
+          :disabled="!has('challenge', 'group', 'participant')"
+          :error="value !== null && value <= 0"
+        />
 
-      <v-btn
-        type="submit"
-        rounded
-        x-large
-        block
-        color="primary"
-        :disabled="!(has('challenge', 'group', 'participant') && value > 0)"
-        :loading="isAddEntryLoading"
-      >
-        Submit
-      </v-btn>
-    </v-form>
+        <v-btn
+          type="submit"
+          rounded
+          x-large
+          block
+          color="primary"
+          :disabled="!(has('challenge', 'group', 'participant') && value > 0)"
+          :loading="isAddEntryLoading"
+        >
+          Submit
+        </v-btn>
+      </v-form>
 
-    <v-spacer />
-    <AddCompliment
-      :firestore-refs="firestoreRefs"
-      :compliments="compliments"
-      class="d-flex justify-center pa-6"
-      @input="msg => successMessage = msg"
-    />
+      <v-spacer />
+      <AddCompliment
+        :firestore-refs="firestoreRefs"
+        :compliments="compliments"
+        class="d-flex justify-center pa-6"
+        @input="msg => successMessage = msg"
+      />
+    </template>
 
     <v-snackbar v-model="hasSuccessMessage">
       <div class="title ma-auto" style="text-transform: capitalize;">
@@ -86,6 +89,7 @@ import {
   idKey,
   findByIdKey,
 } from '@/plugins/firebase';
+import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
@@ -215,6 +219,7 @@ export default Vue.extend({
     },
   },
   components: {
+    Loader,
     Picker,
     EditGroup,
     AddCompliment,
