@@ -1,7 +1,7 @@
 <template>
   <div class="Statistics flex-page">
     <Loader v-if="loading" class="ma-auto" />
-    <div v-else-if="!filteredEntries.length" class="d-flex flex-column align-center ma-auto">
+    <div v-else-if="!relevantEntries.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
@@ -15,7 +15,7 @@
     >
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <v-btn icon style="visibility: hidden;" />
+          <FilterBy :groups="relevantGroups" :country-ids.sync="filterDataByCountryIds" />
           {{ $root.labels.Group }} Averages
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
@@ -34,7 +34,7 @@
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <v-btn icon style="visibility: hidden;" />
+          <FilterBy :groups="relevantGroups" :country-ids.sync="filterDataByCountryIds" />
           {{ $root.labels.Group }} Totals
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
@@ -53,36 +53,36 @@
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <v-btn icon style="visibility: hidden;" />
+          <FilterBy
+            :groups="relevantGroups"
+            :country-ids.sync="filterDataByCountryIds"
+            :dirty="Boolean(filterDataByGroupIds.length)"
+          >
+            <Picker
+              v-model="filterDataByGroupIds"
+              :label="$root.labels.Group"
+              outlined
+              rounded
+              clearable
+              multiple
+              dense
+              hide-details
+              :placeholder="`All ${$root.labels.Group}s`"
+              :menu-props="{ width: '100%', offsetY: true }"
+              :hide-no-data="false"
+              :items="relevantGroups"
+              :item-value="idKey"
+              item-text="$name"
+              class="mt-4 mx-4"
+            />
+          </FilterBy>
           {{ $root.labels.Participant }} Totals
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
-        <header class="d-flex px-3 pb-3">
-          <v-select
-            v-model="currentGroupId"
-            outlined
-            rounded
-            dense
-            clearable
-            hide-details
-            :placeholder="`All ${$root.labels.Group}s`"
-            :menu-props="{ offsetY: true }"
-            :items="filteredGroups"
-            :item-value="idKey"
-            :label="`Filter by ${$root.labels.Group}`"
-            item-text="$name"
-          >
-            <template #item="{ item }">
-              <v-avatar size="16" :color="item.color" class="mr-2" style="margin-top: -2px" />
-              {{ item.$name }}
-            </template>
-          </v-select>
-        </header>
-
-        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y has-header">
+        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
           <div
-            v-if="!participantsInCurrentGroup.length"
+            v-if="!sortedParticipants.length"
             class="d-flex flex-column align-center ma-auto"
           >
             <v-icon x-large>mdi-cancel</v-icon>
@@ -111,7 +111,10 @@ import orderBy from 'lodash.orderby';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
+import FilterBy from '@/components/FilterBy.vue';
 import SortBy from '@/components/SortBy.vue';
+import Picker from '@/components/Picker.vue';
+import { getEmojiFlag } from 'countries-list';
 
 // exponentially curb values to that outliers are less prominent in chart axes
 const flatten = (v) => v ** (1 / 2);
@@ -125,14 +128,6 @@ function sumItemEntries(allEntries, item, key) {
   const entries = allEntries.filter((entry) => entry[key] === item[idKey]);
   const sum = entries.reduce((acc, { value }) => acc + value, 0);
   return sum;
-}
-function gatherData(allEntries, items, key = '$total', transformValue = flatten) {
-  return {
-    labels: items.map(({ $name, name }) => $name || name),
-    datasets: [{
-      data: items.map((item) => transformValue(item[key])),
-    }],
-  };
 }
 
 const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E'];
@@ -162,8 +157,11 @@ export default Vue.extend({
     currentSlide: {
       type: Number,
     },
-    currentGroupId: {
-      type: String,
+    filterDataByGroupIds: {
+      type: Array,
+    },
+    filterDataByCountryIds: {
+      type: Array,
     },
     orderDataById: {
       type: String,
@@ -187,21 +185,21 @@ export default Vue.extend({
       return findByIdKey(this.challenges, this.currentChallengeId);
     },
 
-    filteredGroups() {
+    relevantGroups() {
       if (this.currentChallenge) {
         return this.groups
           .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
       }
       return this.groups;
     },
-    filteredParticipants() {
+    relevantParticipants() {
       if (this.currentChallenge) {
         return this.participants
           .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
       }
       return this.participants;
     },
-    filteredEntries() {
+    relevantEntries() {
       if (this.currentChallenge) {
         return this.entries
           .filter(({ challengeId }) => challengeId === this.currentChallenge[idKey]);
@@ -209,9 +207,6 @@ export default Vue.extend({
       return this.entries;
     },
 
-    currentGroup() {
-      return findByIdKey(this.filteredGroups, this.currentGroupId);
-    },
     orderDataBys() {
       return [
         {
@@ -275,17 +270,17 @@ export default Vue.extend({
           callbacks: {
             ...this.chartOptions.tooltips.callbacks,
             afterTitle: ([{ index }]) => {
-              if (this.currentGroup) return null;
+              if (!this.filterDataByGroupIds.length) return null;
 
-              const participant = this.participantsInCurrentGroup[index] || {};
-              return participant && `${participant.$group.$name}`;
+              const participant = this.sortedParticipants[index] || {};
+              return participant && `${participant.$group.name}`;
             },
           },
         },
         elements: {
           rectangle: {
             backgroundColor: ({ dataIndex }) => get(
-              this.participantsInCurrentGroup,
+              this.sortedParticipants,
               `${dataIndex}.$group.color`,
               '#000000',
             ),
@@ -295,16 +290,28 @@ export default Vue.extend({
     },
 
     sortedParticipants() {
-      const participantsWithValues = this.filteredParticipants
+      let participantsWithValues = this.relevantParticipants
         .map((item) => {
           // eslint-disable-next-line no-param-reassign
-          item.$total = sumItemEntries(this.filteredEntries, item, 'participantId');
+          item.$name = item.$group && item.$group.country
+            ? `${item.name} ${getEmojiFlag(item.$group.country)}`
+            : item.name;
+          // eslint-disable-next-line no-param-reassign
+          item.$total = sumItemEntries(this.relevantEntries, item, 'participantId');
           return item;
         })
         .filter(({ $total }) => $total);
 
+      if (this.filterDataByCountryIds.length) {
+        participantsWithValues = participantsWithValues
+          .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
+      }
+      if (this.filterDataByGroupIds.length && this.currentSlide === 2) {
+        participantsWithValues = participantsWithValues
+          .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
+      }
       if (this.orderDataBy) {
-        return orderBy(
+        participantsWithValues = orderBy(
           participantsWithValues,
           this.orderDataBy.keys,
           this.orderDataBy.dirs,
@@ -313,9 +320,9 @@ export default Vue.extend({
       return participantsWithValues;
     },
     sortedGroups() {
-      const groupsWithValues = this.filteredGroups
+      let groupsWithValues = this.relevantGroups
         .map((item) => {
-          const sum = sumItemEntries(this.filteredEntries, item, 'groupId');
+          const sum = sumItemEntries(this.relevantEntries, item, 'groupId');
           // eslint-disable-next-line no-param-reassign
           item.$total = sum;
           // eslint-disable-next-line no-param-reassign
@@ -324,8 +331,12 @@ export default Vue.extend({
         })
         .filter(({ $total }) => $total);
 
+      if (this.filterDataByCountryIds.length) {
+        groupsWithValues = groupsWithValues
+          .filter(({ country }) => this.filterDataByCountryIds.includes(country));
+      }
       if (this.orderDataBy) {
-        return orderBy(
+        groupsWithValues = orderBy(
           groupsWithValues,
           this.orderDataBy.keys,
           this.orderDataBy.dirs,
@@ -333,41 +344,41 @@ export default Vue.extend({
       }
       return groupsWithValues;
     },
-    participantsInCurrentGroup() {
-      if (this.currentGroup) {
-        return this.sortedParticipants
-          .filter(({ groupId }) => groupId === this.currentGroup[idKey]);
-      }
-      return this.sortedParticipants;
-    },
 
     groupDataPerParticipant() {
-      const groupDataPerParticipant = gatherData(
-        this.filteredEntries,
-        this.sortedGroups,
-        '$average',
-      );
+      const groupDataPerParticipant = this.gatherData(this.sortedGroups, '$average');
       // console.log(groupDataPerParticipant);
       return groupDataPerParticipant;
     },
     groupData() {
-      const groupData = gatherData(this.filteredEntries, this.sortedGroups);
+      const groupData = this.gatherData(this.sortedGroups);
       // console.log(groupData);
       return groupData;
     },
     participantData() {
-      const participantData = gatherData(this.filteredEntries, this.participantsInCurrentGroup);
+      const participantData = this.gatherData(this.sortedParticipants);
       // console.log(participantData);
       return participantData;
     },
   },
   methods: {
     get,
+
+    gatherData(items, key = '$total') {
+      return {
+        labels: items.map(({ name, $name }) => $name || name),
+        datasets: [{
+          data: items.map((item) => flatten(item[key])),
+        }],
+      };
+    },
   },
   components: {
     Loader,
     HorizontalBarChart,
+    FilterBy,
     SortBy,
+    Picker,
   },
 });
 </script>
@@ -391,11 +402,6 @@ export default Vue.extend({
     position: relative;
     // @HACK: appbar/title/carousel-delimiters/bottom-nav
     max-height: calc(100vh - 56px - 48px - 50px - 56px);
-
-    &.has-header {
-      // @HACK: appbar/title/select/carousel-delimiters/bottom-nav
-      max-height: calc(100vh - 56px - 48px - 52px - 50px - 56px);
-    }
   }
 }
 </style>
