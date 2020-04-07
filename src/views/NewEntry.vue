@@ -2,7 +2,7 @@
   <div class="NewEntry flex-page">
     <Loader v-if="loading" class="ma-auto" />
     <template v-else>
-      <v-form class="px-4 py-6" @submit.prevent="handleAddEntry()">
+      <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
         <Picker
           v-model="groupId"
           :label="$root.labels.Group"

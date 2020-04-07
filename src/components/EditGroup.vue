@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="isOpen" max-width="320">
     <v-card class="EditGroup">
-      <v-form @submit.prevent="handleDone()">
+      <v-form autocomplete="off" @submit.prevent="handleDone()">
         <v-card-title>
           <div class="flex">
             {{ isNew ? 'Add' : 'Edit' }} {{ $root.labels.Group }}

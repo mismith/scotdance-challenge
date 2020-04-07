@@ -8,28 +8,30 @@
       </v-btn>
     </template>
 
-    <v-sheet class="pb-4">
-      <v-subheader>Filter by</v-subheader>
-      <Picker
-        v-model="currentCountryIds"
-        label="Country"
-        outlined
-        rounded
-        clearable
-        multiple
-        dense
-        hide-details
-        placeholder="All Countries"
-        :menu-props="{ width: '100%', offsetY: true }"
-        :hide-no-data="false"
-        :items="relevantCountries"
-        :item-value="idKey"
-        item-text="$name"
-        class="mx-4"
-      />
+    <v-form autocomplete="off">
+      <v-sheet class="pb-4">
+        <v-subheader>Filter by</v-subheader>
+        <Picker
+          v-model="currentCountryIds"
+          label="Country"
+          outlined
+          rounded
+          clearable
+          multiple
+          dense
+          hide-details
+          placeholder="All Countries"
+          :menu-props="{ width: '100%', offsetY: true }"
+          :hide-no-data="false"
+          :items="relevantCountries"
+          :item-value="idKey"
+          item-text="$name"
+          class="mx-4"
+        />
 
-      <slot />
-    </v-sheet>
+        <slot />
+      </v-sheet>
+    </v-form>
   </v-menu>
 </template>
 
