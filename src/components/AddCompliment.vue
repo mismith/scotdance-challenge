@@ -87,9 +87,6 @@ export default Vue.extend({
       await this.$nextTick();
       this.$emit('input', value);
     },
-    getRandomCompliment() {
-      return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
-    },
     toCompliment(text) {
       return (text || '').trim().toLowerCase().replace(/!$/, '');
     },

@@ -183,6 +183,9 @@ export default Vue.extend({
       }
       return str;
     },
+    getRandomCompliment() {
+      return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
+    },
 
     async handleAdd(item, refKey) {
       return this.firestoreRefs[refKey].add(item);
