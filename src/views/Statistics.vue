@@ -400,8 +400,16 @@ export default Vue.extend({
   .chartjs-size-wrapper {
     flex: auto;
     position: relative;
-    // @HACK: appbar/title/carousel-delimiters/bottom-nav
-    max-height: calc(100vh - 56px - 48px - 50px - 56px);
+    // @HACK: notch/appbar/title/carousel-delimiters/bottom-nav/notch
+    max-height: calc(
+      100vh
+      - env(safe-area-inset-top)
+      - 56px
+      - 48px
+      - 50px
+      - 56px
+      - env(safe-area-inset-bottom)
+    );
   }
 }
 </style>

@@ -226,7 +226,7 @@ export default Vue.extend({
     z-index: 200; // less than v-overlay
 
     a[data-cshid] {
-      margin-bottom: 56px !important;
+      margin-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
     }
   }
 }
@@ -243,9 +243,19 @@ export default Vue.extend({
     flex-direction: column;
   }
 
-  .v-bottom-navigation {
+  .v-app-bar.v-app-bar--fixed {
+    height: auto !important;
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .v-bottom-navigation.v-bottom-navigation--fixed {
+    height: calc(56px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+
     .v-btn {
-      height: inherit !important;
+      height: 56px !important;
 
       &.v-size--x-large {
         height: 110% !important;
