@@ -27,7 +27,7 @@
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
-              height: `${Math.max(128, 32 * sortedGroups.length + 1)}px`,
+              height: `${Math.max(128, 24 * (sortedGroups.length + 1))}px`,
             }"
           />
         </div>
@@ -46,7 +46,7 @@
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
-              height: `${Math.max(128, 32 * sortedGroups.length + 1)}px`,
+              height: `${Math.max(128, 24 * (sortedGroups.length + 1))}px`,
             }"
           />
         </div>
@@ -95,7 +95,7 @@
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
-              height: `${Math.max(128, 32 * participantsInCurrentGroup.length + 1)}px`,
+              height: `${Math.max(128, 24 * (sortedParticipants.length + 1))}px`,
             }"
           />
         </div>
