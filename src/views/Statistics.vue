@@ -20,7 +20,7 @@
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
-        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+        <div class="chartjs-size-wrapper">
           <HorizontalBarChart
             :chart-data="groupDataPerParticipant"
             :chart-options="chartOptions"
@@ -39,7 +39,7 @@
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
-        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+        <div class="chartjs-size-wrapper">
           <HorizontalBarChart
             :chart-data="groupData"
             :chart-options="chartOptions"
@@ -80,7 +80,7 @@
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
-        <div class="chartjs-size-wrapper flex d-flex flex-column scroll-y">
+        <div class="chartjs-size-wrapper">
           <div
             v-if="!sortedParticipants.length"
             class="d-flex flex-column align-center ma-auto"
@@ -392,24 +392,25 @@ export default Vue.extend({
       > .v-responsive__content {
         display: flex;
         flex-direction: column;
+        padding-top: 48px; // for subheader
         padding-bottom: 50px; // for carousel delimeters
+
+        > .v-subheader {
+          position: fixed;
+          top: 56px;
+          left: 0;
+          right: 0;
+          background: white;
+          z-index: 1;
+        }
       }
     }
-  }
-
-  .chartjs-size-wrapper {
-    flex: auto;
-    position: relative;
-    // @HACK: notch/appbar/title/carousel-delimiters/bottom-nav/notch
-    max-height: calc(
-      100vh
-      - env(safe-area-inset-top)
-      - 56px
-      - 48px
-      - 50px
-      - 56px
-      - env(safe-area-inset-bottom)
-    );
+    .v-carousel__controls {
+      position: fixed;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 56px;
+    }
   }
 }
 </style>
