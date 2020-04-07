@@ -31,9 +31,9 @@
             </v-btn>
           </v-card-title>
           <v-card-text>
-            <span>by <strong>{{ entry.$participant.name }}</strong></span>
-            <span>of <strong>{{ entry.$group.$name }}</strong></span>
-            <span>at <strong>{{ entry.createdAt.toDate().toLocaleString() }}</strong></span>
+            by <strong>{{ entry.$participant.name }}</strong>
+            of <strong>{{ entry.$group.$name }}</strong>
+            at <strong>{{ entry.createdAt.toDate().toLocaleString() }}</strong>
           </v-card-text>
         </v-card>
       </v-timeline-item>
@@ -147,19 +147,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style lang="scss">
-.Activity {
-  .v-timeline-item {
-    .v-card__text {
-      > span {
-        white-space: nowrap;
-
-        &:after {
-          content: " ";
-        }
-      }
-    }
-  }
-}
-</style>
