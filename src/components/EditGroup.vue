@@ -54,15 +54,10 @@
             rounded
             :menu-props="{ maxWidth: 288 }"
             :hide-no-data="false"
-            :items="countries"
+            :items="availableCountries"
             :item-value="idKey"
-            item-text="name"
-          >
-            <template #item="{ item }">
-              <big class="mr-2" style="font-size: 24px;">{{ item.emoji }}</big>
-              {{ item.name }}
-            </template>
-          </Picker>
+            item-text="$name"
+          />
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn
@@ -83,8 +78,7 @@
 
 <script>
 import Vue from 'vue';
-import orderBy from 'lodash.orderby';
-import { countries, fetchCountryCode } from '@/services/country';
+import { availableCountries, fetchCountryCode } from '@/services/country';
 import { idKey } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 
@@ -96,7 +90,7 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-
+      availableCountries,
       isPickingColor: false,
     };
   },
@@ -120,14 +114,6 @@ export default Vue.extend({
         if (!this.value.color || !/^#[a-f0-9]{6}$/i.test(this.value.color.trim())) return false;
       }
       return true;
-    },
-    countries() {
-      return orderBy(
-        Object.entries(countries)
-          .map(([code, data]) => ({ [idKey]: code, ...data }))
-          .filter(({ languages }) => languages.includes('en')),
-        ['name'],
-      );
     },
   },
   watch: {

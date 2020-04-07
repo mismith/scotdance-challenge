@@ -1,4 +1,6 @@
 import { countries, getEmojiFlag } from 'countries-list';
+import orderBy from 'lodash.orderby';
+import { idKey } from '@/plugins/firebase';
 
 export { countries, getEmojiFlag };
 
@@ -8,3 +10,10 @@ export async function fetchCountryCode() {
   const countryCode = await res.text();
   return countryCode;
 }
+
+export const availableCountries = orderBy(
+  Object.entries(countries)
+    .map(([code, data]) => ({ [idKey]: code, $name: `${data.name} ${data.emoji}`, ...data }))
+    .filter(({ languages }) => languages.includes('en')),
+  ['name'],
+);
