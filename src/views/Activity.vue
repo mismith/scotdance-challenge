@@ -41,7 +41,6 @@
 
 <script>
 import Vue from 'vue';
-import { getEmojiFlag } from '@/services/country';
 import { idKey } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
@@ -97,7 +96,6 @@ export default Vue.extend({
     },
   },
   methods: {
-    getEmojiFlag,
     ...mapActions([
       'bindEntries',
     ]),
