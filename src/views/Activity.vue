@@ -79,7 +79,6 @@ export default Vue.extend({
     groups: Array,
     participants: Array,
     entries: Array,
-    compliments: Array,
     loading: Boolean,
     currentChallengeId: String,
   },

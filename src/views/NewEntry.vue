@@ -67,7 +67,6 @@
       <v-spacer />
       <AddCompliment
         :firestore-refs="firestoreRefs"
-        :compliments="compliments"
         class="d-flex justify-center pa-6"
         @input="msg => successMessage = msg"
       />
@@ -84,6 +83,7 @@
 <script>
 import Vue from 'vue';
 import palette from 'vuetify/lib/util/colors';
+import compliments from '@/store/compliments';
 import {
   firestore,
   idKey,
@@ -102,7 +102,6 @@ export default Vue.extend({
     groups: Array,
     participants: Array,
     entries: Array,
-    compliments: Array,
     loading: Boolean,
     currentChallengeId: String,
   },
@@ -188,7 +187,7 @@ export default Vue.extend({
       return str;
     },
     getRandomCompliment() {
-      return this.compliments[Math.round(Math.random() * this.compliments.length - 1)];
+      return compliments[Math.round(Math.random() * compliments.length - 1)];
     },
 
     async handleAdd(item, refKey) {
@@ -210,7 +209,7 @@ export default Vue.extend({
         });
         this.value = null;
 
-        this.successMessage = this.getRandomCompliment().text;
+        this.successMessage = this.getRandomCompliment();
       } finally {
         setTimeout(() => {
           this.isAddEntryLoading = false;

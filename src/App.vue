@@ -25,7 +25,6 @@
         groups,
         participants,
         entries,
-        compliments,
         loading,
         currentChallengeId: challengeId,
       }" />
@@ -55,7 +54,6 @@ import {
   Group,
   Participant,
   Entry,
-  Compliments,
   firestore,
   db,
   idKey,
@@ -69,8 +67,6 @@ const firestoreRefs = {
   groups: db.collection('groups'),
   participants: db.collection('participants'),
   entries: db.collection('entries'),
-  compliments: db.collection('compliments'),
-  complimentsSubmitted: db.collection('complimentsSubmitted'),
 };
 
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
@@ -89,7 +85,6 @@ export default Vue.extend({
     groupsRaw: [] as Group[],
     participantsRaw: [] as Participant[],
     entriesRaw: [] as Entry[],
-    complimentsRaw: [] as Compliments[],
     loading: true,
   }),
   firestore: {
@@ -97,7 +92,6 @@ export default Vue.extend({
     groupsRaw: firestoreRefs.groups.orderBy('name'),
     participantsRaw: firestoreRefs.participants.orderBy('name'),
     entriesRaw: firestoreRefs.entries.orderBy('createdAt'),
-    complimentsRaw: firestoreRefs.compliments,
   },
   computed: {
     challengesDebug() {
@@ -183,10 +177,6 @@ export default Vue.extend({
         // @ts-ignore
         $participant: findByIdKey<Participant>(this.participantsDebug, item.participantId),
       }));
-    },
-    compliments() {
-      // @ts-ignore
-      return this.complimentsRaw;
     },
   },
   watch: {

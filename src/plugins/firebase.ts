@@ -52,9 +52,6 @@ export interface Entry extends FirebaseObject {
   $group?: Group;
   $participant?: Participant;
 }
-export interface Compliments extends FirebaseObject {
-  text: string;
-}
 
 export function findByIdKey<T extends FirebaseObject>(items: T[], id: string) {
   return items.find((item) => item[idKey] === id);

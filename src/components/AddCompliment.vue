@@ -53,13 +53,12 @@
 
 <script>
 import Vue from 'vue';
-import { firestore, idKey } from '@/plugins/firebase';
+import { firestore, db, idKey } from '@/plugins/firebase';
 
 export default Vue.extend({
   name: 'AddCompliment',
   props: {
     firestoreRefs: Object,
-    compliments: Array,
   },
   data() {
     return {
@@ -93,7 +92,7 @@ export default Vue.extend({
     async handleAddCompliment() {
       try {
         this.submitting = true;
-        await this.firestoreRefs.complimentsSubmitted.add({
+        await db.collection('complimentsSubmitted').add({
           text: this.toCompliment(this.newCompliment),
           createdAt: firestore.FieldValue.serverTimestamp(),
         });
