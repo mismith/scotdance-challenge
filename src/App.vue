@@ -41,18 +41,8 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { getEmojiFlag } from 'countries-list';
 import { mapGetters, mapActions } from 'vuex';
-import {
-  Challenge,
-  Group,
-  Participant,
-  Entry,
-  firestore,
-  firestoreRefs,
-  idKey,
-  findByIdKey,
-} from '@/plugins/firebase';
+import { firestoreRefs, idKey } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
@@ -66,100 +56,12 @@ export default Vue.extend({
   },
   data: () => ({
     idKey,
-    groupsRaw: [] as Group[],
-    participantsRaw: [] as Participant[],
-    entriesRaw: [] as Entry[],
     loading: true,
   }),
-  firestore: {
-    // groupsRaw: firestoreRefs.groups.orderBy('name'),
-    // participantsRaw: firestoreRefs.participants.orderBy('name'),
-    // entriesRaw: firestoreRefs.entries.orderBy('createdAt'),
-  },
   computed: {
     ...mapGetters([
       'challenges',
     ]),
-    // challengesDebug() {
-    //   // @ts-ignore
-    //   if (this.$root.isDebugging) {
-    //     return this.challengesRaw.concat({
-    //       [idKey]: 'test_challenge',
-    //       name: 'Test',
-    //     });
-    //   }
-    //   // @ts-ignore
-    //   return this.challengesRaw;
-    // },
-    groupsDebug() {
-      // @ts-ignore
-      if (this.$root.isDebugging) {
-        return this.groupsRaw.concat({
-          [idKey]: 'test_group',
-          challengeId: 'test_challenge',
-          name: 'Test Group',
-        });
-      }
-      // @ts-ignore
-      return this.groupsRaw;
-    },
-    participantsDebug() {
-      // @ts-ignore
-      if (this.$root.isDebugging) {
-        return this.participantsRaw.concat({
-          [idKey]: 'test_participant',
-          challengeId: 'test_challenge',
-          groupId: 'test_group',
-          name: 'Test Participant',
-        });
-      }
-      // @ts-ignore
-      return this.participantsRaw;
-    },
-    entriesDebug() {
-      // @ts-ignore
-      if (this.$root.isDebugging) {
-        return this.entriesRaw.concat({
-          [idKey]: 'test_entry',
-          challengeId: 'test_challenge',
-          groupId: 'test_group',
-          participantId: 'test_participant',
-          value: 1000,
-          createdAt: firestore.Timestamp.now(),
-        });
-      }
-      // @ts-ignore
-      return this.entriesRaw;
-    },
-
-    groups() {
-      // @ts-ignore
-      return this.groupsDebug.map((item) => Object.assign(item, {
-        $name: `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`,
-        // @ts-ignore
-        $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
-      }));
-    },
-    participants() {
-      // @ts-ignore
-      return this.participantsDebug.map((item) => Object.assign(item, {
-        // @ts-ignore
-        $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
-        // @ts-ignore
-        $group: findByIdKey<Group>(this.groupsDebug, item.groupId),
-      }));
-    },
-    entries() {
-      // @ts-ignore
-      return this.entriesDebug.map((item) => Object.assign(item, {
-        // @ts-ignore
-        $challenge: findByIdKey<Challenge>(this.challengesDebug, item.challengeId),
-        // @ts-ignore
-        $group: findByIdKey<Group>(this.groupsDebug, item.groupId),
-        // @ts-ignore
-        $participant: findByIdKey<Participant>(this.participantsDebug, item.participantId),
-      }));
-    },
   },
   watch: {
     challenges: {
@@ -187,7 +89,6 @@ export default Vue.extend({
   },
   async created() {
     await this.bindChallenges();
-    // await Promise.all(Object.values(firestoreRefs).map((ref) => ref.get()));
     this.loading = false;
   },
   components: {

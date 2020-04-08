@@ -7,7 +7,7 @@ import { firestorePlugin } from 'vuefire';
 Vue.use(firestorePlugin);
 
 const { firestore } = firebase;
-export { firestore };
+export { firebase, firestore };
 
 export const app = firebase.initializeApp({
   projectId: 'scotdance-challenge',

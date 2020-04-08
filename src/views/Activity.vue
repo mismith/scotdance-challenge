@@ -77,7 +77,11 @@ export default Vue.extend({
     currentChallengeId: {
       async handler(challengeId) {
         this.loading = true;
-        await this.bindEntries({ challengeId });
+        await this.bindEntries({
+          mutateQuery: challengeId
+            ? (query) => query.where('challengeId', '==', challengeId)
+            : undefined,
+        });
         this.loading = false;
       },
       immediate: true,

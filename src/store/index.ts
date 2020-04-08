@@ -2,10 +2,13 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import { vuexfireMutations, firestoreAction } from 'vuexfire';
 import {
+  firebase,
   firestore,
   firestoreRefs,
   idKey,
   Challenge,
+  Group,
+  Participant,
   Entry,
 } from '@/plugins/firebase';
 
@@ -16,6 +19,8 @@ const isDebugging = window.location.hostname === 'localhost';
 export default new Vuex.Store({
   state: {
     challenges: [] as Challenge[],
+    groups: [] as Group[],
+    participants: [] as Participant[],
     entries: [] as Entry[],
   },
   getters: {
@@ -30,6 +35,33 @@ export default new Vuex.Store({
         ];
       }
       return challenges;
+    },
+    groups: ({ groups }) => {
+      if (isDebugging) {
+        return [
+          {
+            [idKey]: 'test_group',
+            challengeId: 'test_challenge',
+            name: 'Test Group',
+          },
+          ...groups,
+        ];
+      }
+      return groups;
+    },
+    participants: ({ participants }) => {
+      if (isDebugging) {
+        return [
+          {
+            [idKey]: 'test_participant',
+            challengeId: 'test_challenge',
+            groupId: 'test_group',
+            name: 'Test Participant',
+          },
+          ...participants,
+        ];
+      }
+      return participants;
     },
     entries: ({ entries }) => {
       if (isDebugging) {
@@ -52,16 +84,30 @@ export default new Vuex.Store({
     ...vuexfireMutations,
   },
   actions: {
-    bindChallenges: firestoreAction(({ bindFirestoreRef }) => {
+    bindChallenges: firestoreAction(({ bindFirestoreRef }, {
+      mutateQuery = (query: firebase.firestore.Query) => query,
+    } = {}) => {
       const query = firestoreRefs.challenges.orderBy('name');
-      return bindFirestoreRef('challenges', query);
+      return bindFirestoreRef('challenges', mutateQuery(query));
     }),
-    bindEntries: firestoreAction(({ bindFirestoreRef }, { challengeId, limit = 50 } = {}) => {
-      let query = firestoreRefs.entries.orderBy('createdAt', 'desc').limit(limit);
-      if (challengeId) {
-        query = query.where('challengeId', '==', challengeId);
-      }
-      return bindFirestoreRef('entries', query);
+    bindGroups: firestoreAction(({ bindFirestoreRef }, {
+      mutateQuery = (query: firebase.firestore.Query) => query,
+    } = {}) => {
+      const query = firestoreRefs.groups.orderBy('name');
+      return bindFirestoreRef('groups', mutateQuery(query));
+    }),
+    bindParticipants: firestoreAction(({ bindFirestoreRef }, {
+      mutateQuery = (query: firebase.firestore.Query) => query,
+    } = {}) => {
+      const query = firestoreRefs.participants.orderBy('name');
+      return bindFirestoreRef('participants', mutateQuery(query));
+    }),
+    bindEntries: firestoreAction(({ bindFirestoreRef }, {
+      mutateQuery = (query: firebase.firestore.Query) => query,
+      limit = 50,
+    } = {}) => {
+      const query = firestoreRefs.entries.orderBy('createdAt', 'desc').limit(limit);
+      return bindFirestoreRef('entries', mutateQuery(query));
     }),
   },
 });

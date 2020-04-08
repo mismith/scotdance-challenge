@@ -1,75 +1,72 @@
 <template>
   <div class="NewEntry flex-page">
-    <Loader v-if="loading" class="ma-auto" />
-    <template v-else>
-      <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
-        <Picker
-          v-model="groupId"
-          :label="$root.labels.Group"
-          outlined
-          rounded
-          clearable
-          :items="relevantGroups"
-          item-text="$name"
-          :item-value="idKey"
-          :disabled="!has('challenge')"
-          :add-new="name => groupToEdit = {
-            name: capitalize(name),
-            color: colors[relevantGroups.length % colors.length],
-            challengeId: this.challengeId,
-          }"
-        />
-        <EditGroup
-          v-model="groupToEdit"
-          @done="group => handleAddGroup(group)"
-        />
-
-        <Picker
-          v-model="participantId"
-          :label="$root.labels.Participant"
-          outlined
-          rounded
-          clearable
-          :items="relevantParticipants"
-          item-text="name"
-          :item-value="idKey"
-          :disabled="!has('challenge', 'group')"
-          :add-new="name => handleAdd({
-            name: capitalize(name),
-            challengeId: this.challengeId,
-            groupId: this.groupId,
-          }, 'participants')"
-        />
-        <v-text-field
-          v-model="value"
-          type="number"
-          min="0"
-          rounded
-          outlined
-          :placeholder="`Add New ${$root.labels.Entry}`"
-          :disabled="!has('challenge', 'group', 'participant')"
-          :error="value !== null && value <= 0"
-        />
-
-        <v-btn
-          type="submit"
-          rounded
-          x-large
-          block
-          color="primary"
-          :disabled="!(has('challenge', 'group', 'participant') && value > 0)"
-          :loading="isAddEntryLoading"
-        >
-          Submit
-        </v-btn>
-      </v-form>
-
-      <v-spacer />
-      <AddCompliment
-        class="d-flex justify-center pa-6"
-        @input="msg => successMessage = msg"
+    <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
+      <Picker
+        v-model="groupId"
+        :label="$root.labels.Group"
+        outlined
+        rounded
+        clearable
+        :items="groups"
+        item-text="name"
+        :item-value="idKey"
+        :disabled="!currentChallengeId"
+        :add-new="name => groupToEdit = {
+          name: capitalize(name),
+          color: colors[groups.length % colors.length],
+          challengeId: this.challengeId,
+        }"
       />
-    </template>
+      <EditGroup
+        v-model="groupToEdit"
+        @done="group => handleAddGroup(group)"
+      />
+
+      <Picker
+        v-model="participantId"
+        :label="$root.labels.Participant"
+        outlined
+        rounded
+        clearable
+        :items="participants"
+        item-text="name"
+        :item-value="idKey"
+        :disabled="!currentChallengeId || !currentGroupId"
+        :add-new="name => handleAdd({
+          name: capitalize(name),
+          challengeId: this.challengeId,
+          groupId: this.groupId,
+        }, 'participants')"
+      />
+      <v-text-field
+        v-model="value"
+        type="number"
+        min="0"
+        rounded
+        outlined
+        :placeholder="`Add New ${$root.labels.Entry}`"
+        :disabled="!currentChallengeId || !currentGroupId || !currentParticipantId"
+        :error="value !== null && value <= 0"
+      />
+
+      <v-btn
+        type="submit"
+        rounded
+        x-large
+        block
+        color="primary"
+        :disabled="!currentChallengeId || !currentGroupId || !currentParticipantId || value <= 0"
+        :loading="isAddEntryLoading"
+      >
+        Submit
+      </v-btn>
+    </v-form>
+
+    <v-spacer />
+    <AddCompliment
+      class="d-flex justify-center pa-6"
+      @input="msg => successMessage = msg"
+    />
 
     <v-snackbar v-model="hasSuccessMessage">
       <div class="title ma-auto" style="text-transform: capitalize;">
@@ -81,15 +78,10 @@
 
 <script>
 import Vue from 'vue';
+import { mapGetters, mapActions } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
 import compliments from '@/store/compliments';
-import {
-  firestore,
-  firestoreRefs,
-  idKey,
-  findByIdKey,
-} from '@/plugins/firebase';
-import Loader from '@/components/Loader.vue';
+import { firestore, firestoreRefs, idKey } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
@@ -97,11 +89,6 @@ import AddCompliment from '@/components/AddCompliment.vue';
 export default Vue.extend({
   name: 'NewEntry',
   props: {
-    challenges: Array,
-    groups: Array,
-    participants: Array,
-    entries: Array,
-    loading: Boolean,
     challengeId: String,
   },
   localStorage: {
@@ -133,16 +120,23 @@ export default Vue.extend({
     };
   },
   computed: {
-    relevantChallenges() {
-      return this.challenges;
+    ...mapGetters([
+      'challenges',
+      'groups',
+      'participants',
+    ]),
+
+    currentChallengeId() {
+      const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
+      return challenge && challenge[idKey];
     },
-    relevantGroups() {
-      return this.groups.filter(({ challengeId }) => challengeId === this.challengeId);
+    currentGroupId() {
+      const group = this.groups.find(({ [idKey]: id }) => id === this.groupId);
+      return group && group[idKey];
     },
-    relevantParticipants() {
-      return this.participants.filter(({ challengeId, groupId }) => (
-        challengeId === this.challengeId && groupId === this.groupId
-      ));
+    currentParticipantId() {
+      const participant = this.participants.find(({ [idKey]: id }) => id === this.participantId);
+      return participant && participant[idKey];
     },
 
     hasSuccessMessage: {
@@ -155,21 +149,36 @@ export default Vue.extend({
     },
   },
   watch: {
-    challengeId() {
-      this.groupId = null;
-      this.participantId = null;
+    currentChallengeId: {
+      async handler(challengeId) {
+        this.bindGroups({
+          mutateQuery: challengeId
+            ? (query) => query.where('challengeId', '==', challengeId)
+            : undefined,
+        });
+        this.groupId = null;
+        this.participantId = null;
+      },
+      immediate: true,
     },
-    groupId() {
-      this.participantId = null;
+    currentGroupId: {
+      async handler(groupId) {
+        this.bindParticipants({
+          mutateQuery: groupId
+            ? (query) => query.where('groupId', '==', groupId)
+            : undefined,
+        });
+        this.participantId = null;
+      },
+      immediate: true,
     },
   },
   methods: {
-    has(...keys) {
-      return keys.every((key) => findByIdKey(
-        this[`relevant${key[0].toUpperCase()}${key.split('').slice(1).join('')}s`],
-        this[`${key}Id`],
-      ));
-    },
+    ...mapActions([
+      'bindGroups',
+      'bindParticipants',
+    ]),
+
     capitalize(text) {
       let str = (text || '').trim();
       if (str) {
@@ -213,7 +222,6 @@ export default Vue.extend({
     },
   },
   components: {
-    Loader,
     Picker,
     EditGroup,
     AddCompliment,
