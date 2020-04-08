@@ -57,9 +57,6 @@ import { firestore, db, idKey } from '@/plugins/firebase';
 
 export default Vue.extend({
   name: 'AddCompliment',
-  props: {
-    firestoreRefs: Object,
-  },
   data() {
     return {
       idKey,

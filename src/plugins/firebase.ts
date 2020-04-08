@@ -18,6 +18,13 @@ export const app = firebase.initializeApp({
 export const db = app.firestore();
 export const analytics = firebase.analytics();
 
+export const firestoreRefs = {
+  challenges: db.collection('challenges'),
+  groups: db.collection('groups'),
+  participants: db.collection('participants'),
+  entries: db.collection('entries'),
+};
+
 export const idKey = 'id';
 
 export interface FirebaseObject {

@@ -5,6 +5,7 @@ import VueLocalStorage from 'vue-localstorage';
 // eslint-disable-next-line
 // @ts-ignore
 import VueInfiniteScroll from 'vue-infinite-scroll';
+import { Promised } from 'vue-promised';
 import App from './App.vue';
 import router from './router';
 import store from './store';
@@ -17,6 +18,7 @@ Vue.use(VueLocalStorage, {
   bind: true,
 });
 Vue.use(VueInfiniteScroll);
+Vue.component('Promised', Promised);
 
 new Vue({
   router,
@@ -30,10 +32,5 @@ new Vue({
       Entry: 'Entry',
     },
   }),
-  computed: {
-    isDebugging() {
-      return window.location.hostname === 'localhost';
-    },
-  },
   render: (h) => h(App),
 }).$mount('#app');

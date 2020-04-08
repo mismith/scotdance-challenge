@@ -19,15 +19,7 @@
     </v-app-bar>
 
     <v-content>
-      <router-view v-bind="{
-        firestoreRefs,
-        challenges,
-        groups,
-        participants,
-        entries,
-        loading,
-        currentChallengeId: challengeId,
-      }" />
+      <router-view :challenge-id="challengeId" />
     </v-content>
 
     <v-bottom-navigation app grow shift color="primary">
@@ -49,25 +41,19 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import { getEmojiFlag } from 'countries-list';
+import { mapGetters, mapActions } from 'vuex';
 import {
   Challenge,
   Group,
   Participant,
   Entry,
   firestore,
-  db,
+  firestoreRefs,
   idKey,
   findByIdKey,
 } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
-import { getEmojiFlag } from 'countries-list';
-
-const firestoreRefs = {
-  challenges: db.collection('challenges'),
-  groups: db.collection('groups'),
-  participants: db.collection('participants'),
-  entries: db.collection('entries'),
-};
 
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default Vue.extend({
@@ -80,31 +66,31 @@ export default Vue.extend({
   },
   data: () => ({
     idKey,
-    firestoreRefs,
-    challengesRaw: [] as Challenge[],
     groupsRaw: [] as Group[],
     participantsRaw: [] as Participant[],
     entriesRaw: [] as Entry[],
     loading: true,
   }),
   firestore: {
-    challengesRaw: firestoreRefs.challenges.orderBy('name'),
-    groupsRaw: firestoreRefs.groups.orderBy('name'),
-    participantsRaw: firestoreRefs.participants.orderBy('name'),
-    entriesRaw: firestoreRefs.entries.orderBy('createdAt'),
+    // groupsRaw: firestoreRefs.groups.orderBy('name'),
+    // participantsRaw: firestoreRefs.participants.orderBy('name'),
+    // entriesRaw: firestoreRefs.entries.orderBy('createdAt'),
   },
   computed: {
-    challengesDebug() {
-      // @ts-ignore
-      if (this.$root.isDebugging) {
-        return this.challengesRaw.concat({
-          [idKey]: 'test_challenge',
-          name: 'Test',
-        });
-      }
-      // @ts-ignore
-      return this.challengesRaw;
-    },
+    ...mapGetters([
+      'challenges',
+    ]),
+    // challengesDebug() {
+    //   // @ts-ignore
+    //   if (this.$root.isDebugging) {
+    //     return this.challengesRaw.concat({
+    //       [idKey]: 'test_challenge',
+    //       name: 'Test',
+    //     });
+    //   }
+    //   // @ts-ignore
+    //   return this.challengesRaw;
+    // },
     groupsDebug() {
       // @ts-ignore
       if (this.$root.isDebugging) {
@@ -146,10 +132,6 @@ export default Vue.extend({
       return this.entriesRaw;
     },
 
-    challenges() {
-      // @ts-ignore
-      return this.challengesDebug;
-    },
     groups() {
       // @ts-ignore
       return this.groupsDebug.map((item) => Object.assign(item, {
@@ -193,15 +175,19 @@ export default Vue.extend({
     },
   },
   methods: {
+    ...mapActions([
+      'bindChallenges',
+    ]),
+
     async handleAddChallenge(name: string) {
-      // @ts-ignore
-      await this.firestoreRefs.challenges.add({
+      await firestoreRefs.challenges.add({
         name,
       });
     },
   },
   async created() {
-    await Promise.all(Object.values(firestoreRefs).map((ref) => ref.get()));
+    await this.bindChallenges();
+    // await Promise.all(Object.values(firestoreRefs).map((ref) => ref.get()));
     this.loading = false;
   },
   components: {

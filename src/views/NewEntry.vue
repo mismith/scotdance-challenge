@@ -66,7 +66,6 @@
 
       <v-spacer />
       <AddCompliment
-        :firestore-refs="firestoreRefs"
         class="d-flex justify-center pa-6"
         @input="msg => successMessage = msg"
       />
@@ -86,6 +85,7 @@ import palette from 'vuetify/lib/util/colors';
 import compliments from '@/store/compliments';
 import {
   firestore,
+  firestoreRefs,
   idKey,
   findByIdKey,
 } from '@/plugins/firebase';
@@ -97,13 +97,12 @@ import AddCompliment from '@/components/AddCompliment.vue';
 export default Vue.extend({
   name: 'NewEntry',
   props: {
-    firestoreRefs: Object,
     challenges: Array,
     groups: Array,
     participants: Array,
     entries: Array,
     loading: Boolean,
-    currentChallengeId: String,
+    challengeId: String,
   },
   localStorage: {
     groupId: {
@@ -134,10 +133,6 @@ export default Vue.extend({
     };
   },
   computed: {
-    challengeId() {
-      return this.currentChallengeId;
-    },
-
     relevantChallenges() {
       return this.challenges;
     },
@@ -191,7 +186,7 @@ export default Vue.extend({
     },
 
     async handleAdd(item, refKey) {
-      return this.firestoreRefs[refKey].add(item);
+      return firestoreRefs[refKey].add(item);
     },
     async handleAddGroup(group) {
       const { id } = await this.handleAdd(group, 'groups');
@@ -200,7 +195,7 @@ export default Vue.extend({
     async handleAddEntry() {
       try {
         this.isAddEntryLoading = true;
-        await this.firestoreRefs.entries.add({
+        await firestoreRefs.entries.add({
           challengeId: this.challengeId,
           groupId: this.groupId,
           participantId: this.participantId,

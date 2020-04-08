@@ -144,13 +144,12 @@ function abbreviateNumber(number) {
 export default Vue.extend({
   name: 'Statistics',
   props: {
-    firestoreRefs: Object,
     challenges: Array,
     groups: Array,
     participants: Array,
     entries: Array,
     loading: Boolean,
-    currentChallengeId: String,
+    challengeId: String,
   },
   localStorage: {
     currentSlide: {
@@ -181,7 +180,7 @@ export default Vue.extend({
   },
   computed: {
     currentChallenge() {
-      return findByIdKey(this.challenges, this.currentChallengeId);
+      return findByIdKey(this.challenges, this.challengeId);
     },
 
     relevantGroups() {
