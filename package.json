@@ -6,8 +6,9 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "dev": "yarn run serve",
-    "deploy": "yarn run build && firebase deploy"
+    "emulate": "firebase emulators:start --only=firestore,functions",
+    "dev": "yarn --cwd functions run dev & yarn run emulate & yarn run serve",
+    "deploy": "yarn --cwd functions run build && yarn run build && firebase deploy"
   },
   "dependencies": {
     "chart.js": "^2.9.3",
