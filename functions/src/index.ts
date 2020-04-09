@@ -12,19 +12,19 @@ exports.aggregateEntriesByParticipant = firestore
     const totalDiff = sign * value;
     const countDiff = sign * 1;
 
-    const challengeRef = db.collection('statistics').doc(challengeId);
-    const groupRef = challengeRef.collection('groups').doc(groupId);
-    const participantRef = groupRef.collection('participants').doc(participantId);
+    const challengeRef = db.collection('challenges').doc(challengeId);
+    const groupRef = db.collection('groups').doc(groupId);
+    const participantRef = db.collection('participants').doc(participantId);
     const refs = [challengeRef, groupRef, participantRef];
 
     return db.runTransaction(async (transaction) => {
       // all reads must come before writes within a transaction
       const docs = await Promise.all(refs.map((ref) => transaction.get(ref)))
       return Promise.all(docs.map((doc, i) => {
-        const { total = 0, count = 0 } = doc.data() || {};
+        const { $total = 0, $count = 0 } = doc.data() || {};
         return transaction.set(refs[i], {
-          total: total + totalDiff,
-          count: count + countDiff,
+          $total: $total + totalDiff,
+          $count: $count + countDiff,
         }, { merge: true });
       }));
     });

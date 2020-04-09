@@ -1,7 +1,7 @@
 <template>
   <div class="Statistics flex-page">
     <Loader v-if="loading" class="ma-auto" />
-    <div v-else-if="!relevantEntries.length" class="d-flex flex-column align-center ma-auto">
+    <div v-else-if="!relevantParticipants.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
@@ -125,15 +125,10 @@ function getParticipantRelativeValue(value, participants, id) {
   const numGroupParticipants = participants.filter(({ groupId }) => groupId === id).length;
   return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
 }
-function sumItemEntries(allEntries, item, key) {
-  const entries = allEntries.filter((entry) => entry[key] === item[idKey]);
-  const sum = entries.reduce((acc, { value }) => acc + value, 0);
-  return sum;
-}
 
 const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E'];
 function abbreviateNumber(number) {
-  const tier = Math.log10(number) / 3 | 0; // eslint-disable-line
+  const tier = Math.log10(number) / 3 | 0; // eslint-disable-line no-bitwise
   if (!tier) return number;
 
   const suffix = SI_SYMBOL[tier];
@@ -174,7 +169,6 @@ export default Vue.extend({
         await Promise.all([
           this.groupsPromise,
           this.participantsPromise,
-          this.entriesPromise,
         ]);
         this.loading = false;
       },
@@ -193,7 +187,6 @@ export default Vue.extend({
       'challenges',
       'groups',
       'participants',
-      'entries',
     ]),
 
     currentChallengeId() {
@@ -203,37 +196,76 @@ export default Vue.extend({
 
     groupsPromise() {
       return this.bindGroups({
-        mutateQuery: (query) => {
-          let q = query;
-          if (this.currentChallengeId) {
-            q = q.where('challengeId', '==', this.currentChallengeId);
-          }
-          return q;
-        },
+        mutateQuery: this.currentChallengeId
+          ? (query) => query.where('challengeId', '==', this.currentChallengeId)
+          : undefined,
       });
     },
     participantsPromise() {
       return this.bindParticipants({
-        mutateQuery: (query) => {
-          let q = query;
-          if (this.currentChallengeId) {
-            q = q.where('challengeId', '==', this.currentChallengeId);
-          }
-          return q;
-        },
+        mutateQuery: this.currentChallengeId
+          ? (query) => query.where('challengeId', '==', this.currentChallengeId)
+          : undefined,
       });
     },
-    entriesPromise() {
-      return this.bindEntries({
-        mutateQuery: (query) => {
-          let q = query;
-          if (this.currentChallengeId) {
-            q = q.where('challengeId', '==', this.currentChallengeId);
-          }
-          return q;
-        },
-        limit: 10000, // @TODO: this is the max
-      });
+
+    relevantGroups() {
+      let groupsWithValues = this.groups
+        .map((item) => {
+          // eslint-disable-next-line no-param-reassign
+          item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
+          // eslint-disable-next-line no-param-reassign
+          item.$average = getParticipantRelativeValue(
+            item.$total,
+            this.relevantParticipants,
+            item[idKey],
+          );
+          return item;
+        })
+        .filter(({ $total }) => $total);
+
+      if (this.filterDataByCountryIds.length) {
+        groupsWithValues = groupsWithValues
+          .filter(({ country }) => this.filterDataByCountryIds.includes(country));
+      }
+      if (this.orderDataBy) {
+        groupsWithValues = orderBy(
+          groupsWithValues,
+          this.orderDataBy.keys,
+          this.orderDataBy.dirs,
+        );
+      }
+      return groupsWithValues;
+    },
+    relevantParticipants() {
+      let participantsWithValues = this.participants
+        .map((item) => {
+          // eslint-disable-next-line no-param-reassign
+          item.$group = findByIdKey(this.groups, item.groupId);
+          // eslint-disable-next-line no-param-reassign
+          item.$name = item.$group && item.$group.country
+            ? `${item.name} ${getEmojiFlag(item.$group.country)}`
+            : item.name;
+          return item;
+        })
+        .filter(({ $total }) => $total);
+
+      if (this.filterDataByCountryIds.length) {
+        participantsWithValues = participantsWithValues
+          .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
+      }
+      if (this.filterDataByGroupIds.length && this.currentSlide === 2) {
+        participantsWithValues = participantsWithValues
+          .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
+      }
+      if (this.orderDataBy) {
+        participantsWithValues = orderBy(
+          participantsWithValues,
+          this.orderDataBy.keys,
+          this.orderDataBy.dirs,
+        );
+      }
+      return participantsWithValues;
     },
 
     orderDataBys() {
@@ -318,69 +350,6 @@ export default Vue.extend({
       };
     },
 
-    relevantGroups() {
-      let groupsWithValues = this.groups
-        .map((item) => {
-          const sum = sumItemEntries(this.relevantEntries, item, 'groupId');
-          // eslint-disable-next-line no-param-reassign
-          item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
-          // eslint-disable-next-line no-param-reassign
-          item.$total = sum;
-          // eslint-disable-next-line no-param-reassign
-          item.$average = getParticipantRelativeValue(sum, this.relevantParticipants, item[idKey]);
-          return item;
-        })
-        .filter(({ $total }) => $total);
-
-      if (this.filterDataByCountryIds.length) {
-        groupsWithValues = groupsWithValues
-          .filter(({ country }) => this.filterDataByCountryIds.includes(country));
-      }
-      if (this.orderDataBy) {
-        groupsWithValues = orderBy(
-          groupsWithValues,
-          this.orderDataBy.keys,
-          this.orderDataBy.dirs,
-        );
-      }
-      return groupsWithValues;
-    },
-    relevantParticipants() {
-      let participantsWithValues = this.participants
-        .map((item) => {
-          // eslint-disable-next-line no-param-reassign
-          item.$group = findByIdKey(this.groups, item.groupId);
-          // eslint-disable-next-line no-param-reassign
-          item.$name = item.$group && item.$group.country
-            ? `${item.name} ${getEmojiFlag(item.$group.country)}`
-            : item.name;
-          // eslint-disable-next-line no-param-reassign
-          item.$total = sumItemEntries(this.relevantEntries, item, 'participantId');
-          return item;
-        })
-        .filter(({ $total }) => $total);
-
-      if (this.filterDataByCountryIds.length) {
-        participantsWithValues = participantsWithValues
-          .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
-      }
-      if (this.filterDataByGroupIds.length && this.currentSlide === 2) {
-        participantsWithValues = participantsWithValues
-          .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
-      }
-      if (this.orderDataBy) {
-        participantsWithValues = orderBy(
-          participantsWithValues,
-          this.orderDataBy.keys,
-          this.orderDataBy.dirs,
-        );
-      }
-      return participantsWithValues;
-    },
-    relevantEntries() {
-      return this.entries;
-    },
-
     groupDataPerParticipant() {
       const groupDataPerParticipant = this.gatherData(this.relevantGroups, '$average');
       // console.log(groupDataPerParticipant);
@@ -402,7 +371,6 @@ export default Vue.extend({
     ...mapActions([
       'bindGroups',
       'bindParticipants',
-      'bindEntries',
     ]),
 
     gatherData(items, key = '$total') {
@@ -438,7 +406,7 @@ export default Vue.extend({
 
         > .v-subheader {
           position: fixed;
-          top: 56px;
+          top: calc(56px + env(safe-area-inset-top)); // for toolbar
           left: 0;
           right: 0;
           background: white;
@@ -450,7 +418,7 @@ export default Vue.extend({
       position: fixed;
       left: 0 !important;
       right: 0 !important;
-      bottom: 56px;
+      bottom: calc(56px + env(safe-area-inset-bottom)); // for bottom nav
     }
   }
 }

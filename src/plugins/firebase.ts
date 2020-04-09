@@ -38,10 +38,14 @@ export const idKey = 'id';
 export interface FirebaseObject {
   [idKey]: string;
 }
-export interface Challenge extends FirebaseObject {
+export interface WithStats {
+  $total: number;
+  $count: number;
+}
+export interface Challenge extends FirebaseObject, WithStats {
   name: string;
 }
-export interface Group extends FirebaseObject {
+export interface Group extends FirebaseObject, WithStats {
   challengeId: string;
   name: string;
   color?: string;
@@ -49,7 +53,7 @@ export interface Group extends FirebaseObject {
   $name?: string;
   $challenge?: Challenge;
 }
-export interface Participant extends FirebaseObject {
+export interface Participant extends FirebaseObject, WithStats {
   challengeId: string;
   groupId: string;
   name: string;
@@ -61,8 +65,7 @@ export interface Entry extends FirebaseObject {
   groupId: string;
   participantId: string;
   value: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createdAt: any; // @TODO: Timestamp
+  createdAt: firebase.firestore.Timestamp;
   $challenge?: Challenge;
   $group?: Group;
   $participant?: Participant;
