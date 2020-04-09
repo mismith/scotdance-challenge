@@ -3,6 +3,7 @@ import firebase from 'firebase/app';
 import 'firebase/analytics';
 import 'firebase/firestore';
 import { firestorePlugin } from 'vuefire';
+import { isDebugging } from '@/config';
 
 Vue.use(firestorePlugin);
 
@@ -15,8 +16,15 @@ export const app = firebase.initializeApp({
   appId: '1:925970077234:web:6ded4b043fe3ff76424e2b',
   measurementId: 'G-4EKW3LECT3',
 });
-export const db = app.firestore();
 export const analytics = firebase.analytics();
+export const db = app.firestore();
+
+if (isDebugging) {
+  db.settings({
+    host: 'localhost:5002',
+    ssl: false,
+  });
+}
 
 export const firestoreRefs = {
   challenges: db.collection('challenges'),

@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { vuexfireMutations, firestoreAction } from 'vuexfire';
+import { isDebugging } from '@/config';
 import {
   firebase,
   firestore,
@@ -14,8 +15,6 @@ import {
 
 Vue.use(Vuex);
 
-const isDebugging = window.location.hostname === 'localhost';
-
 export default new Vuex.Store({
   state: {
     challenges: [] as Challenge[],
@@ -23,8 +22,10 @@ export default new Vuex.Store({
     participants: [] as Participant[],
     entries: [] as Entry[],
   },
+  // eslint-disable-next-line
+  // @ts-ignore
   getters: {
-    challenges: ({ challenges }) => {
+    challenges({ challenges }) {
       if (isDebugging) {
         return [
           {
