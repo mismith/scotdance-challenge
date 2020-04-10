@@ -81,7 +81,12 @@ import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
 import compliments from '@/store/compliments';
-import { firestore, firestoreRefs, idKey } from '@/plugins/firebase';
+import {
+  firestore,
+  firestoreRefs,
+  idKey,
+  capitalize,
+} from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
@@ -174,22 +179,12 @@ export default Vue.extend({
     },
   },
   methods: {
+    capitalize,
     ...mapActions([
       'bindGroups',
       'bindParticipants',
     ]),
 
-    capitalize(text) {
-      let str = (text || '').trim();
-      if (str) {
-        str = str.split(' ');
-        for (let i = 0, x = str.length; i < x; i += 1) {
-          str[i] = str[i][0].toUpperCase() + str[i].substr(1);
-        }
-        return str.join(' ');
-      }
-      return str;
-    },
     getRandomCompliment() {
       return compliments[Math.round(Math.random() * compliments.length - 1)];
     },
