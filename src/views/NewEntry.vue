@@ -190,7 +190,10 @@ export default Vue.extend({
     },
 
     async handleAdd(item, refKey) {
-      return firestoreRefs[refKey].add(item);
+      return firestoreRefs[refKey].add({
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        ...item,
+      });
     },
     async handleAddGroup(group) {
       const { id } = await this.handleAdd(group, 'groups');
@@ -199,13 +202,12 @@ export default Vue.extend({
     async handleAddEntry() {
       try {
         this.isAddEntryLoading = true;
-        await firestoreRefs.entries.add({
+        await this.handleAdd({
           challengeId: this.challengeId,
           groupId: this.groupId,
           participantId: this.participantId,
           value: Number(this.value),
-          createdAt: firestore.FieldValue.serverTimestamp(),
-        });
+        }, 'entries');
         this.value = null;
 
         this.successMessage = this.getRandomCompliment();

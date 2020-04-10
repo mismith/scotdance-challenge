@@ -48,7 +48,12 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
-import { firestoreRefs, idKey, capitalize } from '@/plugins/firebase';
+import {
+  firestore,
+  firestoreRefs,
+  idKey,
+  capitalize,
+} from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 
@@ -91,7 +96,10 @@ export default Vue.extend({
     ]),
 
     async handleAddChallenge(challenge: object) {
-      const { id } = await firestoreRefs.challenges.add(challenge);
+      const { id } = await firestoreRefs.challenges.add({
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        ...challenge,
+      });
       // @ts-ignore
       this.challengeId = id;
     },

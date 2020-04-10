@@ -46,12 +46,14 @@ export interface Challenge extends FirebaseObject, WithStats {
   name: string;
   startAt: firebase.firestore.Timestamp;
   endAt: firebase.firestore.Timestamp;
+  createdAt: firebase.firestore.Timestamp;
 }
 export interface Group extends FirebaseObject, WithStats {
   challengeId: string;
   name: string;
   color?: string;
   country?: string;
+  createdAt: firebase.firestore.Timestamp;
   $name?: string;
   $challenge?: Challenge;
 }
@@ -59,6 +61,7 @@ export interface Participant extends FirebaseObject, WithStats {
   challengeId: string;
   groupId: string;
   name: string;
+  createdAt: firebase.firestore.Timestamp;
   $challenge?: Challenge;
   $group?: Group;
 }
