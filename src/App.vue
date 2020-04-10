@@ -14,7 +14,13 @@
         :items="challenges"
         item-text="name"
         :item-value="idKey"
-        :add-new="name => handleAddChallenge(name)"
+        :add-new="name => challengeToEdit = {
+          name: capitalize(name),
+        }"
+      />
+      <EditChallenge
+        v-model="challengeToEdit"
+        @done="challenge => handleAddChallenge(challenge)"
       />
     </v-app-bar>
 
@@ -42,8 +48,9 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
-import { firestoreRefs, idKey } from '@/plugins/firebase';
+import { firestoreRefs, idKey, capitalize } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
+import EditChallenge from '@/components/EditChallenge.vue';
 
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default Vue.extend({
@@ -57,6 +64,7 @@ export default Vue.extend({
   data: () => ({
     idKey,
     loading: true,
+    challengeToEdit: undefined,
   }),
   computed: {
     ...mapGetters([
@@ -77,14 +85,15 @@ export default Vue.extend({
     },
   },
   methods: {
+    capitalize,
     ...mapActions([
       'bindChallenges',
     ]),
 
-    async handleAddChallenge(name: string) {
-      await firestoreRefs.challenges.add({
-        name,
-      });
+    async handleAddChallenge(challenge: object) {
+      const { id } = await firestoreRefs.challenges.add(challenge);
+      // @ts-ignore
+      this.challengeId = id;
     },
   },
   async created() {
@@ -93,6 +102,7 @@ export default Vue.extend({
   },
   components: {
     Picker,
+    EditChallenge,
   },
 });
 </script>
