@@ -86,6 +86,7 @@ import {
   firestoreRefs,
   idKey,
   capitalize,
+  findByIdKey,
 } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
@@ -174,6 +175,21 @@ export default Vue.extend({
             : undefined,
         });
         this.participantId = null;
+      },
+      immediate: true,
+    },
+    currentParticipantId: {
+      handler(participantId) {
+        if (window.$crisp) {
+          const challenge = findByIdKey(this.challenges, this.challengeId);
+          const group = findByIdKey(this.groups, this.groupId);
+          const participant = findByIdKey(this.participants, participantId);
+          window.$crisp.push(['set', 'session:data', [[
+            ['Challenge', (challenge && challenge.name) || ''],
+            ['Group', (group && group.name) || ''],
+            ['Participant', (participant && participant.name) || ''],
+          ]]]);
+        }
       },
       immediate: true,
     },
