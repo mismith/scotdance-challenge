@@ -18,6 +18,58 @@
             rounded
             required
           />
+          <v-menu
+            v-model="isPickingStartAt"
+            :close-on-content-click="false"
+            offset-y
+            nudge-top="24"
+            min-width="290"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="value.startAt"
+                label="Start Date"
+                outlined
+                rounded
+                clearable
+                readonly
+                append-icon="mdi-calendar"
+                @click:append="isPickingStartAt = true"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker
+              v-model="value.startAt"
+              no-title
+              @input="isPickingStartAt = false"
+            />
+          </v-menu>
+          <v-menu
+            v-model="isPickingEndAt"
+            :close-on-content-click="false"
+            offset-y
+            nudge-top="24"
+            min-width="290"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field
+                v-model="value.endAt"
+                label="End Date"
+                outlined
+                rounded
+                clearable
+                readonly
+                append-icon="mdi-calendar"
+                @click:append="isPickingEndAt = true"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker
+              v-model="value.endAt"
+              no-title
+              @input="isPickingEndAt = false"
+            />
+          </v-menu>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn
@@ -48,6 +100,8 @@ export default Vue.extend({
   data() {
     return {
       idKey,
+      isPickingStartAt: false,
+      isPickingEndAt: false,
     };
   },
   computed: {
