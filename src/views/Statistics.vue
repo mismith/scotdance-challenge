@@ -1,7 +1,6 @@
 <template>
   <div class="Statistics flex-page">
-    <Loader v-if="loading" class="ma-auto" />
-    <div v-else-if="!relevantParticipants.length" class="d-flex flex-column align-center ma-auto">
+    <div v-if="!relevantParticipants.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
@@ -106,11 +105,10 @@
 
 <script>
 import Vue from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters } from 'vuex';
 import get from 'lodash.get';
 import orderBy from 'lodash.orderby';
 import { idKey, findByIdKey } from '@/plugins/firebase';
-import Loader from '@/components/Loader.vue';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 import FilterBy from '@/components/FilterBy.vue';
 import SortBy from '@/components/SortBy.vue';
@@ -159,22 +157,9 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-      loading: true,
     };
   },
   watch: {
-    currentChallengeId: {
-      async handler() {
-        this.loading = true;
-        await Promise.all([
-          this.groupsPromise,
-          this.participantsPromise,
-        ]);
-        this.loading = false;
-      },
-      immediate: true,
-    },
-
     orderDataBys(orderDataBys) {
       const orderDataBy = findByIdKey(orderDataBys, this.orderDataById);
       if (!orderDataBy) {
@@ -188,26 +173,6 @@ export default Vue.extend({
       'groups',
       'participants',
     ]),
-
-    currentChallengeId() {
-      const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
-      return challenge && challenge[idKey];
-    },
-
-    groupsPromise() {
-      return this.bindGroups({
-        mutateQuery: this.currentChallengeId
-          ? (query) => query.where('challengeId', '==', this.currentChallengeId)
-          : undefined,
-      });
-    },
-    participantsPromise() {
-      return this.bindParticipants({
-        mutateQuery: this.currentChallengeId
-          ? (query) => query.where('challengeId', '==', this.currentChallengeId)
-          : undefined,
-      });
-    },
 
     relevantGroups() {
       let groupsWithValues = this.groups
@@ -368,10 +333,6 @@ export default Vue.extend({
   },
   methods: {
     get,
-    ...mapActions([
-      'bindGroups',
-      'bindParticipants',
-    ]),
 
     gatherData(items, key = '$total') {
       return {
@@ -383,7 +344,6 @@ export default Vue.extend({
     },
   },
   components: {
-    Loader,
     HorizontalBarChart,
     FilterBy,
     SortBy,

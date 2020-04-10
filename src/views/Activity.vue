@@ -1,6 +1,10 @@
 <template>
   <div class="Activity flex-page pr-6" :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }">
-    <v-timeline :dense="$vuetify.breakpoint.smAndDown">
+    <div v-if="!entries.length" class="d-flex flex-column align-center ma-auto">
+      <v-icon x-large>mdi-cancel</v-icon>
+      No entries yet
+    </div>
+    <v-timeline v-else :dense="$vuetify.breakpoint.smAndDown">
       <ActivityTimelineItem
         v-for="entry in entries"
         :key="entry[idKey]"
@@ -9,11 +13,6 @@
         @flag="flaggedEntry = entry"
       />
     </v-timeline>
-    <Loader v-if="loading" class="ma-auto" />
-    <div v-else-if="!entries.length" class="d-flex flex-column align-center ma-auto">
-      <v-icon x-large>mdi-cancel</v-icon>
-      No entries yet
-    </div>
 
     <v-dialog v-model="isFlagging" max-width="320">
       <v-card>
@@ -42,9 +41,8 @@
 <script>
 import Vue from 'vue';
 import { idKey } from '@/plugins/firebase';
-import Loader from '@/components/Loader.vue';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters } from 'vuex';
 
 export default Vue.extend({
   name: 'Activity',
@@ -54,8 +52,6 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-
-      loading: true,
 
       isFlagging: false,
       flaggedEntry: undefined,
@@ -73,19 +69,6 @@ export default Vue.extend({
     },
   },
   watch: {
-    currentChallengeId: {
-      async handler(challengeId) {
-        this.loading = true;
-        await this.bindEntries({
-          mutateQuery: challengeId
-            ? (query) => query.where('challengeId', '==', challengeId)
-            : undefined,
-        });
-        this.loading = false;
-      },
-      immediate: true,
-    },
-
     flaggedEntry(flaggedEntry) {
       this.isFlagging = Boolean(flaggedEntry);
     },
@@ -96,10 +79,6 @@ export default Vue.extend({
     },
   },
   methods: {
-    ...mapActions([
-      'bindEntries',
-    ]),
-
     openLiveChat() {
       if (window.$crisp) {
         if (this.flaggedEntry) {
@@ -116,7 +95,6 @@ export default Vue.extend({
     },
   },
   components: {
-    Loader,
     ActivityTimelineItem,
   },
 });

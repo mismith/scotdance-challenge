@@ -48,7 +48,7 @@
 <script>
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
-import { firestoreRefs, idKey } from '@/plugins/firebase';
+import { idKey, findByIdKey } from '@/plugins/firebase';
 
 export default Vue.extend({
   name: 'ActivityTimelineItem',
@@ -59,25 +59,23 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-
-      challenge: null,
-      group: null,
-      participant: null,
     };
   },
   computed: {
     ...mapGetters([
       'challenges',
+      'groups',
+      'participants',
     ]),
-  },
-  watch: {
-    entry: {
-      handler(entry) {
-        this.$bind('challenge', firestoreRefs.challenges.doc(entry.challengeId));
-        this.$bind('group', firestoreRefs.groups.doc(entry.groupId));
-        this.$bind('participant', firestoreRefs.participants.doc(entry.participantId));
-      },
-      immediate: true,
+
+    challenge() {
+      return this.entry && findByIdKey(this.challenges, this.entry.challengeId);
+    },
+    group() {
+      return this.entry && findByIdKey(this.groups, this.entry.groupId);
+    },
+    participant() {
+      return this.entry && findByIdKey(this.participants, this.entry.participantId);
     },
   },
 });

@@ -25,7 +25,8 @@
     </v-app-bar>
 
     <v-content>
-      <router-view :challenge-id="challengeId" />
+      <Loader v-if="$route.name !== 'home' && loading" class="ma-auto" />
+      <router-view v-else :challenge-id="challengeId" />
     </v-content>
 
     <v-bottom-navigation app grow shift color="primary">
@@ -55,6 +56,7 @@ import {
   idKey,
   capitalize,
 } from '@/plugins/firebase';
+import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 
@@ -76,6 +78,11 @@ export default Vue.extend({
     ...mapGetters([
       'challenges',
     ]),
+
+    currentChallengeId() {
+      const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
+      return challenge && challenge[idKey];
+    },
   },
   watch: {
     challenges: {
@@ -89,11 +96,39 @@ export default Vue.extend({
       },
       immediate: true,
     },
+
+    currentChallengeId: {
+      async handler(challengeId) {
+        this.loading = true;
+        await Promise.all([
+          this.bindGroups({
+            mutateQuery: challengeId
+              ? (query) => query.where('challengeId', '==', challengeId)
+              : undefined,
+          }),
+          this.bindParticipants({
+            mutateQuery: challengeId
+              ? (query) => query.where('challengeId', '==', challengeId)
+              : undefined,
+          }),
+          this.bindEntries({
+            mutateQuery: challengeId
+              ? (query) => query.where('challengeId', '==', challengeId)
+              : undefined,
+          }),
+        ]);
+        this.loading = false;
+      },
+      immediate: true,
+    },
   },
   methods: {
     capitalize,
     ...mapActions([
       'bindChallenges',
+      'bindGroups',
+      'bindParticipants',
+      'bindEntries',
     ]),
 
     async handleAddChallenge(challenge: object) {
@@ -113,9 +148,9 @@ export default Vue.extend({
     }
 
     await this.bindChallenges();
-    this.loading = false;
   },
   components: {
+    Loader,
     Picker,
     EditChallenge,
   },

@@ -28,7 +28,7 @@
         outlined
         rounded
         clearable
-        :items="participants"
+        :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
         :disabled="!currentChallengeId || !currentGroupId"
@@ -78,7 +78,7 @@
 
 <script>
 import Vue from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
 import compliments from '@/store/compliments';
 import {
@@ -145,6 +145,10 @@ export default Vue.extend({
       return participant && participant[idKey];
     },
 
+    relevantParticipants() {
+      return this.participants.filter(({ groupId }) => groupId === this.currentGroupId);
+    },
+
     hasSuccessMessage: {
       get() {
         return Boolean(this.successMessage);
@@ -157,11 +161,6 @@ export default Vue.extend({
   watch: {
     currentChallengeId: {
       async handler(challengeId) {
-        this.bindGroups({
-          mutateQuery: challengeId
-            ? (query) => query.where('challengeId', '==', challengeId)
-            : undefined,
-        });
         this.groupId = null;
         this.participantId = null;
 
@@ -176,11 +175,6 @@ export default Vue.extend({
     },
     currentGroupId: {
       async handler(groupId) {
-        this.bindParticipants({
-          mutateQuery: groupId
-            ? (query) => query.where('groupId', '==', groupId)
-            : undefined,
-        });
         this.participantId = null;
 
         if (window.$crisp) {
@@ -206,10 +200,6 @@ export default Vue.extend({
   },
   methods: {
     capitalize,
-    ...mapActions([
-      'bindGroups',
-      'bindParticipants',
-    ]),
 
     getRandomCompliment() {
       return compliments[Math.round(Math.random() * compliments.length - 1)];
