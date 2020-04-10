@@ -30,7 +30,8 @@ export default new Vuex.Store({
         return [
           {
             [idKey]: 'test_challenge',
-            name: 'Test',
+            name: 'Test Challenge',
+            createdAt: firestore.Timestamp.now(),
           },
           ...challenges,
         ];
@@ -44,6 +45,7 @@ export default new Vuex.Store({
             [idKey]: 'test_group',
             challengeId: 'test_challenge',
             name: 'Test Group',
+            createdAt: firestore.Timestamp.now(),
           },
           ...groups,
         ];
@@ -58,6 +60,7 @@ export default new Vuex.Store({
             challengeId: 'test_challenge',
             groupId: 'test_group',
             name: 'Test Participant',
+            createdAt: firestore.Timestamp.now(),
           },
           ...participants,
         ];

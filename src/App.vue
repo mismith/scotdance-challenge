@@ -48,6 +48,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
+import { version } from '@/../package.json';
 import {
   firestore,
   firestoreRefs,
@@ -105,6 +106,12 @@ export default Vue.extend({
     },
   },
   async created() {
+    // @ts-ignore
+    if (window.$crisp) {
+      // @ts-ignore
+      window.$crisp.push(['set', 'session:data', [[['AppVersion', version]]]]);
+    }
+
     await this.bindChallenges();
     this.loading = false;
   },
