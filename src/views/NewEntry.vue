@@ -164,6 +164,13 @@ export default Vue.extend({
         });
         this.groupId = null;
         this.participantId = null;
+
+        if (window.$crisp) {
+          const challenge = findByIdKey(this.challenges, challengeId);
+          if (challenge) {
+            window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
+          }
+        }
       },
       immediate: true,
     },
@@ -175,20 +182,23 @@ export default Vue.extend({
             : undefined,
         });
         this.participantId = null;
+
+        if (window.$crisp) {
+          const group = findByIdKey(this.groups, groupId);
+          if (group) {
+            window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]]);
+          }
+        }
       },
       immediate: true,
     },
     currentParticipantId: {
       handler(participantId) {
         if (window.$crisp) {
-          const challenge = findByIdKey(this.challenges, this.challengeId);
-          const group = findByIdKey(this.groups, this.groupId);
           const participant = findByIdKey(this.participants, participantId);
-          window.$crisp.push(['set', 'session:data', [[
-            ['Challenge', (challenge && challenge.name) || ''],
-            ['Group', (group && group.name) || ''],
-            ['Participant', (participant && participant.name) || ''],
-          ]]]);
+          if (participant) {
+            window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]]);
+          }
         }
       },
       immediate: true,
