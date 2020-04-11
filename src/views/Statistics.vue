@@ -69,7 +69,7 @@
               :placeholder="`All ${$root.labels.Group}s`"
               :menu-props="{ width: '100%', offsetY: true }"
               :hide-no-data="false"
-              :items="relevantGroups"
+              :items="filteredGroups"
               :item-value="idKey"
               item-text="$name"
               class="mt-4 mx-4"
@@ -174,7 +174,7 @@ export default Vue.extend({
       'participants',
     ]),
 
-    relevantGroups() {
+    filteredGroups() {
       let groupsWithValues = this.groups
         .map((item) => {
           // eslint-disable-next-line no-param-reassign
@@ -193,6 +193,10 @@ export default Vue.extend({
         groupsWithValues = groupsWithValues
           .filter(({ country }) => this.filterDataByCountryIds.includes(country));
       }
+      return groupsWithValues;
+    },
+    relevantGroups() {
+      let groupsWithValues = this.filteredGroups;
       if (this.orderDataBy) {
         groupsWithValues = orderBy(
           groupsWithValues,
