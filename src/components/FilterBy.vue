@@ -13,7 +13,7 @@
         <v-subheader>Filter by</v-subheader>
         <Picker
           v-model="currentCountryIds"
-          label="Country"
+          :label="$root.labels.Country"
           outlined
           rounded
           clearable

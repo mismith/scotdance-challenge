@@ -49,7 +49,7 @@
           </v-text-field>
           <Picker
             v-model="value.country"
-            label="Country"
+            :label="$root.labels.Country"
             outlined
             rounded
             :menu-props="{ maxWidth: 288 }"

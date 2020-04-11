@@ -30,6 +30,8 @@ new Vue({
       Group: 'Studio',
       Participant: 'Dancer',
       Entry: 'Entry',
+
+      Country: 'Country',
     },
   }),
   render: (h) => h(App),
