@@ -46,7 +46,7 @@
         outlined
         :placeholder="`Add New ${$root.labels.Entry}`"
         :disabled="!currentChallengeId || !currentGroupId || !currentParticipantId"
-        :error="value !== null && value <= 0"
+        :error="value !== undefined && value !== null && !isValid"
       />
 
       <v-btn
@@ -55,13 +55,7 @@
         x-large
         block
         color="primary"
-        :disabled="
-          !currentChallengeId
-          || !currentGroupId
-          || !currentParticipantId
-          || value <= 0
-          || isAddEntryLoading
-        "
+        :disabled="!isValid"
         :loading="isAddEntryLoading"
       >
         Submit
@@ -163,6 +157,13 @@ export default Vue.extend({
       return this.participants.filter(({ groupId }) => groupId === this.currentGroupId);
     },
 
+    isValid() {
+      return this.currentChallengeId
+        && this.currentGroupId
+        && this.currentParticipantId
+        && Number(this.value) > 0;
+    },
+
     hasSuccessMessage: {
       get() {
         return Boolean(this.successMessage);
@@ -231,6 +232,7 @@ export default Vue.extend({
     },
     async handleAddEntry() {
       if (this.isAddEntryLoading) return; // don't allow dupes
+      if (!this.isValid) return; // don't allow invalids
 
       try {
         this.isAddEntryLoading = true;
@@ -238,7 +240,7 @@ export default Vue.extend({
           challengeId: this.challengeId,
           groupId: this.groupId,
           participantId: this.participantId,
-          value: Number(this.value),
+          value: Number(this.value) || 0,
         }, 'entries');
         this.value = null;
 
