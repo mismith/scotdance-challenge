@@ -14,7 +14,7 @@
     >
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <FilterBy :groups="relevantGroups" :country-ids.sync="filterDataByCountryIds" />
+          <FilterBy :groups="extendedGroups" :country-ids.sync="filterDataByCountryIds" />
           {{ $root.labels.Group }} Averages
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
@@ -33,7 +33,7 @@
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <FilterBy :groups="relevantGroups" :country-ids.sync="filterDataByCountryIds" />
+          <FilterBy :groups="extendedGroups" :country-ids.sync="filterDataByCountryIds" />
           {{ $root.labels.Group }} Totals
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
@@ -53,7 +53,7 @@
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
           <FilterBy
-            :groups="relevantGroups"
+            :groups="extendedGroups"
             :country-ids.sync="filterDataByCountryIds"
             :dirty="Boolean(filterDataByGroupIds.length)"
           >
@@ -174,8 +174,8 @@ export default Vue.extend({
       'participants',
     ]),
 
-    filteredGroups() {
-      let groupsWithValues = this.groups
+    extendedGroups() {
+      return this.groups
         .map((item) => {
           // eslint-disable-next-line no-param-reassign
           item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
@@ -188,7 +188,9 @@ export default Vue.extend({
           return item;
         })
         .filter(({ $total }) => $total);
-
+    },
+    filteredGroups() {
+      let groupsWithValues = this.extendedGroups;
       if (this.filterDataByCountryIds.length) {
         groupsWithValues = groupsWithValues
           .filter(({ country }) => this.filterDataByCountryIds.includes(country));

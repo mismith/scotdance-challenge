@@ -13,7 +13,11 @@ export async function fetchCountryCode() {
 
 export const availableCountries = orderBy(
   Object.entries(countries)
-    .map(([code, data]) => ({ [idKey]: code, $name: `${data.name} ${data.emoji}`, ...data }))
+    .map(([code, data]) => ({
+      [idKey]: code,
+      $name: `${data.name} ${data.emoji}`,
+      ...data,
+    }))
     .filter(({ languages }) => languages.includes('en')),
   ['name'],
 );
