@@ -55,7 +55,13 @@
         x-large
         block
         color="primary"
-        :disabled="!currentChallengeId || !currentGroupId || !currentParticipantId || value <= 0"
+        :disabled="
+          !currentChallengeId
+          || !currentGroupId
+          || !currentParticipantId
+          || value <= 0
+          || isAddEntryLoading
+        "
         :loading="isAddEntryLoading"
       >
         Submit
@@ -216,6 +222,8 @@ export default Vue.extend({
       this.groupId = id;
     },
     async handleAddEntry() {
+      if (this.isAddEntryLoading) return; // don't allow dupes
+
       try {
         this.isAddEntryLoading = true;
         await this.handleAdd({
