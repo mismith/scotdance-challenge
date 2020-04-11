@@ -77,7 +77,14 @@
           </FilterBy>
           <div class="d-flex">
             {{ $root.labels.Participant }} Totals
-            <v-chip small color="primary" class="ml-3">Top 100</v-chip>
+            <v-chip
+              v-if="relevantParticipants.length !== relevantParticipantsData.length"
+              small
+              color="primary"
+              class="ml-3"
+            >
+              Top 100
+            </v-chip>
           </div>
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
