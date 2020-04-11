@@ -75,13 +75,16 @@
               class="mt-4 mx-4"
             />
           </FilterBy>
-          {{ $root.labels.Participant }} Totals
+          <div class="d-flex">
+            {{ $root.labels.Participant }} Totals
+            <v-chip small color="primary" class="ml-3">Top 100</v-chip>
+          </div>
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
         <div class="chartjs-size-wrapper">
           <div
-            v-if="!relevantParticipants.length"
+            v-if="!relevantParticipantsData.length"
             class="d-flex flex-column align-center ma-auto"
           >
             <v-icon x-large>mdi-cancel</v-icon>
@@ -94,7 +97,7 @@
             class="flex-shrink-0"
             :styles="{
               position: 'relative',
-              height: `${Math.max(128, 24 * (relevantParticipants.length + 1))}px`,
+              height: `${Math.max(128, 24 * (relevantParticipantsData.length + 1))}px`,
             }"
           />
         </div>
@@ -235,6 +238,9 @@ export default Vue.extend({
       }
       return participantsWithValues;
     },
+    relevantParticipantsData() {
+      return this.relevantParticipants.slice(0, 100);
+    },
 
     orderDataBys() {
       return [
@@ -301,7 +307,7 @@ export default Vue.extend({
             afterTitle: ([{ index }]) => {
               if (!this.filterDataByGroupIds.length) return null;
 
-              const participant = this.relevantParticipants[index] || {};
+              const participant = this.relevantParticipantsData[index] || {};
               return participant && `${participant.$group.name}`;
             },
           },
@@ -309,7 +315,7 @@ export default Vue.extend({
         elements: {
           rectangle: {
             backgroundColor: ({ dataIndex }) => get(
-              this.relevantParticipants,
+              this.relevantParticipantsData,
               `${dataIndex}.$group.color`,
               '#000000',
             ),
@@ -329,7 +335,7 @@ export default Vue.extend({
       return groupData;
     },
     participantData() {
-      const participantData = this.gatherData(this.relevantParticipants);
+      const participantData = this.gatherData(this.relevantParticipantsData);
       // console.log(participantData);
       return participantData;
     },
