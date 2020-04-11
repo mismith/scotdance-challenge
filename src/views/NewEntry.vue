@@ -7,8 +7,8 @@
         outlined
         rounded
         clearable
-        :items="groups"
-        item-text="name"
+        :items="relevantGroups"
+        item-text="$name"
         :item-value="idKey"
         :disabled="!currentChallengeId"
         :add-new="name => groupToEdit = {
@@ -86,6 +86,7 @@
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
+import { getEmojiFlag } from 'countries-list';
 import compliments from '@/store/compliments';
 import {
   firestore,
@@ -151,6 +152,13 @@ export default Vue.extend({
       return participant && participant[idKey];
     },
 
+    relevantGroups() {
+      return this.groups.map((item) => {
+        // eslint-disable-next-line no-param-reassign
+        item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
+        return item;
+      });
+    },
     relevantParticipants() {
       return this.participants.filter(({ groupId }) => groupId === this.currentGroupId);
     },
