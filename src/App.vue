@@ -51,6 +51,7 @@ import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
 import { version } from '@/../package.json';
 import {
+  firebase,
   firestore,
   firestoreRefs,
   idKey,
@@ -80,6 +81,7 @@ export default Vue.extend({
     ]),
 
     currentChallengeId() {
+      // @ts-ignore
       const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
       return challenge && challenge[idKey];
     },
@@ -99,24 +101,29 @@ export default Vue.extend({
 
     currentChallengeId: {
       async handler(challengeId) {
+        // @ts-ignore
         this.loading = true;
         await Promise.all([
+          // @ts-ignore
           this.bindGroups({
             mutateQuery: challengeId
-              ? (query) => query.where('challengeId', '==', challengeId)
+              ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
+          // @ts-ignore
           this.bindParticipants({
             mutateQuery: challengeId
-              ? (query) => query.where('challengeId', '==', challengeId)
+              ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
+          // @ts-ignore
           this.bindEntries({
             mutateQuery: challengeId
-              ? (query) => query.where('challengeId', '==', challengeId)
+              ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
         ]);
+        // @ts-ignore
         this.loading = false;
       },
       immediate: true,
