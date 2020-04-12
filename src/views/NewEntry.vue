@@ -31,7 +31,7 @@
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
-        :disabled="!challengeId || !currentGroupId"
+        :disabled="!challengeId || !groupId"
         :add-new="name => handleAdd({
           name: capitalize(name),
           challengeId,
@@ -45,7 +45,7 @@
         rounded
         outlined
         :placeholder="`Add New ${$root.labels.Entry}`"
-        :disabled="!challengeId || !currentGroupId || !currentParticipantId"
+        :disabled="!challengeId || !groupId || !participantId"
         :error="value !== undefined && value !== null && !isValid"
       />
 
@@ -95,14 +95,6 @@ import AddCompliment from '@/components/AddCompliment.vue';
 
 export default Vue.extend({
   name: 'NewEntry',
-  localStorage: {
-    groupId: {
-      type: String,
-    },
-    participantId: {
-      type: String,
-    },
-  },
   data() {
     return {
       idKey,
@@ -131,13 +123,21 @@ export default Vue.extend({
       'challengeId',
     ]),
 
-    currentGroupId() {
-      const group = this.groups.find(({ [idKey]: id }) => id === this.groupId);
-      return group && group[idKey];
+    groupId: {
+      get() {
+        return this.$store.getters.groupId;
+      },
+      set(groupId) {
+        return this.$store.commit('setGroupId', groupId);
+      },
     },
-    currentParticipantId() {
-      const participant = this.participants.find(({ [idKey]: id }) => id === this.participantId);
-      return participant && participant[idKey];
+    participantId: {
+      get() {
+        return this.$store.getters.participantId;
+      },
+      set(participantId) {
+        return this.$store.commit('setParticipantId', participantId);
+      },
     },
 
     relevantGroups() {
@@ -148,13 +148,13 @@ export default Vue.extend({
       });
     },
     relevantParticipants() {
-      return this.participants.filter(({ groupId }) => groupId === this.currentGroupId);
+      return this.participants.filter(({ groupId }) => groupId === this.groupId);
     },
 
     isValid() {
       return this.challengeId
-        && this.currentGroupId
-        && this.currentParticipantId
+        && this.groupId
+        && this.participantId
         && Number(this.value) > 0;
     },
 
@@ -175,27 +175,9 @@ export default Vue.extend({
       },
       immediate: true,
     },
-    currentGroupId: {
-      async handler(groupId) {
+    groupId: {
+      async handler() {
         this.participantId = null;
-
-        if (window.$crisp) {
-          const group = findByIdKey(this.groups, groupId);
-          if (group) {
-            window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]]);
-          }
-        }
-      },
-      immediate: true,
-    },
-    currentParticipantId: {
-      handler(participantId) {
-        if (window.$crisp) {
-          const participant = findByIdKey(this.participants, participantId);
-          if (participant) {
-            window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]]);
-          }
-        }
       },
       immediate: true,
     },

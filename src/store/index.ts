@@ -22,7 +22,10 @@ export default new Vuex.Store({
     groups: [] as Group[],
     participants: [] as Participant[],
     entries: [] as Entry[],
-    challengeId: undefined,
+
+    challengeId: '',
+    groupId: '',
+    participantId: '',
   },
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore
@@ -89,6 +92,12 @@ export default new Vuex.Store({
     challengeId({ challengeId }) {
       return challengeId || Vue.localStorage.get('challengeId', '', String);
     },
+    groupId({ groupId }) {
+      return groupId || Vue.localStorage.get('groupId', '', String);
+    },
+    participantId({ participantId }) {
+      return participantId || Vue.localStorage.get('participantId', '', String);
+    },
   },
   mutations: {
     ...vuexfireMutations,
@@ -102,6 +111,23 @@ export default new Vuex.Store({
         window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
       }
     },
+    setGroupId(state: any, to) {
+      const group = findByIdKey<Group>(state.groups, to);
+      state.groupId = (group && group[idKey]) || '';
+      Vue.localStorage.set('groupId', state.groupId);
+
+      if (window.$crisp && group) {
+        window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]]);
+      }
+    },
+    setParticipantId(state: any, to) {
+      const participant = findByIdKey<Participant>(state.participants, to);
+      state.participantId = (participant && participant[idKey]) || '';
+      Vue.localStorage.set('participantId', state.participantId);
+
+      if (window.$crisp && participant) {
+        window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]]);
+      }
     },
   },
   actions: {
