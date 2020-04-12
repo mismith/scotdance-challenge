@@ -32,7 +32,10 @@
           width="48"
           style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
         />
-        of <strong v-if="group">{{ group.name }}</strong>
+        of <strong v-if="group">
+          {{ group.name }}
+          <span v-if="group.country">{{ getEmojiFlag(group.country) }}</span>
+        </strong>
         <v-skeleton-loader
           v-else
           type="text"
@@ -48,6 +51,7 @@
 <script>
 import Vue from 'vue';
 import { mapGetters, mapState } from 'vuex';
+import { getEmojiFlag } from '@/services/country';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 
 export default Vue.extend({
@@ -79,6 +83,9 @@ export default Vue.extend({
     participant() {
       return this.entry && findByIdKey(this.participants, this.entry.participantId);
     },
+  },
+  methods: {
+    getEmojiFlag,
   },
 });
 </script>
