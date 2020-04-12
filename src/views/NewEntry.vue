@@ -78,7 +78,7 @@
 
 <script>
 import Vue from 'vue';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
 import { getEmojiFlag } from 'countries-list';
 import compliments from '@/store/compliments';
@@ -87,7 +87,6 @@ import {
   firestoreRefs,
   idKey,
   capitalize,
-  findByIdKey,
 } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
@@ -116,16 +115,18 @@ export default Vue.extend({
     };
   },
   computed: {
+    ...mapState([
+      'challengeId',
+    ]),
     ...mapGetters([
       'challenges',
       'groups',
       'participants',
-      'challengeId',
     ]),
 
     groupId: {
       get() {
-        return this.$store.getters.groupId;
+        return this.$store.state.groupId;
       },
       set(groupId) {
         return this.$store.commit('setGroupId', groupId);
@@ -133,7 +134,7 @@ export default Vue.extend({
     },
     participantId: {
       get() {
-        return this.$store.getters.participantId;
+        return this.$store.state.participantId;
       },
       set(participantId) {
         return this.$store.commit('setParticipantId', participantId);
@@ -168,18 +169,12 @@ export default Vue.extend({
     },
   },
   watch: {
-    challengeId: {
-      async handler() {
-        this.groupId = null;
-        this.participantId = null;
-      },
-      immediate: true,
+    challengeId() {
+      this.groupId = null;
+      this.participantId = null;
     },
-    groupId: {
-      async handler() {
-        this.participantId = null;
-      },
-      immediate: true,
+    groupId() {
+      this.participantId = null;
     },
   },
   methods: {

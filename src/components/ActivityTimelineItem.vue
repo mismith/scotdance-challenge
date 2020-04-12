@@ -47,7 +47,7 @@
 
 <script>
 import Vue from 'vue';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 
 export default Vue.extend({
@@ -61,11 +61,13 @@ export default Vue.extend({
     };
   },
   computed: {
+    ...mapState([
+      'challengeId',
+    ]),
     ...mapGetters([
       'challenges',
       'groups',
       'participants',
-      'challengeId',
     ]),
 
     challenge() {

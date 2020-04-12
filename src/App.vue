@@ -26,7 +26,7 @@
 
     <v-content>
       <Loader v-if="$route.name !== 'home' && loading" class="ma-auto" />
-      <router-view v-else />
+      <router-view v-show="$route.name === 'home' || !loading" />
     </v-content>
 
     <v-bottom-navigation app grow shift color="primary">
@@ -75,7 +75,7 @@ export default Vue.extend({
 
     challengeId: {
       get() {
-        return this.$store.getters.challengeId;
+        return this.$store.state.challengeId;
       },
       set(challengeId) {
         return this.$store.commit('setChallengeId', challengeId);

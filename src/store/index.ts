@@ -1,7 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { vuexfireMutations, firestoreAction } from 'vuexfire';
-import { isDebugging } from '@/config';
+import VuexPersistence from 'vuex-persist';
+import { isDebugging, $package } from '@/config';
 import {
   firebase,
   firestore,
@@ -16,12 +17,32 @@ import {
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+interface State {
+  challenges: Challenge[];
+  groups: Group[];
+  participants: Participant[];
+  entries: Entry[];
+
+  challengeId: string;
+  groupId: string;
+  participantId: string;
+}
+
+const vuexLocal = new VuexPersistence<State>({
+  key: $package.name,
+  reducer: ({ challengeId, groupId, participantId }) => ({
+    challengeId,
+    groupId,
+    participantId,
+  }),
+});
+
+export default new Vuex.Store<State>({
   state: {
-    challenges: [] as Challenge[],
-    groups: [] as Group[],
-    participants: [] as Participant[],
-    entries: [] as Entry[],
+    challenges: [],
+    groups: [],
+    participants: [],
+    entries: [],
 
     challengeId: '',
     groupId: '',
@@ -88,16 +109,6 @@ export default new Vuex.Store({
       }
       return entries;
     },
-
-    challengeId({ challengeId }) {
-      return challengeId || Vue.localStorage.get('challengeId', '', String);
-    },
-    groupId({ groupId }) {
-      return groupId || Vue.localStorage.get('groupId', '', String);
-    },
-    participantId({ participantId }) {
-      return participantId || Vue.localStorage.get('participantId', '', String);
-    },
   },
   mutations: {
     ...vuexfireMutations,
@@ -105,7 +116,6 @@ export default new Vuex.Store({
     setChallengeId(state: any, to) {
       const challenge = findByIdKey<Challenge>(state.challenges, to);
       state.challengeId = (challenge && challenge[idKey]) || '';
-      Vue.localStorage.set('challengeId', state.challengeId);
 
       if (window.$crisp && challenge) {
         window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
@@ -114,7 +124,6 @@ export default new Vuex.Store({
     setGroupId(state: any, to) {
       const group = findByIdKey<Group>(state.groups, to);
       state.groupId = (group && group[idKey]) || '';
-      Vue.localStorage.set('groupId', state.groupId);
 
       if (window.$crisp && group) {
         window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]]);
@@ -123,7 +132,6 @@ export default new Vuex.Store({
     setParticipantId(state: any, to) {
       const participant = findByIdKey<Participant>(state.participants, to);
       state.participantId = (participant && participant[idKey]) || '';
-      Vue.localStorage.set('participantId', state.participantId);
 
       if (window.$crisp && participant) {
         window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]]);
@@ -157,4 +165,7 @@ export default new Vuex.Store({
       return bindFirestoreRef('entries', mutateQuery(query));
     }),
   },
+  plugins: [
+    vuexLocal.plugin,
+  ],
 });
