@@ -9,7 +9,6 @@
         v-for="entry in entries"
         :key="entry[idKey]"
         :entry="entry"
-        :challenge-id="currentChallengeId"
         @flag="flaggedEntry = entry"
       />
     </v-timeline>
@@ -46,9 +45,6 @@ import { mapGetters } from 'vuex';
 
 export default Vue.extend({
   name: 'Activity',
-  props: {
-    challengeId: String,
-  },
   data() {
     return {
       idKey,
@@ -62,11 +58,6 @@ export default Vue.extend({
       'challenges',
       'entries',
     ]),
-
-    currentChallengeId() {
-      const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
-      return challenge && challenge[idKey];
-    },
   },
   watch: {
     flaggedEntry(flaggedEntry) {

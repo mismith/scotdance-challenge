@@ -10,11 +10,11 @@
         :items="relevantGroups"
         item-text="$name"
         :item-value="idKey"
-        :disabled="!currentChallengeId"
+        :disabled="!challengeId"
         :add-new="name => groupToEdit = {
           name: capitalize(name),
-          color: colors[groups.length % colors.length],
-          challengeId: this.challengeId,
+          color: colors[relevantGroups.length % colors.length],
+          challengeId,
         }"
       />
       <EditGroup
@@ -31,11 +31,11 @@
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
-        :disabled="!currentChallengeId || !currentGroupId"
+        :disabled="!challengeId || !currentGroupId"
         :add-new="name => handleAdd({
           name: capitalize(name),
-          challengeId: this.challengeId,
-          groupId: this.groupId,
+          challengeId,
+          groupId,
         }, 'participants')"
       />
       <v-text-field
@@ -45,7 +45,7 @@
         rounded
         outlined
         :placeholder="`Add New ${$root.labels.Entry}`"
-        :disabled="!currentChallengeId || !currentGroupId || !currentParticipantId"
+        :disabled="!challengeId || !currentGroupId || !currentParticipantId"
         :error="value !== undefined && value !== null && !isValid"
       />
 
@@ -95,9 +95,6 @@ import AddCompliment from '@/components/AddCompliment.vue';
 
 export default Vue.extend({
   name: 'NewEntry',
-  props: {
-    challengeId: String,
-  },
   localStorage: {
     groupId: {
       type: String,
@@ -131,12 +128,9 @@ export default Vue.extend({
       'challenges',
       'groups',
       'participants',
+      'challengeId',
     ]),
 
-    currentChallengeId() {
-      const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
-      return challenge && challenge[idKey];
-    },
     currentGroupId() {
       const group = this.groups.find(({ [idKey]: id }) => id === this.groupId);
       return group && group[idKey];
@@ -158,7 +152,7 @@ export default Vue.extend({
     },
 
     isValid() {
-      return this.currentChallengeId
+      return this.challengeId
         && this.currentGroupId
         && this.currentParticipantId
         && Number(this.value) > 0;
@@ -174,7 +168,7 @@ export default Vue.extend({
     },
   },
   watch: {
-    currentChallengeId: {
+    challengeId: {
       async handler(challengeId) {
         this.groupId = null;
         this.participantId = null;

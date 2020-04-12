@@ -26,7 +26,7 @@
 
     <v-content>
       <Loader v-if="$route.name !== 'home' && loading" class="ma-auto" />
-      <router-view v-else :challenge-id="challengeId" />
+      <router-view v-else />
     </v-content>
 
     <v-bottom-navigation app grow shift color="primary">
@@ -64,12 +64,6 @@ import EditChallenge from '@/components/EditChallenge.vue';
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default Vue.extend({
   name: 'App',
-  // @ts-ignore
-  localStorage: {
-    challengeId: {
-      type: String,
-    },
-  },
   data: () => ({
     idKey,
     loading: true,
@@ -80,26 +74,17 @@ export default Vue.extend({
       'challenges',
     ]),
 
-    currentChallengeId() {
-      // @ts-ignore
-      const challenge = this.challenges.find(({ [idKey]: id }) => id === this.challengeId);
-      return challenge && challenge[idKey];
+    challengeId: {
+      get() {
+        return this.$store.getters.challengeId;
+      },
+      set(challengeId) {
+        return this.$store.commit('setChallengeId', challengeId);
+      },
     },
   },
   watch: {
-    challenges: {
-      handler(challenges) {
-        // @ts-ignore
-        if (!this.loading && challenges && challenges.length === 1) {
-          // auto-pick first challenge if it's the only one
-          // @ts-ignore
-          this.challengeId = challenges[0][idKey];
-        }
-      },
-      immediate: true,
-    },
-
-    currentChallengeId: {
+    challengeId: {
       async handler(challengeId) {
         // @ts-ignore
         this.loading = true;
@@ -154,7 +139,12 @@ export default Vue.extend({
       window.$crisp.push(['set', 'session:data', [[['AppVersion', version]]]]);
     }
 
+    // @ts-ignore
     await this.bindChallenges();
+    if (!this.challengeId && this.challenges.length === 1) {
+      // auto-pick first challenge if it's the only one
+      this.challengeId = this.challenges[0][idKey];
+    }
   },
   components: {
     Loader,

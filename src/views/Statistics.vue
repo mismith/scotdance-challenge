@@ -137,9 +137,6 @@ function abbreviateNumber(number) {
 
 export default Vue.extend({
   name: 'Statistics',
-  props: {
-    challengeId: String,
-  },
   localStorage: {
     currentSlide: {
       type: Number,

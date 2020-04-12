@@ -7,6 +7,7 @@ import {
   firestore,
   firestoreRefs,
   idKey,
+  findByIdKey,
   Challenge,
   Group,
   Participant,
@@ -15,14 +16,15 @@ import {
 
 Vue.use(Vuex);
 
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default new Vuex.Store({
   state: {
     challenges: [] as Challenge[],
     groups: [] as Group[],
     participants: [] as Participant[],
     entries: [] as Entry[],
+    challengeId: undefined,
   },
-  // eslint-disable-next-line
   // @ts-ignore
   getters: {
     challenges({ challenges }) {
@@ -83,9 +85,22 @@ export default new Vuex.Store({
       }
       return entries;
     },
+
+    // @ts-ignore
+    challengeId: ({ challengeId }) => challengeId
+      // @ts-ignore
+      || Vue.localStorage.get('challengeId', '', String),
   },
   mutations: {
     ...vuexfireMutations,
+
+    setChallengeId(state, challengeId) {
+      const challenge = findByIdKey(state.challenges, challengeId);
+      // @ts-ignore
+      state.challengeId = (challenge && challenge[idKey]) || '';
+      // @ts-ignore
+      Vue.localStorage.set('challengeId', state.challengeId);
+    },
   },
   actions: {
     bindChallenges: firestoreAction(({ bindFirestoreRef }, {

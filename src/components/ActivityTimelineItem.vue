@@ -54,7 +54,6 @@ export default Vue.extend({
   name: 'ActivityTimelineItem',
   props: {
     entry: Object,
-    challengeId: String,
   },
   data() {
     return {
@@ -66,6 +65,7 @@ export default Vue.extend({
       'challenges',
       'groups',
       'participants',
+      'challengeId',
     ]),
 
     challenge() {
