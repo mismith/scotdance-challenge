@@ -114,7 +114,7 @@
           <FilterBy
             :groups="extendedGroups"
             :country-ids.sync="filterDataByCountryIds"
-            :dirty="Boolean(filterDataByGroupIds.length)"
+            :dirty="Boolean(filterDataByGroupIds.length || filterDataBySearch)"
           >
             <Picker
               v-model="filterDataByGroupIds"
@@ -131,6 +131,18 @@
               :items="filteredGroups"
               :item-value="idKey"
               item-text="$name"
+              class="mt-4 mx-4"
+            />
+            <v-text-field
+              type="search"
+              v-model="filterDataBySearch"
+              label="Search"
+              outlined
+              rounded
+              clearable
+              multiple
+              dense
+              hide-details
               class="mt-4 mx-4"
             />
           </FilterBy>
@@ -164,6 +176,7 @@
             },
           ]"
           :items="relevantParticipants"
+          :search="filterDataBySearch"
           :footer-props="{
             itemsPerPageOptions: [100],
           }"
@@ -171,6 +184,10 @@
         >
           <template v-slot:[`item.$rank`]="{ item }">
             {{ item.$rank }}
+          </template>
+          <template v-slot:[`item.$group.name`]="{ item }">
+            <v-avatar size="12" :color="item.$group.color" class="mr-1 mt-n1" />
+            {{ item.$group.name }}
           </template>
           <template v-slot:[`item.$group.country`]="{ item }">
             {{ getName(item.$group.country) }}
@@ -227,6 +244,9 @@ export default Vue.extend({
     },
     filterDataByCountryIds: {
       type: Array,
+    },
+    filterDataBySearch: {
+      type: Object, // actually String, but then `undefined` and `null` get encoded improperly
     },
     orderDataById: {
       type: String,
