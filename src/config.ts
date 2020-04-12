@@ -1,2 +1,4 @@
-// eslint-disable-next-line import/prefer-default-export
-export const isDebugging = window.location.hostname === 'localhost';
+import $package from '@/../package.json';
+
+export { $package };
+export const isDebugging = window.location.hostname === 'localhost' && 0;

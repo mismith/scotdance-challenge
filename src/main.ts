@@ -6,15 +6,16 @@ import VueLocalStorage from 'vue-localstorage';
 // @ts-ignore
 import VueInfiniteScroll from 'vue-infinite-scroll';
 import { Promised } from 'vue-promised';
-import App from './App.vue';
-import router from './router';
-import store from './store';
-import vuetify from './plugins/vuetify';
+import { $package } from '@/config';
+import App from '@/App.vue';
+import router from '@/router';
+import store from '@/store';
+import vuetify from '@/plugins/vuetify';
 
 Vue.config.productionTip = false;
 
 Vue.use(VueLocalStorage, {
-  namespace: 'scotdance-challenge',
+  namespace: $package.name,
   bind: true,
 });
 Vue.use(VueInfiniteScroll);

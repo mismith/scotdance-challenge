@@ -49,7 +49,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
-import { version } from '@/../package.json';
+import { $package } from '@/config';
 import {
   firebase,
   firestore,
@@ -127,7 +127,7 @@ export default Vue.extend({
   },
   async created() {
     if (window.$crisp) {
-      window.$crisp.push(['set', 'session:data', [[['AppVersion', version]]]]);
+      window.$crisp.push(['set', 'session:data', [[['AppVersion', $package.version]]]]);
     }
 
     await (this as any).bindChallenges();
