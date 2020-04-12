@@ -247,6 +247,7 @@ export default Vue.extend({
     },
     filterDataBySearch: {
       type: Object, // actually String, but then `undefined` and `null` get encoded improperly
+      default: '',
     },
     orderDataById: {
       type: String,
