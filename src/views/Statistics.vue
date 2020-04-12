@@ -86,7 +86,7 @@
               Top 100
             </v-chip>
           </div>
-          <SortBy v-model="orderDataById" :items="orderDataBys" />
+          <v-btn icon style="visibility: hidden;" />
         </v-subheader>
 
         <div class="chartjs-size-wrapper">
@@ -236,11 +236,13 @@ export default Vue.extend({
         participantsWithValues = participantsWithValues
           .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
       }
-      if (this.orderDataBy) {
+      // always sort by value since Top 100 on alphabetical makes no sense
+      const orderDataBy = findByIdKey(this.orderDataBys, 'value');
+      if (orderDataBy) {
         participantsWithValues = orderBy(
           participantsWithValues,
-          this.orderDataBy.keys,
-          this.orderDataBy.dirs,
+          orderDataBy.keys,
+          orderDataBy.dirs,
         );
       }
       return participantsWithValues;
