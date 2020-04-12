@@ -16,7 +16,6 @@ import {
 
 Vue.use(Vuex);
 
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default new Vuex.Store({
   state: {
     challenges: [] as Challenge[],
@@ -25,6 +24,7 @@ export default new Vuex.Store({
     entries: [] as Entry[],
     challengeId: undefined,
   },
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore
   getters: {
     challenges({ challenges }) {
@@ -86,20 +86,22 @@ export default new Vuex.Store({
       return entries;
     },
 
-    // @ts-ignore
-    challengeId: ({ challengeId }) => challengeId
-      // @ts-ignore
-      || Vue.localStorage.get('challengeId', '', String),
+    challengeId({ challengeId }) {
+      return challengeId || Vue.localStorage.get('challengeId', '', String);
+    },
   },
   mutations: {
     ...vuexfireMutations,
 
-    setChallengeId(state, challengeId) {
-      const challenge = findByIdKey(state.challenges, challengeId);
-      // @ts-ignore
+    setChallengeId(state: any, to) {
+      const challenge = findByIdKey<Challenge>(state.challenges, to);
       state.challengeId = (challenge && challenge[idKey]) || '';
-      // @ts-ignore
       Vue.localStorage.set('challengeId', state.challengeId);
+
+      if (window.$crisp && challenge) {
+        window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
+      }
+    },
     },
   },
   actions: {

@@ -61,7 +61,6 @@ import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
 export default Vue.extend({
   name: 'App',
   data: () => ({
@@ -86,30 +85,25 @@ export default Vue.extend({
   watch: {
     challengeId: {
       async handler(challengeId) {
-        // @ts-ignore
-        this.loading = true;
+        (this as any).loading = true;
         await Promise.all([
-          // @ts-ignore
-          this.bindGroups({
+          (this as any).bindGroups({
             mutateQuery: challengeId
               ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
-          // @ts-ignore
-          this.bindParticipants({
+          (this as any).bindParticipants({
             mutateQuery: challengeId
               ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
-          // @ts-ignore
-          this.bindEntries({
+          (this as any).bindEntries({
             mutateQuery: challengeId
               ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
         ]);
-        // @ts-ignore
-        this.loading = false;
+        (this as any).loading = false;
       },
       immediate: true,
     },
@@ -128,19 +122,15 @@ export default Vue.extend({
         createdAt: firestore.FieldValue.serverTimestamp(),
         ...challenge,
       });
-      // @ts-ignore
-      this.challengeId = id;
+      (this as any).challengeId = id;
     },
   },
   async created() {
-    // @ts-ignore
     if (window.$crisp) {
-      // @ts-ignore
       window.$crisp.push(['set', 'session:data', [[['AppVersion', version]]]]);
     }
 
-    // @ts-ignore
-    await this.bindChallenges();
+    await (this as any).bindChallenges();
     if (!this.challengeId && this.challenges.length === 1) {
       // auto-pick first challenge if it's the only one
       this.challengeId = this.challenges[0][idKey];

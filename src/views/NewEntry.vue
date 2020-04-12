@@ -169,16 +169,9 @@ export default Vue.extend({
   },
   watch: {
     challengeId: {
-      async handler(challengeId) {
+      async handler() {
         this.groupId = null;
         this.participantId = null;
-
-        if (window.$crisp) {
-          const challenge = findByIdKey(this.challenges, challengeId);
-          if (challenge) {
-            window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
-          }
-        }
       },
       immediate: true,
     },
