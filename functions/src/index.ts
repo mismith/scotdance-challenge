@@ -64,12 +64,20 @@ exports.syncAggregateStatistics = functions.https.onRequest((req, res) => {
       tally(stats.participants, participantId, value);
     });
 
+    const { challengeId, groupId, participantId } = req.query;
     await Promise.all(toAggregate.reduce(
-      (acc, key, i) => acc.concat(toAggregateSnaps[i].docs.map((doc) => transaction.set(doc.ref, {
-        $total: firestore.FieldValue.delete(),
-        $count: firestore.FieldValue.delete(),
-        ...stats[key][doc.id],
-      }, { merge: true }))),
+      (acc, key, i) => acc.concat(toAggregateSnaps[i].docs
+        .filter((doc) => {
+          if (key === 'challenges' && challengeId) return doc.id === challengeId;
+          if (key === 'groups' && groupId) return doc.id === groupId;
+          if (key === 'participants' && participantId) return doc.id === participantId;
+          return true;
+        })
+        .map((doc) => transaction.set(doc.ref, {
+          $total: firestore.FieldValue.delete(),
+          $count: firestore.FieldValue.delete(),
+          ...stats[key][doc.id],
+        }, { merge: true }))),
       [] as FirebaseFirestore.Transaction[],
     ));
 
