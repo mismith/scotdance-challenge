@@ -109,6 +109,77 @@
           />
         </div>
       </v-carousel-item>
+      <v-carousel-item>
+        <v-subheader class="primary--text subtitle-1 justify-space-between">
+          <FilterBy
+            :groups="extendedGroups"
+            :country-ids.sync="filterDataByCountryIds"
+            :dirty="Boolean(filterDataByGroupIds.length)"
+          >
+            <Picker
+              v-model="filterDataByGroupIds"
+              :label="$root.labels.Group"
+              outlined
+              rounded
+              clearable
+              multiple
+              dense
+              hide-details
+              :placeholder="`All ${$root.labels.Group}s`"
+              :menu-props="{ width: '100%', offsetY: true }"
+              :hide-no-data="false"
+              :items="filteredGroups"
+              :item-value="idKey"
+              item-text="$name"
+              class="mt-4 mx-4"
+            />
+          </FilterBy>
+          <div class="d-flex">
+            {{ $root.labels.Participant }} Totals
+          </div>
+          <v-btn icon style="visibility: hidden;" />
+        </v-subheader>
+
+        <v-data-table
+          :headers="[
+            {
+              text: '#',
+              value: '$rank',
+            },
+            {
+              text: $root.labels.Participant,
+              value: 'name',
+            },
+            {
+              text: $root.labels.Group,
+              value: '$group.name',
+            },
+            {
+              text: $root.labels.Country,
+              value: '$group.country',
+            },
+            {
+              text: 'Total',
+              value: '$total',
+            },
+          ]"
+          :items="relevantParticipants"
+          :footer-props="{
+            itemsPerPageOptions: [100],
+          }"
+          :class="{ 'mb-6': $vuetify.breakpoint.xsOnly }"
+        >
+          <template v-slot:[`item.$rank`]="{ item }">
+            {{ item.$rank }}
+          </template>
+          <template v-slot:[`item.$group.country`]="{ item }">
+            {{ getName(item.$group.country) }}
+          </template>
+          <template v-slot:[`item.$total`]="{ item }">
+            {{ item.$total.toLocaleString() }}
+          </template>
+        </v-data-table>
+      </v-carousel-item>
     </v-carousel>
   </div>
 </template>
@@ -119,11 +190,11 @@ import { mapGetters } from 'vuex';
 import get from 'lodash.get';
 import orderBy from 'lodash.orderby';
 import { idKey, findByIdKey } from '@/plugins/firebase';
+import { getName, getEmojiFlag } from '@/services/country';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 import FilterBy from '@/components/FilterBy.vue';
 import SortBy from '@/components/SortBy.vue';
 import Picker from '@/components/Picker.vue';
-import { getEmojiFlag } from 'countries-list';
 
 // exponentially curb values to that outliers are less prominent in chart axes
 const flatten = (v) => v ** (1 / 2);
@@ -232,7 +303,7 @@ export default Vue.extend({
         participantsWithValues = participantsWithValues
           .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
       }
-      if (this.filterDataByGroupIds.length && this.currentSlide === 2) {
+      if (this.filterDataByGroupIds.length && this.currentSlide >= 2) {
         participantsWithValues = participantsWithValues
           .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
       }
@@ -245,6 +316,12 @@ export default Vue.extend({
           orderDataBy.dirs,
         );
       }
+      participantsWithValues = participantsWithValues
+        .map((item, index) => {
+          // eslint-disable-next-line no-param-reassign
+          item.$rank = index + 1;
+          return item;
+        });
       return participantsWithValues;
     },
     relevantParticipantsData() {
@@ -351,6 +428,7 @@ export default Vue.extend({
   },
   methods: {
     get,
+    getName,
 
     gatherData(items, key = '$total') {
       return {
