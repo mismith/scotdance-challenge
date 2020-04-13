@@ -41,7 +41,9 @@
       <v-text-field
         v-model="value"
         type="number"
-        min="0"
+        step="1"
+        min="1"
+        max="9999"
         rounded
         outlined
         :placeholder="`Add New ${$root.labels.Entry}`"
@@ -156,7 +158,8 @@ export default Vue.extend({
       return this.challengeId
         && this.groupId
         && this.participantId
-        && Number(this.value) > 0;
+        && Number(this.value) > 0
+        && Number(this.value) <= 9999;
     },
 
     hasSuccessMessage: {
