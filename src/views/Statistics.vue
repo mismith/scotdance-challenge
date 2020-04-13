@@ -475,20 +475,25 @@ export default Vue.extend({
   height: 100%;
 
   .v-carousel {
-    .v-carousel__item {
-      > .v-responsive__content {
-        display: flex;
-        flex-direction: column;
-        padding-top: 48px; // for subheader
-        padding-bottom: 50px; // for carousel delimeters
+    .v-window__container {
+      // HACK: for some reason the carousel transition caused a flicker of improper styling
+      &:not(.v-window__container--is-active) {
+        .v-carousel__item {
+          > .v-responsive__content {
+            display: flex;
+            flex-direction: column;
+            padding-top: 48px; // for subheader
+            padding-bottom: 50px; // for carousel delimeters
 
-        > .v-subheader {
-          position: fixed;
-          top: calc(56px + env(safe-area-inset-top)); // for toolbar
-          left: 0;
-          right: 0;
-          background: white;
-          z-index: 1;
+            > .v-subheader {
+              position: fixed;
+              top: calc(56px + env(safe-area-inset-top)); // for toolbar
+              left: 0;
+              right: 0;
+              background: white;
+              z-index: 1;
+            }
+          }
         }
       }
     }
