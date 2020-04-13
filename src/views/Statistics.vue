@@ -136,13 +136,14 @@
             <v-text-field
               type="search"
               v-model="filterDataBySearch"
-              label="Search"
+              :label="$root.labels.Participant"
               outlined
               rounded
               clearable
               multiple
               dense
               hide-details
+              placeholder="Search"
               class="mt-4 mx-4"
             />
           </FilterBy>
