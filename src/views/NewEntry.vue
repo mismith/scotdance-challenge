@@ -1,5 +1,7 @@
 <template>
   <div class="NewEntry flex-page">
+    <ChallengeProgress v-if="currentChallenge" :challenge="currentChallenge" />
+
     <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
       <Picker
         v-model="groupId"
@@ -66,7 +68,7 @@
 
     <v-spacer />
     <AddCompliment
-      class="d-flex justify-center pa-6"
+      class="d-flex justify-center pb-6"
       @input="msg => successMessage = msg"
     />
 
@@ -89,7 +91,9 @@ import {
   firestoreRefs,
   idKey,
   capitalize,
+  findByIdKey,
 } from '@/plugins/firebase';
+import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
@@ -125,6 +129,10 @@ export default Vue.extend({
       'groups',
       'participants',
     ]),
+
+    currentChallenge() {
+      return findByIdKey(this.challenges, this.challengeId);
+    },
 
     groupId: {
       get() {
@@ -220,6 +228,7 @@ export default Vue.extend({
     },
   },
   components: {
+    ChallengeProgress,
     Picker,
     EditGroup,
     AddCompliment,
