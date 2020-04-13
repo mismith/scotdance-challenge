@@ -8,7 +8,7 @@
       <v-chip
         color="rgba(0, 0, 0, 0.5)"
         dark
-        :style="{ height: 24 }"
+        style="height: 24px;"
       >
         <div>
           This {{ $root.labels.Challenge.toLowerCase() }}
