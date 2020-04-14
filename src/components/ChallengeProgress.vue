@@ -12,8 +12,8 @@
       >
         <div>
           This {{ $root.labels.Challenge.toLowerCase() }}
-          {{ status }}
-          <strong>{{ distance }}</strong>
+          {{ status[0] }}
+          <strong>{{ status[1] }}</strong>
         </div>
       </v-chip>
     </v-progress-linear>
@@ -28,7 +28,6 @@ import {
   endOfDay,
   differenceInMilliseconds,
   formatDistanceStrict,
-  isBefore,
   isAfter,
 } from 'date-fns';
 import { Challenge } from '../plugins/firebase';
@@ -52,20 +51,22 @@ export default Vue.extend({
       return null;
     },
     status() {
-      if (this.startDate && isAfter((this as any).startDate, new Date())) {
-        return 'starts';
+      const { startDate, endDate } = (this as any);
+      if (startDate) {
+        const distance = formatDistanceStrict(startDate, new Date(), { addSuffix: true });
+        if (isAfter(startDate, new Date())) {
+          return ['starts', distance];
+        }
+        if (!endDate) {
+          return ['started', distance];
+        }
       }
-      if (this.endDate && isBefore((this as any).endDate, new Date())) {
-        return 'ended';
-      }
-      if (this.startDate || this.endDate) {
-        return 'ends';
-      }
-      return null;
-    },
-    distance() {
-      if (this.endDate) {
-        return formatDistanceStrict((this as any).endDate, new Date(), { addSuffix: true });
+      if (endDate) {
+        const distance = formatDistanceStrict(endDate, new Date(), { addSuffix: true });
+        if (isAfter(endDate, new Date())) {
+          return ['ends', distance];
+        }
+        return ['ended', distance];
       }
       return null;
     },
