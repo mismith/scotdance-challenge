@@ -66,7 +66,7 @@ export default new Vuex.Store<State>({
   mutations: {
     ...vuexfireMutations,
 
-    setChallengeId(state: any, to) {
+    setChallengeId(state, to) {
       const challenge = findByIdKey<Challenge>(state.challenges, to);
       state.challengeId = (challenge && challenge[idKey]) || '';
 
@@ -74,7 +74,7 @@ export default new Vuex.Store<State>({
         window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
       }
     },
-    setGroupId(state: any, to) {
+    setGroupId(state, to) {
       const group = findByIdKey<Group>(state.groups, to);
       state.groupId = (group && group[idKey]) || '';
 
@@ -82,7 +82,7 @@ export default new Vuex.Store<State>({
         window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]]);
       }
     },
-    setParticipantId(state: any, to) {
+    setParticipantId(state, to) {
       const participant = findByIdKey<Participant>(state.participants, to);
       state.participantId = (participant && participant[idKey]) || '';
 
