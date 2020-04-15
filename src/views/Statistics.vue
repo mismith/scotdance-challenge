@@ -1,6 +1,6 @@
 <template>
   <div class="Statistics flex-page">
-    <div v-if="!relevantParticipants.length" class="d-flex flex-column align-center ma-auto">
+    <div v-if="!filteredParticipants.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
@@ -288,52 +288,48 @@ export default Vue.extend({
         .filter(({ $total }) => $total);
     },
     filteredGroups() {
-      let groupsWithValues = this.extendedGroups;
+      let filteredGroups = this.extendedGroups;
       if (this.filterDataByCountryIds.length) {
-        groupsWithValues = groupsWithValues
+        filteredGroups = filteredGroups
           .filter(({ country }) => this.filterDataByCountryIds.includes(country));
       }
-      return groupsWithValues;
+      return filteredGroups;
     },
     relevantGroups() {
-      let groupsWithValues = this.filteredGroups;
+      let relevantGroups = this.filteredGroups;
       if (this.orderDataBy) {
-        groupsWithValues = orderBy(
-          groupsWithValues,
-          this.orderDataBy.keys,
-          this.orderDataBy.dirs,
-        );
+        relevantGroups = orderBy(relevantGroups, this.orderDataBy.keys, this.orderDataBy.dirs);
       }
-      return groupsWithValues;
+      return relevantGroups;
+    },
+
+    filteredParticipants() {
+      return this.participants.filter(({ $total }) => $total);
     },
     relevantParticipants() {
-      let participantsWithValues = this.participants
+      let relevantParticipants = this.participants
         .filter(({ $total }) => $total);
 
       if (this.filterDataByCountryIds.length) {
-        participantsWithValues = participantsWithValues
+        relevantParticipants = relevantParticipants
           .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
       }
       if (this.filterDataByGroupIds.length && this.currentSlide >= 2) {
-        participantsWithValues = participantsWithValues
+        relevantParticipants = relevantParticipants
           .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
       }
       // always sort by value since Top 100 on alphabetical makes no sense
       const orderDataBy = findByIdKey(this.orderDataBys, 'value');
       if (orderDataBy) {
-        participantsWithValues = orderBy(
-          participantsWithValues,
-          orderDataBy.keys,
-          orderDataBy.dirs,
-        );
+        relevantParticipants = orderBy(relevantParticipants, orderDataBy.keys, orderDataBy.dirs);
       }
-      participantsWithValues = participantsWithValues
+      relevantParticipants = relevantParticipants
         .map((item, index) => {
           // eslint-disable-next-line no-param-reassign
           item.$rank = index + 1;
           return item;
         });
-      return participantsWithValues;
+      return relevantParticipants;
     },
     relevantParticipantsData() {
       return this.relevantParticipants.slice(0, 100);
