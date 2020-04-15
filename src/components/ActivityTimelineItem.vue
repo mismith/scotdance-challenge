@@ -42,7 +42,15 @@
           width="48"
           style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
         />
-        at <strong>{{ entry.createdAt.toDate().toLocaleString() }}</strong>
+        at <strong v-if="entry.createdAt">
+          {{ entry.createdAt.toDate().toLocaleString() }}
+        </strong>
+        <v-skeleton-loader
+          v-else
+          type="text"
+          width="48"
+          style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
+        />
       </v-card-text>
     </v-card>
   </v-timeline-item>
