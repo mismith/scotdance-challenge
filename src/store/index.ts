@@ -127,9 +127,10 @@ export default new Vuex.Store<State>({
     bindEntries: firestoreAction(({ bindFirestoreRef }, {
       mutateQuery = (query: firebase.firestore.Query) => query,
       limit = 50,
+      options = {},
     } = {}) => {
       const query = firestoreRefs.entries.orderBy('createdAt', 'desc').limit(limit);
-      return bindFirestoreRef('entries', mutateQuery(query));
+      return bindFirestoreRef('entries', mutateQuery(query), options);
     }),
   },
   plugins: [

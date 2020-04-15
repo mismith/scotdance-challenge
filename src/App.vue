@@ -98,11 +98,6 @@ export default Vue.extend({
               ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
-          (this as any).bindEntries({
-            mutateQuery: challengeId
-              ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
-              : undefined,
-          }),
         ]);
         (this as any).loading = false;
       },

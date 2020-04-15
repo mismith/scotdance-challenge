@@ -12,6 +12,18 @@
         @flag="flaggedEntry = entry"
       />
     </v-timeline>
+    <v-btn
+      v-if="!isShowingAllEntries || isLoadingMore"
+      fab
+      small
+      color="primary"
+      :loading="isLoadingMore"
+      class="mr-auto mb-10"
+      :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
+      @click="loadMore()"
+    >
+      <v-icon>mdi-dots-vertical</v-icon>
+    </v-btn>
 
     <v-dialog v-model="isFlagging" max-width="320">
       <v-card>
@@ -41,7 +53,9 @@
 import Vue from 'vue';
 import { idKey } from '@/plugins/firebase';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
-import { mapGetters } from 'vuex';
+import { mapState, mapGetters, mapActions } from 'vuex';
+
+const INCREMENT = 20;
 
 export default Vue.extend({
   name: 'Activity',
@@ -49,17 +63,35 @@ export default Vue.extend({
     return {
       idKey,
 
+      limit: 0,
+      isLoadingMore: false,
+
       isFlagging: false,
       flaggedEntry: undefined,
     };
   },
   computed: {
+    ...mapState([
+      'challengeId',
+    ]),
     ...mapGetters([
       'challenges',
       'entries',
     ]),
+
+    isShowingAllEntries() {
+      return this.entries.length < this.limit;
+    },
   },
   watch: {
+    challengeId: {
+      handler() {
+        this.limit = 0;
+        this.loadMore();
+      },
+      immediate: true,
+    },
+
     flaggedEntry(flaggedEntry) {
       this.isFlagging = Boolean(flaggedEntry);
     },
@@ -70,6 +102,10 @@ export default Vue.extend({
     },
   },
   methods: {
+    ...mapActions([
+      'bindEntries',
+    ]),
+
     openLiveChat() {
       if (window.$crisp) {
         if (this.flaggedEntry) {
@@ -83,6 +119,23 @@ export default Vue.extend({
         throw new Error('Live chat not found');
       }
       this.flaggedEntry = null;
+    },
+
+    async loadMore() {
+      if (this.isShowingAllEntries || this.isLoadingMore) return;
+
+      this.isLoadingMore = true;
+      this.limit += INCREMENT;
+      await this.bindEntries({
+        mutateQuery: this.challengeId
+          ? (query) => query.where('challengeId', '==', this.challengeId)
+          : undefined,
+        limit: this.limit,
+        options: {
+          wait: true,
+        },
+      });
+      this.isLoadingMore = false;
     },
   },
   components: {
