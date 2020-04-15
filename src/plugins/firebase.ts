@@ -63,7 +63,6 @@ export interface Participant extends FirebaseObject, WithStats {
   name: string;
   createdAt: firebase.firestore.Timestamp;
   $name?: string;
-  $challenge?: Challenge;
   $group?: Group;
 }
 export interface Entry extends FirebaseObject {
@@ -72,8 +71,6 @@ export interface Entry extends FirebaseObject {
   participantId: string;
   value: number;
   createdAt: firebase.firestore.Timestamp;
-  $challenge?: Challenge;
-  $group?: Group;
   $participant?: Participant;
 }
 

@@ -51,31 +51,33 @@ export default new Vuex.Store<State>({
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore
   getters: {
+    /* eslint-disable no-param-reassign */
     challenges({ challenges }) {
       return challenges;
     },
-    groups({ groups }) {
+    groups({ groups }, { challenges }) {
       return groups.map((item) => {
-        // eslint-disable-next-line no-param-reassign
+        item.$challenge = findByIdKey(challenges, item.challengeId);
         item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
-
         return item;
       });
     },
     participants({ participants }, { groups }) {
       return participants.map((item) => {
-        // eslint-disable-next-line no-param-reassign
         item.$group = findByIdKey(groups, item.groupId);
-        // eslint-disable-next-line no-param-reassign
         item.$name = item.$group && item.$group.country
           ? `${item.name} ${getEmojiFlag(item.$group.country)}`
           : item.name;
         return item;
       });
     },
-    entries({ entries }) {
-      return entries;
+    entries({ entries }, { participants }) {
+      return entries.map((item) => {
+        item.$participant = findByIdKey(participants, item.participantId);
+        return item;
+      });
     },
+    /* eslint-enable no-param-reassign */
   },
   mutations: {
     ...vuexfireMutations,
