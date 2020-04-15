@@ -1,5 +1,5 @@
 <template>
-  <v-app class="App">
+  <v-app class="App" :class="{ isDebugging }">
     <v-app-bar v-if="$route.name !== 'home'" app color="primary" height="56">
       <Picker
         v-model="challengeId"
@@ -49,7 +49,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
-import { $package } from '@/config';
+import { $package, isDebugging } from '@/config';
 import {
   firebase,
   firestore,
@@ -64,6 +64,7 @@ import EditChallenge from '@/components/EditChallenge.vue';
 export default Vue.extend({
   name: 'App',
   data: () => ({
+    isDebugging,
     idKey,
     loading: true,
     challengeToEdit: undefined,
@@ -156,6 +157,18 @@ export default Vue.extend({
 }
 
 .App {
+  &.isDebugging {
+    .v-bottom-navigation {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        #0001,
+        #0001 5px,
+        transparent 0,
+        transparent 10px,
+      );
+    }
+  }
+
   &,
   .v-application--wrap {
     // override Vuetify default (100vh) to solve Safari issue
