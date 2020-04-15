@@ -2,10 +2,9 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import { vuexfireMutations, firestoreAction } from 'vuexfire';
 import VuexPersistence from 'vuex-persist';
-import { isDebugging, $package } from '@/config';
+import { $package } from '@/config';
 import {
   firebase,
-  firestore,
   firestoreRefs,
   idKey,
   findByIdKey,
@@ -52,61 +51,15 @@ export default new Vuex.Store<State>({
   // @ts-ignore
   getters: {
     challenges({ challenges }) {
-      if (isDebugging) {
-        return [
-          {
-            [idKey]: 'test_challenge',
-            name: 'Test Challenge',
-            createdAt: firestore.Timestamp.now(),
-          },
-          ...challenges,
-        ];
-      }
       return challenges;
     },
-    groups: ({ groups }) => {
-      if (isDebugging) {
-        return [
-          {
-            [idKey]: 'test_group',
-            challengeId: 'test_challenge',
-            name: 'Test Group',
-            createdAt: firestore.Timestamp.now(),
-          },
-          ...groups,
-        ];
-      }
+    groups({ groups }) {
       return groups;
     },
-    participants: ({ participants }) => {
-      if (isDebugging) {
-        return [
-          {
-            [idKey]: 'test_participant',
-            challengeId: 'test_challenge',
-            groupId: 'test_group',
-            name: 'Test Participant',
-            createdAt: firestore.Timestamp.now(),
-          },
-          ...participants,
-        ];
-      }
+    participants({ participants }) {
       return participants;
     },
-    entries: ({ entries }) => {
-      if (isDebugging) {
-        return [
-          {
-            [idKey]: 'test_entry',
-            challengeId: 'test_challenge',
-            groupId: 'test_group',
-            participantId: 'test_participant',
-            value: 1000,
-            createdAt: firestore.Timestamp.now(),
-          },
-          ...entries,
-        ];
-      }
+    entries({ entries }) {
       return entries;
     },
   },
