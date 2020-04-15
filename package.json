@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "emulate": "firebase emulators:start --only=firestore,functions",
+    "emulate": "firebase emulators:start --only=firestore,functions  --import=.",
     "dev": "yarn --cwd functions run dev & yarn run emulate & yarn run serve",
     "deploy": "yarn version && yarn --cwd functions run build && yarn run build && firebase deploy"
   },
