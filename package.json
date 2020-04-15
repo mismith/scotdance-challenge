@@ -8,7 +8,9 @@
     "lint": "vue-cli-service lint",
     "emulate": "firebase emulators:start --only=firestore,functions  --import=.",
     "dev": "yarn --cwd functions run dev & yarn run emulate & yarn run serve",
-    "deploy": "yarn version && yarn --cwd functions run build && yarn run build && firebase deploy"
+    "predeploy": "yarn version && yarn --cwd functions run build && yarn run build",
+    "deploy": "firebase deploy",
+    "postdeploy": "git push origin master"
   },
   "dependencies": {
     "chart.js": "^2.9.3",
