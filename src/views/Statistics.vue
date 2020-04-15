@@ -14,7 +14,10 @@
     >
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <FilterBy :groups="extendedGroups" :country-ids.sync="filterDataByCountryIds" />
+          <FilterBy
+            :all-groups="extendedGroups"
+            :country-ids.sync="filterDataByCountryIds"
+          />
           {{ $root.labels.Group }} Averages
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
@@ -33,7 +36,10 @@
       </v-carousel-item>
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
-          <FilterBy :groups="extendedGroups" :country-ids.sync="filterDataByCountryIds" />
+          <FilterBy
+            :all-groups="extendedGroups"
+            :country-ids.sync="filterDataByCountryIds"
+          />
           {{ $root.labels.Group }} Totals
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
@@ -53,28 +59,11 @@
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
           <FilterBy
-            :groups="extendedGroups"
+            :all-groups="extendedGroups"
             :country-ids.sync="filterDataByCountryIds"
-            :dirty="Boolean(filterDataByGroupIds.length)"
-          >
-            <Picker
-              v-model="filterDataByGroupIds"
-              :label="$root.labels.Group"
-              outlined
-              rounded
-              clearable
-              multiple
-              dense
-              hide-details
-              :placeholder="`All ${$root.labels.Group}s`"
-              :menu-props="{ width: '100%', offsetY: true }"
-              :hide-no-data="false"
-              :items="filteredGroups"
-              :item-value="idKey"
-              item-text="$name"
-              class="mt-4 mx-4"
-            />
-          </FilterBy>
+            :filtered-groups="filteredGroups"
+            :group-ids.sync="filterDataByGroupIds"
+          />
           <div class="d-flex">
             {{ $root.labels.Participant }} Totals
             <v-chip
@@ -112,41 +101,13 @@
       <v-carousel-item>
         <v-subheader class="primary--text subtitle-1 justify-space-between">
           <FilterBy
-            :groups="extendedGroups"
+            :all-groups="extendedGroups"
             :country-ids.sync="filterDataByCountryIds"
-            :dirty="Boolean(filterDataByGroupIds.length || filterDataBySearch)"
-          >
-            <Picker
-              v-model="filterDataByGroupIds"
-              :label="$root.labels.Group"
-              outlined
-              rounded
-              clearable
-              multiple
-              dense
-              hide-details
-              :placeholder="`All ${$root.labels.Group}s`"
-              :menu-props="{ width: '100%', offsetY: true }"
-              :hide-no-data="false"
-              :items="filteredGroups"
-              :item-value="idKey"
-              item-text="$name"
-              class="mt-4 mx-4"
-            />
-            <v-text-field
-              type="search"
-              v-model="filterDataBySearch"
-              :label="$root.labels.Participant"
-              outlined
-              rounded
-              clearable
-              multiple
-              dense
-              hide-details
-              placeholder="Search"
-              class="mt-4 mx-4"
-            />
-          </FilterBy>
+            :filtered-groups="filteredGroups"
+            :group-ids.sync="filterDataByGroupIds"
+            searchable
+            :search-query.sync="filterDataBySearch"
+          />
           <div class="d-flex">
             {{ $root.labels.Participant }} Totals
           </div>
@@ -212,7 +173,6 @@ import { getName } from '@/services/country';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 import FilterBy from '@/components/FilterBy.vue';
 import SortBy from '@/components/SortBy.vue';
-import Picker from '@/components/Picker.vue';
 
 // exponentially curb values to that outliers are less prominent in chart axes
 const flatten = (v) => v ** (1 / 2);
@@ -450,7 +410,6 @@ export default Vue.extend({
     HorizontalBarChart,
     FilterBy,
     SortBy,
-    Picker,
   },
 });
 </script>
