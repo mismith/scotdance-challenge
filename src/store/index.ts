@@ -3,6 +3,7 @@ import Vuex from 'vuex';
 import { vuexfireMutations, firestoreAction } from 'vuexfire';
 import VuexPersistence from 'vuex-persist';
 import { $package } from '@/config';
+import { getEmojiFlag } from '@/services/country';
 import {
   firebase,
   firestoreRefs,
@@ -54,10 +55,23 @@ export default new Vuex.Store<State>({
       return challenges;
     },
     groups({ groups }) {
-      return groups;
+      return groups.map((item) => {
+        // eslint-disable-next-line no-param-reassign
+        item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
+
+        return item;
+      });
     },
-    participants({ participants }) {
-      return participants;
+    participants({ participants }, { groups }) {
+      return participants.map((item) => {
+        // eslint-disable-next-line no-param-reassign
+        item.$group = findByIdKey(groups, item.groupId);
+        // eslint-disable-next-line no-param-reassign
+        item.$name = item.$group && item.$group.country
+          ? `${item.name} ${getEmojiFlag(item.$group.country)}`
+          : item.name;
+        return item;
+      });
     },
     entries({ entries }) {
       return entries;

@@ -84,7 +84,6 @@
 import Vue from 'vue';
 import { mapGetters, mapState } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
-import { getEmojiFlag } from 'countries-list';
 import compliments from '@/store/compliments';
 import {
   firestore,
@@ -152,11 +151,7 @@ export default Vue.extend({
     },
 
     relevantGroups() {
-      return this.groups.map((item) => {
-        // eslint-disable-next-line no-param-reassign
-        item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
-        return item;
-      });
+      return this.groups;
     },
     relevantParticipants() {
       return this.participants.filter(({ groupId }) => groupId === this.groupId);

@@ -62,6 +62,7 @@ export interface Participant extends FirebaseObject, WithStats {
   groupId: string;
   name: string;
   createdAt: firebase.firestore.Timestamp;
+  $name?: string;
   $challenge?: Challenge;
   $group?: Group;
 }

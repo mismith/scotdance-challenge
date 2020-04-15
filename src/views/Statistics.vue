@@ -208,7 +208,7 @@ import { mapGetters } from 'vuex';
 import get from 'lodash.get';
 import orderBy from 'lodash.orderby';
 import { idKey, findByIdKey } from '@/plugins/firebase';
-import { getName, getEmojiFlag } from '@/services/country';
+import { getName } from '@/services/country';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 import FilterBy from '@/components/FilterBy.vue';
 import SortBy from '@/components/SortBy.vue';
@@ -278,8 +278,6 @@ export default Vue.extend({
       return this.groups
         .map((item) => {
           // eslint-disable-next-line no-param-reassign
-          item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
-          // eslint-disable-next-line no-param-reassign
           item.$average = getParticipantRelativeValue(
             item.$total,
             this.relevantParticipants,
@@ -310,15 +308,6 @@ export default Vue.extend({
     },
     relevantParticipants() {
       let participantsWithValues = this.participants
-        .map((item) => {
-          // eslint-disable-next-line no-param-reassign
-          item.$group = findByIdKey(this.groups, item.groupId);
-          // eslint-disable-next-line no-param-reassign
-          item.$name = item.$group && item.$group.country
-            ? `${item.name} ${getEmojiFlag(item.$group.country)}`
-            : item.name;
-          return item;
-        })
         .filter(({ $total }) => $total);
 
       if (this.filterDataByCountryIds.length) {
