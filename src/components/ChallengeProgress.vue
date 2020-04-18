@@ -22,15 +22,8 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import {
-  parse,
-  startOfDay,
-  endOfDay,
-  differenceInMilliseconds,
-  formatDistanceStrict,
-  isAfter,
-} from 'date-fns';
-import { Challenge } from '../plugins/firebase';
+import { differenceInMilliseconds, formatDistanceStrict, isAfter } from 'date-fns';
+import { getChallengeStartDate, getChallengeEndDate } from '@/services/date';
 
 export default Vue.extend({
   name: 'ChallengeProgress',
@@ -39,16 +32,10 @@ export default Vue.extend({
   },
   computed: {
     startDate() {
-      if (this.challenge && (this.challenge as Challenge).startAt) {
-        return startOfDay(parse(this.challenge.startAt, 'yyyy-MM-dd', new Date()));
-      }
-      return null;
+      return getChallengeStartDate(this.challenge);
     },
     endDate() {
-      if (this.challenge && (this.challenge as Challenge).endAt) {
-        return endOfDay(parse(this.challenge.endAt, 'yyyy-MM-dd', new Date()));
-      }
-      return null;
+      return getChallengeEndDate(this.challenge);
     },
     status() {
       const { startDate, endDate } = (this as any);

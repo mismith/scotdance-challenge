@@ -12,7 +12,7 @@
         :items="relevantGroups"
         item-text="$name"
         :item-value="idKey"
-        :disabled="!challengeId"
+        :disabled="!isChallengeActive || !challengeId"
         :add-new="name => groupToEdit = {
           name: capitalize(name),
           color: colors[relevantGroups.length % colors.length],
@@ -33,7 +33,7 @@
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
-        :disabled="!challengeId || !groupId"
+        :disabled="!isChallengeActive || !challengeId || !groupId"
         :add-new="name => handleAdd({
           name: capitalize(name),
           challengeId,
@@ -49,7 +49,7 @@
         rounded
         outlined
         :placeholder="`Add New ${$root.labels.Entry}`"
-        :disabled="!challengeId || !groupId || !participantId"
+        :disabled="!isChallengeActive || !challengeId || !groupId || !participantId"
         :error="value !== undefined && value !== null && !isValid"
       />
 
@@ -59,7 +59,7 @@
         x-large
         block
         color="primary"
-        :disabled="!isValid"
+        :disabled="!isChallengeActive || !isValid"
         :loading="isAddEntryLoading"
       >
         Submit
@@ -84,6 +84,7 @@
 import Vue from 'vue';
 import { mapGetters, mapState } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
+import { isBefore, isAfter } from 'date-fns';
 import compliments from '@/store/compliments';
 import {
   firestore,
@@ -96,6 +97,7 @@ import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
+import { getChallengeStartDate, getChallengeEndDate } from '../services/date';
 
 export default Vue.extend({
   name: 'NewEntry',
@@ -164,6 +166,15 @@ export default Vue.extend({
         && Number(this.value) > 0
         && Number(this.value) <= 9999;
     },
+    isChallengeActive() {
+      if (this.currentChallenge) {
+        const startDate = getChallengeStartDate(this.currentChallenge);
+        const endDate = getChallengeEndDate(this.currentChallenge);
+        return (startDate ? isBefore(startDate, new Date()) : true)
+          && (endDate ? isAfter(endDate, new Date()) : true);
+      }
+      return true;
+    },
 
     hasSuccessMessage: {
       get() {
@@ -203,6 +214,7 @@ export default Vue.extend({
     async handleAddEntry() {
       if (this.isAddEntryLoading) return; // don't allow dupes
       if (!this.isValid) return; // don't allow invalids
+      if (!this.isChallengeActive) return; // don't allow submissions to inactive challenges
 
       try {
         this.isAddEntryLoading = true;
