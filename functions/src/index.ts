@@ -7,12 +7,26 @@ const db = app.firestore();
 exports.aggregateStatistics = functions.firestore
   .document('entries/{entryId}')
   .onWrite(({ before, after }) => {
-    if (before.exists && after.exists) return; // skip updates // @TODO: what if value changes
-
     const { challengeId, groupId, participantId, value } = after.data() || before.data() || {};
-    const sign = !after.exists ? -1 : 1;
-    const totalDiff = sign * value;
-    const countDiff = sign * 1;
+    const [totalDiff, countDiff] = (() => {
+      let totalDiff;
+      let countDiff;
+
+      if (before.exists && after.exists) {
+        // handle entry value updates
+        const { value: beforeValue } = before.data() || {};
+        const { value: afterValue } = after.data() || {};
+        totalDiff = (afterValue || 0) - (beforeValue || 0);
+        countDiff = 0;
+      } else {
+        // handle entry creation or deletion
+        const sign = !after.exists ? -1 : 1;
+        totalDiff = sign * value;
+        countDiff = sign * 1;
+      }
+      return [totalDiff, countDiff];
+    })();
+    if (!totalDiff && !countDiff) return;
 
     return db.runTransaction(async (transaction) => {
       const challengeRef = db.collection('challenges').doc(challengeId);
