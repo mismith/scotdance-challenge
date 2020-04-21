@@ -47,6 +47,7 @@ export interface Challenge extends FirebaseObject, WithStats {
   startAt: string;
   endAt: string;
   createdAt: firebase.firestore.Timestamp;
+  private?: boolean;
 }
 export interface Group extends FirebaseObject, WithStats {
   challengeId: string;
@@ -54,6 +55,7 @@ export interface Group extends FirebaseObject, WithStats {
   color?: string;
   country?: string;
   createdAt: firebase.firestore.Timestamp;
+  private?: boolean;
   $name?: string;
   $challenge?: Challenge;
 }
@@ -62,6 +64,7 @@ export interface Participant extends FirebaseObject, WithStats {
   groupId: string;
   name: string;
   createdAt: firebase.firestore.Timestamp;
+  private?: boolean;
   $name?: string;
   $group?: Group;
 }
@@ -71,6 +74,7 @@ export interface Entry extends FirebaseObject {
   participantId: string;
   value: number;
   createdAt: firebase.firestore.Timestamp;
+  private?: boolean;
   $participant?: Participant;
 }
 

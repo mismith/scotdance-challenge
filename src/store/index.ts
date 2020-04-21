@@ -23,6 +23,9 @@ interface State {
   participants: Participant[];
   entries: Entry[];
 
+  privateIds: string[];
+  isPrivateDialogOpen: boolean;
+
   challengeId: string;
   groupId: string;
   participantId: string;
@@ -30,7 +33,13 @@ interface State {
 
 const vuexLocal = new VuexPersistence<State>({
   key: $package.name,
-  reducer: ({ challengeId, groupId, participantId }) => ({
+  reducer: ({
+    privateIds,
+    challengeId,
+    groupId,
+    participantId,
+  }) => ({
+    privateIds,
     challengeId,
     groupId,
     participantId,
@@ -44,6 +53,9 @@ export default new Vuex.Store<State>({
     participants: [],
     entries: [],
 
+    privateIds: [],
+    isPrivateDialogOpen: false,
+
     challengeId: '',
     groupId: '',
     participantId: '',
@@ -52,30 +64,57 @@ export default new Vuex.Store<State>({
   // @ts-ignore
   getters: {
     /* eslint-disable no-param-reassign */
-    challenges({ challenges }) {
-      return challenges;
+    challenges({ challenges, privateIds }) {
+      return challenges
+        .filter(({ [idKey]: challengeId, private: isPrivate }) => {
+          if (isPrivate) {
+            return privateIds.includes(challengeId);
+          }
+          return true;
+        });
     },
-    groups({ groups }, { challenges }) {
-      return groups.map((item) => {
-        item.$challenge = findByIdKey(challenges, item.challengeId);
-        item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
-        return item;
-      });
+    groups({ groups, privateIds }, { challenges }) {
+      return groups
+        .filter(({ challengeId, private: isPrivate }) => {
+          if (isPrivate) {
+            return privateIds.includes(challengeId);
+          }
+          return true;
+        })
+        .map((item) => {
+          item.$challenge = findByIdKey(challenges, item.challengeId);
+          item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
+          return item;
+        });
     },
-    participants({ participants }, { groups }) {
-      return participants.map((item) => {
-        item.$group = findByIdKey(groups, item.groupId);
-        item.$name = item.$group && item.$group.country
-          ? `${item.name} ${getEmojiFlag(item.$group.country)}`
-          : item.name;
-        return item;
-      });
+    participants({ participants, privateIds }, { groups }) {
+      return participants
+        .filter(({ challengeId, private: isPrivate }) => {
+          if (isPrivate) {
+            return privateIds.includes(challengeId);
+          }
+          return true;
+        })
+        .map((item) => {
+          item.$group = findByIdKey(groups, item.groupId);
+          item.$name = item.$group && item.$group.country
+            ? `${item.name} ${getEmojiFlag(item.$group.country)}`
+            : item.name;
+          return item;
+        });
     },
-    entries({ entries }, { participants }) {
-      return entries.map((item) => {
-        item.$participant = findByIdKey(participants, item.participantId);
-        return item;
-      });
+    entries({ entries, privateIds }, { participants }) {
+      return entries
+        .filter(({ challengeId, private: isPrivate }) => {
+          if (isPrivate) {
+            return privateIds.includes(challengeId);
+          }
+          return true;
+        })
+        .map((item) => {
+          item.$participant = findByIdKey(participants, item.participantId);
+          return item;
+        });
     },
     /* eslint-enable no-param-reassign */
   },
@@ -106,6 +145,10 @@ export default new Vuex.Store<State>({
         window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]]);
       }
     },
+
+    togglePrivateDialogOpen(state, to = !state.isPrivateDialogOpen) {
+      state.isPrivateDialogOpen = Boolean(to);
+    },
   },
   actions: {
     bindChallenges: firestoreAction(({ bindFirestoreRef }, {
@@ -134,6 +177,13 @@ export default new Vuex.Store<State>({
       const query = firestoreRefs.entries.orderBy('createdAt', 'desc').limit(limit);
       return bindFirestoreRef('entries', mutateQuery(query), options);
     }),
+
+    addPrivateId({ state, commit }, id) {
+      if (!state.privateIds.includes(id)) {
+        state.privateIds.push(id);
+        commit('togglePrivateDialogOpen', true);
+      }
+    },
   },
   plugins: [
     vuexLocal.plugin,

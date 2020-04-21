@@ -173,7 +173,7 @@ export default Vue.extend({
         return (startDate ? isBefore(startDate, new Date()) : true)
           && (endDate ? isAfter(endDate, new Date()) : true);
       }
-      return true;
+      return false;
     },
 
     hasSuccessMessage: {
@@ -202,10 +202,14 @@ export default Vue.extend({
     },
 
     async handleAdd(item, refKey) {
-      return firestoreRefs[refKey].add({
+      const newItem = {
         createdAt: firestore.FieldValue.serverTimestamp(),
         ...item,
-      });
+      };
+      if (this.currentChallenge.private) {
+        newItem.private = this.currentChallenge.private;
+      }
+      return firestoreRefs[refKey].add(newItem);
     },
     async handleAddGroup(group) {
       const { id } = await this.handleAdd(group, 'groups');
@@ -215,15 +219,17 @@ export default Vue.extend({
       if (this.isAddEntryLoading) return; // don't allow dupes
       if (!this.isValid) return; // don't allow invalids
       if (!this.isChallengeActive) return; // don't allow submissions to inactive challenges
+      if (!this.currentChallenge) return; // can't add to non-existing challenge
 
       try {
         this.isAddEntryLoading = true;
-        await this.handleAdd({
+        const entry = {
           challengeId: this.challengeId,
           groupId: this.groupId,
           participantId: this.participantId,
           value: Number(this.value) || 0,
-        }, 'entries');
+        };
+        await this.handleAdd(entry, 'entries');
         this.value = null;
 
         this.successMessage = this.getRandomCompliment();

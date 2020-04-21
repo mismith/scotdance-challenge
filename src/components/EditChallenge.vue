@@ -70,6 +70,27 @@
               @input="isPickingEndAt = false"
             />
           </v-menu>
+          <v-switch
+            v-model="value.private"
+            inset
+            class="v-input--reverse mt-0 pa-0"
+          >
+            <template #label>
+              <div class="ml-1 mr-2">
+                Private
+              </div>
+              <v-tooltip top max-width="296">
+                <template #activator="{ on }">
+                  <v-icon small @click.stop v-on="on">mdi-help-circle-outline</v-icon>
+                </template>
+                <div>
+                  Private challenges must be 'unlocked' by each participant via an Access Link,
+                  so they are ideal when entries are limited to specific participants.
+                </div>
+              </v-tooltip>
+              <v-icon class="ml-auto">mdi-shield-lock</v-icon>
+            </template>
+          </v-switch>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn

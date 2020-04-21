@@ -22,6 +22,47 @@
         v-model="challengeToEdit"
         @done="challenge => handleAddChallenge(challenge)"
       />
+
+      <template v-if="currentChallenge && currentChallenge.private">
+        <v-btn icon dark @click="isPrivateDialogOpen = true">
+          <v-icon>mdi-shield-lock</v-icon>
+        </v-btn>
+        <v-dialog v-model="isPrivateDialogOpen" max-width="320">
+          <v-form>
+            <v-card>
+              <v-card-title>
+                <div class="flex">
+                  Private Challenge
+                  <v-icon color="primary" class="ml-1 mt-n1">mdi-shield-lock</v-icon>
+                </div>
+                <v-btn icon class="mr-n1" @click="isPrivateDialogOpen = false">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
+              </v-card-title>
+              <v-card-text class="pb-0">
+                <p class="mb-6">This challenge can only be 'unlocked' when accessed from
+                  the link below:</p>
+
+                <v-text-field
+                  :value="getPrivateUrl(currentChallenge)"
+                  label="Access Link"
+                  rounded
+                  outlined
+                  readonly
+                />
+
+                <p><strong>Do not share this link publicly</strong> &mdash;<br />
+                  anyone who visits it will gain entry.</p>
+              </v-card-text>
+              <v-card-actions class="justify-end">
+                <v-btn rounded large block color="primary" @click="isPrivateDialogOpen = false">
+                  Got It
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-form>
+        </v-dialog>
+      </template>
     </v-app-bar>
 
     <v-content>
@@ -50,12 +91,15 @@
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex';
 import { $package, isDebugging } from '@/config';
+import router from '@/router';
 import {
   firebase,
   firestore,
   firestoreRefs,
   idKey,
+  findByIdKey,
   capitalize,
+  Challenge,
 } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
@@ -80,6 +124,18 @@ export default Vue.extend({
       },
       set(challengeId) {
         return this.$store.commit('setChallengeId', challengeId);
+      },
+    },
+    currentChallenge() {
+      return findByIdKey((this as any).challenges, (this as any).challengeId);
+    },
+
+    isPrivateDialogOpen: {
+      get() {
+        return this.$store.state.isPrivateDialogOpen;
+      },
+      set(to) {
+        this.$store.commit('togglePrivateDialogOpen', to);
       },
     },
   },
@@ -113,12 +169,25 @@ export default Vue.extend({
       'bindEntries',
     ]),
 
-    async handleAddChallenge(challenge: object) {
+    async handleAddChallenge(challenge: Challenge) {
       const { id } = await firestoreRefs.challenges.add({
         createdAt: firestore.FieldValue.serverTimestamp(),
         ...challenge,
       });
+      if (challenge.private) {
+        this.$store.dispatch('addPrivateId', id);
+      }
       (this as any).challengeId = id;
+    },
+
+    getPrivateUrl(challenge: Challenge) {
+      const { href } = router.resolve({
+        name: 'private',
+        params: {
+          privateId: challenge[idKey],
+        },
+      });
+      return `${window.location.origin}${href}`;
     },
   },
   async created() {
@@ -212,6 +281,27 @@ export default Vue.extend({
     overflow: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+// source: https://github.com/vuetifyjs/vuetify/issues/7283#issuecomment-572276385
+.v-input--reverse {
+  .v-input__slot {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+
+    .v-application--is-ltr & {
+      .v-input--selection-controls__input {
+        margin-right: 0;
+        margin-left: 8px;
+      }
+    }
+    .v-application--is-rtl & {
+      .v-input--selection-controls__input {
+        margin-left: 0;
+        margin-right: 8px;
+      }
+    }
   }
 }
 </style>
