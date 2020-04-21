@@ -21,6 +21,8 @@
       class="mr-auto mb-10"
       :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
       @click="loadMore()"
+      v-infinite-scroll="loadMore"
+      :infinite-scroll-distance="100"
     >
       <v-icon>mdi-dots-vertical</v-icon>
     </v-btn>
@@ -51,6 +53,7 @@
 
 <script>
 import Vue from 'vue';
+import infiniteScroll from 'vue-infinite-scroll';
 import { idKey } from '@/plugins/firebase';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
@@ -140,6 +143,9 @@ export default Vue.extend({
   },
   components: {
     ActivityTimelineItem,
+  },
+  directives: {
+    infiniteScroll,
   },
 });
 </script>
