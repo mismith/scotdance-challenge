@@ -16,7 +16,7 @@
         <big class="display-1">
           <AnimatedNumber
             :value="currentChallenge.$total"
-            :formatValue="v => v.toFixed(0).toLocaleString()"
+            :formatValue="v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })"
             :duration="2000"
             round
           />
