@@ -6,7 +6,7 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <big class="flex">+{{ entry.value }}</big>
+        <big class="flex">+{{ entry.value.toLocaleString() }}</big>
 
         <template v-if="challenge">
           <small v-if="!challengeId && challenges.length > 1" class="overline">

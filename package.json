@@ -13,6 +13,7 @@
     "postdeploy": "git push origin master"
   },
   "dependencies": {
+    "animated-number-vue": "^1.0.0",
     "chart.js": "^2.9.3",
     "countries-list": "^2.5.4",
     "date-fns": "^2.12.0",

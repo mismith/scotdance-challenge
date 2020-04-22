@@ -4,28 +4,48 @@
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
-    <v-timeline v-else :dense="$vuetify.breakpoint.smAndDown">
-      <ActivityTimelineItem
-        v-for="entry in entries"
-        :key="entry[idKey]"
-        :entry="entry"
-        @flag="flaggedEntry = entry"
-      />
-    </v-timeline>
-    <v-btn
-      v-if="!isShowingAllEntries || isLoadingMore"
-      fab
-      small
-      color="primary"
-      :loading="isLoadingMore"
-      class="mr-auto mb-10"
-      :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
-      @click="loadMore()"
-      v-infinite-scroll="loadMore"
-      :infinite-scroll-distance="100"
-    >
-      <v-icon>mdi-dots-vertical</v-icon>
-    </v-btn>
+    <template v-else>
+      <div
+        v-if="currentChallenge"
+        class="d-flex align-center my-4 mr-auto primary--text"
+        :style="{
+          flexDirection: $vuetify.breakpoint.smAndDown ? 'row' : 'column',
+          marginLeft: $vuetify.breakpoint.smAndDown ? '16px' : 'auto',
+        }"
+      >
+        <big class="display-1">
+          <AnimatedNumber
+            :value="currentChallenge.$total"
+            :formatValue="v => v.toFixed(0).toLocaleString()"
+            :duration="2000"
+            round
+          />
+        </big>
+        <small class="ma-2">total</small>
+      </div>
+      <v-timeline :dense="$vuetify.breakpoint.smAndDown">
+        <ActivityTimelineItem
+          v-for="entry in entries"
+          :key="entry[idKey]"
+          :entry="entry"
+          @flag="flaggedEntry = entry"
+        />
+      </v-timeline>
+      <v-btn
+        v-if="!isShowingAllEntries || isLoadingMore"
+        fab
+        small
+        color="primary"
+        :loading="isLoadingMore"
+        class="mr-auto mb-10"
+        :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
+        @click="loadMore()"
+        v-infinite-scroll="loadMore"
+        :infinite-scroll-distance="100"
+      >
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </template>
 
     <v-dialog v-model="isFlagging" max-width="320">
       <v-card>
@@ -53,8 +73,9 @@
 
 <script>
 import Vue from 'vue';
+import AnimatedNumber from 'animated-number-vue';
 import infiniteScroll from 'vue-infinite-scroll';
-import { idKey } from '@/plugins/firebase';
+import { idKey, findByIdKey } from '@/plugins/firebase';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
 
@@ -81,6 +102,10 @@ export default Vue.extend({
       'challenges',
       'entries',
     ]),
+
+    currentChallenge() {
+      return findByIdKey(this.challenges, this.challengeId);
+    },
 
     isShowingAllEntries() {
       return this.entries.length < this.limit;
@@ -142,6 +167,7 @@ export default Vue.extend({
     },
   },
   components: {
+    AnimatedNumber,
     ActivityTimelineItem,
   },
   directives: {
