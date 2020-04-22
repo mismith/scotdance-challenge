@@ -89,12 +89,20 @@ export default Vue.extend({
     async handleAddCompliment() {
       try {
         this.submitting = true;
+        const text = this.toCompliment(this.newCompliment);
         await db.collection('complimentsSubmitted').add({
-          text: this.toCompliment(this.newCompliment),
+          text,
           createdAt: firestore.FieldValue.serverTimestamp(),
         });
         this.newCompliment = null;
         this.isOpen = false;
+
+        if (window.$crisp) {
+          window.$crisp.push(['do', 'message:send', [
+            'text',
+            `Compliment Submitted: ${text}`,
+          ]]);
+        }
       } finally {
         setTimeout(() => {
           this.submitting = false;
