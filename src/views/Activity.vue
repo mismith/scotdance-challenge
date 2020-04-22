@@ -31,21 +31,21 @@
           @flag="flaggedEntry = entry"
         />
       </v-timeline>
-      <v-btn
-        v-if="!isShowingAllEntries || isLoadingMore"
-        fab
-        small
-        color="primary"
-        :loading="isLoadingMore"
-        class="mr-auto mb-10"
-        :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
-        @click="loadMore()"
-        v-infinite-scroll="loadMore"
-        :infinite-scroll-distance="100"
-      >
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
     </template>
+    <v-btn
+      v-if="!isShowingAllEntries || isLoadingMore"
+      fab
+      small
+      color="primary"
+      :loading="isLoadingMore"
+      class="mr-auto mb-10"
+      :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
+      @click="loadMore()"
+      v-infinite-scroll="loadMore"
+      :infinite-scroll-distance="100"
+    >
+      <v-icon>mdi-dots-vertical</v-icon>
+    </v-btn>
 
     <v-dialog v-model="isFlagging" max-width="320">
       <v-card>
