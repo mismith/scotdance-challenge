@@ -1,10 +1,11 @@
 <template>
-  <div class="Activity flex-page pr-6" :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }">
+  <div class="Activity flex-page">
     <div v-if="!entries.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
     </div>
     <template v-else>
+      <ChallengeProgress v-if="currentChallenge" :challenge="currentChallenge" />
       <div
         v-if="currentChallenge"
         class="d-flex align-center my-4 mr-auto primary--text"
@@ -23,7 +24,11 @@
         </big>
         <small class="ma-2">total</small>
       </div>
-      <v-timeline :dense="$vuetify.breakpoint.smAndDown">
+      <v-timeline
+        :dense="$vuetify.breakpoint.smAndDown"
+        class="pr-6"
+        :class="{ 'pl-6': !$vuetify.breakpoint.smAndDown }"
+      >
         <ActivityTimelineItem
           v-for="entry in entries"
           :key="entry[idKey]"
@@ -76,6 +81,7 @@ import Vue from 'vue';
 import AnimatedNumber from 'animated-number-vue';
 import infiniteScroll from 'vue-infinite-scroll';
 import { idKey, findByIdKey } from '@/plugins/firebase';
+import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
 
@@ -167,6 +173,7 @@ export default Vue.extend({
     },
   },
   components: {
+    ChallengeProgress,
     AnimatedNumber,
     ActivityTimelineItem,
   },
