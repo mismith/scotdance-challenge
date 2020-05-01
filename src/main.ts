@@ -5,7 +5,6 @@ import VueLocalStorage from 'vue-localstorage';
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import VueInfiniteScroll from 'vue-infinite-scroll';
-import { Promised } from 'vue-promised';
 import get from 'lodash.get';
 
 import { $package } from '@/config';
@@ -21,7 +20,6 @@ Vue.use(VueLocalStorage, {
   bind: true,
 });
 Vue.use(VueInfiniteScroll);
-Vue.component('Promised', Promised);
 
 new Vue({
   router,
