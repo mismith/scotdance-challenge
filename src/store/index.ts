@@ -70,8 +70,8 @@ export default new Vuex.Store<State>({
 
     labels: {
       Challenge: 'Challenge',
-      Group: 'Studio',
-      Participant: 'Dancer',
+      Group: 'Group',
+      Participant: 'Participant',
       Entry: 'Entry',
       Country: 'Country',
     },
