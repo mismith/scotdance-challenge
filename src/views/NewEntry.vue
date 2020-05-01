@@ -129,11 +129,8 @@ export default Vue.extend({
       'challenges',
       'groups',
       'participants',
+      'currentChallenge',
     ]),
-
-    currentChallenge() {
-      return findByIdKey(this.challenges, this.challengeId);
-    },
 
     groupId: {
       get() {

@@ -117,6 +117,10 @@ export default new Vuex.Store<State>({
         });
     },
     /* eslint-enable no-param-reassign */
+
+    currentChallenge({ challengeId }, { challenges }) {
+      return findByIdKey(challenges, challengeId);
+    },
   },
   mutations: {
     ...vuexfireMutations,

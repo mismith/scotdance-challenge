@@ -107,11 +107,8 @@ export default Vue.extend({
     ...mapGetters([
       'challenges',
       'entries',
+      'currentChallenge',
     ]),
-
-    currentChallenge() {
-      return findByIdKey(this.challenges, this.challengeId);
-    },
 
     isShowingAllEntries() {
       return this.entries.length < this.limit;

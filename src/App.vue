@@ -97,7 +97,6 @@ import {
   firestore,
   firestoreRefs,
   idKey,
-  findByIdKey,
   capitalize,
   Challenge,
 } from '@/plugins/firebase';
@@ -116,6 +115,7 @@ export default Vue.extend({
   computed: {
     ...mapGetters([
       'challenges',
+      'currentChallenge',
     ]),
 
     challengeId: {
@@ -125,9 +125,6 @@ export default Vue.extend({
       set(challengeId) {
         return this.$store.commit('setChallengeId', challengeId);
       },
-    },
-    currentChallenge() {
-      return findByIdKey((this as any).challenges, (this as any).challengeId);
     },
 
     isPrivateDialogOpen: {
