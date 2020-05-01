@@ -4,7 +4,7 @@
       <v-form autocomplete="off" @submit.prevent="handleDone()">
         <v-card-title>
           <div class="flex">
-            {{ isNew ? 'Add' : 'Edit' }} {{ $root.labels.Challenge }}
+            {{ isNew ? 'Add' : 'Edit' }} {{ $root.getLabel('Challenge') }}
           </div>
           <v-btn icon class="mr-n1" @click="isOpen = false">
             <v-icon>mdi-close</v-icon>

@@ -5,7 +5,7 @@
     <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
       <Picker
         v-model="groupId"
-        :label="$root.labels.Group"
+        :label="$root.getLabel('Group')"
         outlined
         rounded
         clearable
@@ -26,7 +26,7 @@
 
       <Picker
         v-model="participantId"
-        :label="$root.labels.Participant"
+        :label="$root.getLabel('Participant')"
         outlined
         rounded
         clearable
@@ -48,7 +48,7 @@
         max="9999"
         rounded
         outlined
-        :placeholder="`Add New ${$root.labels.Entry}`"
+        :placeholder="`Add New ${$root.getLabel('Entry')}`"
         :disabled="!isChallengeActive || !challengeId || !groupId || !participantId"
         :error="value !== undefined && value !== null && !isValid"
       />

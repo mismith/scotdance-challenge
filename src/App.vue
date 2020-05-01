@@ -3,8 +3,8 @@
     <v-app-bar v-if="$route.name !== 'home'" app color="primary" height="56">
       <Picker
         v-model="challengeId"
-        :label="$root.labels.Challenge"
-        :placeholder="`All ${$root.labels.Challenge}s`"
+        :label="$root.getLabel('Challenge')"
+        :placeholder="`All ${$root.getLabel('Challenge')}s`"
         dense
         solo
         outlined

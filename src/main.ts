@@ -6,11 +6,13 @@ import VueLocalStorage from 'vue-localstorage';
 // @ts-ignore
 import VueInfiniteScroll from 'vue-infinite-scroll';
 import { Promised } from 'vue-promised';
+import get from 'lodash.get';
+
 import { $package } from '@/config';
-import App from '@/App.vue';
 import router from '@/router';
-import store from '@/store';
+import store, { State } from '@/store';
 import vuetify from '@/plugins/vuetify';
+import App from '@/App.vue';
 
 Vue.config.productionTip = false;
 
@@ -25,15 +27,10 @@ new Vue({
   router,
   store,
   vuetify,
-  data: () => ({
-    labels: {
-      Challenge: 'Challenge',
-      Group: 'Studio',
-      Participant: 'Dancer',
-      Entry: 'Entry',
-
-      Country: 'Country',
+  methods: {
+    getLabel(key: keyof State['labels']) {
+      return get(store.getters.currentChallenge, ['labels', key]) || store.state.labels[key];
     },
-  }),
+  },
   render: (h) => h(App),
 }).$mount('#app');

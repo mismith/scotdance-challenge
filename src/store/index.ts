@@ -17,7 +17,7 @@ import {
 
 Vue.use(Vuex);
 
-interface State {
+export interface State {
   challenges: Challenge[];
   groups: Group[];
   participants: Participant[];
@@ -29,6 +29,14 @@ interface State {
   challengeId: string;
   groupId: string;
   participantId: string;
+
+  labels: {
+    Challenge: string;
+    Group: string;
+    Participant: string;
+    Entry: string;
+    Country: string;
+  };
 }
 
 const vuexLocal = new VuexPersistence<State>({
@@ -59,6 +67,14 @@ export default new Vuex.Store<State>({
     challengeId: '',
     groupId: '',
     participantId: '',
+
+    labels: {
+      Challenge: 'Challenge',
+      Group: 'Studio',
+      Participant: 'Dancer',
+      Entry: 'Entry',
+      Country: 'Country',
+    },
   },
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore

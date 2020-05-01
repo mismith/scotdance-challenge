@@ -18,7 +18,7 @@
             :all-groups="extendedGroups"
             :country-ids.sync="filterDataByCountryIds"
           />
-          {{ $root.labels.Group }} Averages
+          {{ $root.getLabel('Group') }} Averages
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
@@ -40,7 +40,7 @@
             :all-groups="extendedGroups"
             :country-ids.sync="filterDataByCountryIds"
           />
-          {{ $root.labels.Group }} Totals
+          {{ $root.getLabel('Group') }} Totals
           <SortBy v-model="orderDataById" :items="orderDataBys" />
         </v-subheader>
 
@@ -65,7 +65,7 @@
             :group-ids.sync="filterDataByGroupIds"
           />
           <div class="d-flex">
-            {{ $root.labels.Participant }} Totals
+            {{ $root.getLabel('Participant') }} Totals
             <v-chip
               v-if="relevantParticipants.length !== relevantParticipantsData.length"
               small
@@ -109,7 +109,7 @@
             :search-query.sync="filterDataBySearch"
           />
           <div class="d-flex">
-            {{ $root.labels.Participant }} Totals
+            {{ $root.getLabel('Participant') }} Totals
           </div>
           <v-btn icon style="visibility: hidden;" />
         </v-subheader>
@@ -121,15 +121,15 @@
               value: '$rank',
             },
             {
-              text: $root.labels.Participant,
+              text: $root.getLabel('Participant'),
               value: 'name',
             },
             {
-              text: $root.labels.Group,
+              text: $root.getLabel('Group'),
               value: '$group.name',
             },
             {
-              text: $root.labels.Country,
+              text: $root.getLabel('Country'),
               value: '$group.country',
             },
             {

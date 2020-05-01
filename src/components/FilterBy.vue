@@ -14,7 +14,7 @@
         <Picker
           v-if="allGroups"
           v-model="currentCountryIds"
-          :label="$root.labels.Country"
+          :label="$root.getLabel('Country')"
           outlined
           rounded
           clearable
@@ -32,14 +32,14 @@
         <Picker
           v-if="filteredGroups"
           v-model="currentGroupIds"
-          :label="$root.labels.Group"
+          :label="$root.getLabel('Group')"
           outlined
           rounded
           clearable
           multiple
           dense
           hide-details
-          :placeholder="`All ${$root.labels.Group}s`"
+          :placeholder="`All ${$root.getLabel('Group')}s`"
           :menu-props="{ width: '100%', offsetY: true }"
           :hide-no-data="false"
           :items="filteredGroups"
@@ -51,7 +51,7 @@
           v-if="searchable"
           type="search"
           v-model="currentSearchQuery"
-          :label="$root.labels.Participant"
+          :label="$root.getLabel('Participant')"
           outlined
           rounded
           clearable

@@ -4,7 +4,7 @@
       <v-form autocomplete="off" @submit.prevent="handleDone()">
         <v-card-title>
           <div class="flex">
-            {{ isNew ? 'Add' : 'Edit' }} {{ $root.labels.Group }}
+            {{ isNew ? 'Add' : 'Edit' }} {{ $root.getLabel('Group') }}
           </div>
           <v-btn icon class="mr-n1" @click="isOpen = false">
             <v-icon>mdi-close</v-icon>
@@ -49,7 +49,7 @@
           </v-text-field>
           <Picker
             v-model="value.country"
-            :label="$root.labels.Country"
+            :label="$root.getLabel('Country')"
             outlined
             rounded
             :menu-props="{ maxWidth: 288 }"

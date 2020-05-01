@@ -11,7 +11,7 @@
         style="height: 24px;"
       >
         <div>
-          This {{ $root.labels.Challenge.toLowerCase() }}
+          This {{ $root.getLabel('Challenge').toLowerCase() }}
           {{ status[0] }}
           <strong>{{ status[1] }}</strong>
         </div>
