@@ -13,7 +13,7 @@
         <v-card-text v-if="value">
           <v-text-field
             v-model="value.name"
-            label="Name"
+            label="Name *"
             outlined
             rounded
             required
@@ -152,10 +152,5 @@ export default Vue.extend({
       this.$emit('input', null);
     },
   },
-  components: {
-  },
 });
 </script>
-
-<style lang="scss">
-</style>

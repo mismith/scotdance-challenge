@@ -9,6 +9,7 @@
         outlined
         rounded
         clearable
+        required
         :items="relevantGroups"
         item-text="$name"
         :item-value="idKey"
@@ -30,6 +31,7 @@
         outlined
         rounded
         clearable
+        required
         :items="relevantParticipants"
         item-text="name"
         :item-value="idKey"
@@ -48,6 +50,7 @@
         max="9999"
         rounded
         outlined
+        required
         :placeholder="`Add New ${$root.getLabel('Entry')}`"
         :disabled="!isChallengeActive || !challengeId || !groupId || !participantId"
         :error="value !== undefined && value !== null && !isValid"
@@ -91,7 +94,6 @@ import {
   firestoreRefs,
   idKey,
   capitalize,
-  findByIdKey,
 } from '@/plugins/firebase';
 import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import Picker from '@/components/Picker.vue';

@@ -13,7 +13,7 @@
         <v-card-text v-if="value">
           <v-text-field
             v-model="value.name"
-            label="Name"
+            label="Name *"
             outlined
             rounded
             required
@@ -23,7 +23,6 @@
             label="Color"
             outlined
             rounded
-            required
             @click="isPickingColor = true"
           >
             <template #append>

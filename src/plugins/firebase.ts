@@ -44,8 +44,8 @@ export interface WithStats {
 }
 export interface Challenge extends FirebaseObject, WithStats {
   name: string;
-  startAt: string;
-  endAt: string;
+  startAt?: string;
+  endAt?: string;
   createdAt: firebase.firestore.Timestamp;
   private?: boolean;
 }

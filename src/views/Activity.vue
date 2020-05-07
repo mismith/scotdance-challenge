@@ -80,7 +80,7 @@
 import Vue from 'vue';
 import AnimatedNumber from 'animated-number-vue';
 import infiniteScroll from 'vue-infinite-scroll';
-import { idKey, findByIdKey } from '@/plugins/firebase';
+import { idKey } from '@/plugins/firebase';
 import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
