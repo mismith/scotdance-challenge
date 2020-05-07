@@ -358,7 +358,7 @@ export default Vue.extend({
           callbacks: {
             ...this.chartOptions.tooltips.callbacks,
             afterTitle: ([{ index }]) => {
-              if (!this.filterDataByGroupIds.length) return null;
+              if (this.filterDataByGroupIds.length === 1) return null;
 
               const participant = this.relevantParticipantsData[index] || {};
               return participant && `${participant.$group.name}`;
