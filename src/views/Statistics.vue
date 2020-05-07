@@ -172,6 +172,7 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 import get from 'lodash.get';
 import orderBy from 'lodash.orderby';
+import runes from 'runes';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 import { getName } from '@/services/country';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
@@ -196,6 +197,21 @@ function abbreviateNumber(number) {
   const scale = 10 ** (tier * 3);
   const scaled = number / scale;
   return `${scaled.toFixed(1)}${suffix}`;
+}
+
+function truncateLabel(label, limit = 22) {
+  if (!label) return label;
+
+  const chars = runes(label.trim());
+  if (chars.length <= limit) return label; // don't trim a single character
+
+  const truncate = (num) => chars.slice(0, num).join('').trim();
+  const lastChar = chars[chars.length - 1];
+  if (!/[\w\s]/.test(lastChar)) { // last char is emoji-like; preserve it in place
+    return `${truncate(limit - 2)}…${lastChar}`;
+  }
+
+  return `${truncate(limit - 1)}…`;
 }
 
 export default Vue.extend({
@@ -330,6 +346,11 @@ export default Vue.extend({
               beginAtZero: true,
               min: 0,
               callback: (value) => abbreviateNumber(unflatten(value)),
+            },
+          }],
+          yAxes: [{
+            ticks: {
+              callback: (value) => truncateLabel(value),
             },
           }],
         },
