@@ -19,6 +19,7 @@
             required
           />
           <v-menu
+            v-if="showField('startAt')"
             v-model="isPickingStartAt"
             :close-on-content-click="false"
             offset-y
@@ -45,6 +46,7 @@
             />
           </v-menu>
           <v-menu
+            v-if="showField('endAt')"
             v-model="isPickingEndAt"
             :close-on-content-click="false"
             offset-y
@@ -70,6 +72,39 @@
               @input="isPickingEndAt = false"
             />
           </v-menu>
+          <div v-if="showField('labels')" class="mb-10">
+            <v-subheader class="mb-1 pl-6" style="height: auto;">Label Overrides</v-subheader>
+            <v-text-field
+              v-model="labels.Group"
+              label="Group"
+              outlined
+              rounded
+              clearable
+              dense
+              hide-details
+              class="mb-2"
+            />
+            <v-text-field
+              v-model="labels.Participant"
+              label="Participant"
+              outlined
+              rounded
+              clearable
+              dense
+              hide-details
+              class="mb-2"
+            />
+            <v-text-field
+              v-model="labels.Entry"
+              label="Entry"
+              outlined
+              rounded
+              clearable
+              dense
+              hide-details
+              class="mb-2"
+            />
+          </div>
           <v-switch
             v-model="value.private"
             inset
@@ -91,6 +126,36 @@
               <v-icon class="ml-auto">mdi-shield-lock</v-icon>
             </template>
           </v-switch>
+
+          <div class="d-flex flex-wrap">
+            <v-chip
+              v-if="!showField('startAt')"
+              small
+              class="mr-1 mb-1"
+              @click="showField('startAt', true)"
+            >
+              <v-icon left small>mdi-plus</v-icon>
+              Start Date
+            </v-chip>
+            <v-chip
+              v-if="!showField('endAt')"
+              small
+              class="mr-1 mb-1"
+              @click="showField('endAt', true)"
+            >
+              <v-icon left small>mdi-plus</v-icon>
+              End Date
+            </v-chip>
+            <v-chip
+              v-if="!showField('labels')"
+              small
+              class="mr-1 mb-1"
+              @click="showField('labels', true)"
+            >
+              <v-icon left small>mdi-cursor-text</v-icon>
+              Labels
+            </v-chip>
+          </div>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn
@@ -111,6 +176,7 @@
 
 <script>
 import Vue from 'vue';
+import get from 'lodash.get';
 import { idKey } from '@/plugins/firebase';
 
 export default Vue.extend({
@@ -123,6 +189,8 @@ export default Vue.extend({
       idKey,
       isPickingStartAt: false,
       isPickingEndAt: false,
+      labels: {},
+      showFields: {},
     };
   },
   computed: {
@@ -132,7 +200,7 @@ export default Vue.extend({
       },
       set(isOpen) {
         if (!isOpen) {
-          this.$emit('input', null);
+          this.reset();
         }
       },
     },
@@ -147,9 +215,22 @@ export default Vue.extend({
     },
   },
   methods: {
+    reset() {
+      this.labels = {};
+      this.showFields = {};
+      this.$emit('input', null);
+    },
+
+    showField(field, set = undefined) {
+      if (set) {
+        this.$set(this.showFields, field, set);
+      }
+      return get(this.showFields, field, false);
+    },
+
     handleDone() {
       this.$emit('done', this.value);
-      this.$emit('input', null);
+      this.reset();
     },
   },
 });
