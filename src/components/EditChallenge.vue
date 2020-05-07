@@ -18,6 +18,14 @@
             rounded
             required
           />
+          <v-textarea
+            v-if="showField('description')"
+            v-model="value.description"
+            label="Description"
+            outlined
+            rounded
+            auto-grow
+          />
           <v-menu
             v-if="showField('startAt')"
             v-model="isPickingStartAt"
@@ -145,6 +153,15 @@
             >
               <v-icon left small>mdi-plus</v-icon>
               End Date
+            </v-chip>
+            <v-chip
+              v-if="!showField('description')"
+              small
+              class="mr-1 mb-1"
+              @click="showField('description', true)"
+            >
+              <v-icon left small>mdi-plus</v-icon>
+              Description
             </v-chip>
             <v-chip
               v-if="!showField('labels')"

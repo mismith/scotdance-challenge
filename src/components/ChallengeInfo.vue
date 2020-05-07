@@ -16,6 +16,10 @@
             <div class="overline">Name</div>
             {{ challenge.name }}
           </div>
+          <div v-if="challenge.description" class="mb-4">
+            <div class="overline">Description</div>
+            <div style="white-space: pre-wrap;">{{ challenge.description }}</div>
+          </div>
           <div v-if="startDate" class="mb-4">
             <div class="overline">Start{{ isAfter(startDate, new Date()) ? 's' : 'ed' }}</div>
             {{ startDate.toLocaleString() }}
