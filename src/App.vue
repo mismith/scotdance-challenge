@@ -63,6 +63,15 @@
           </v-form>
         </v-dialog>
       </template>
+      <template v-if="currentChallenge">
+        <v-btn icon dark @click="isInfoDialogOpen = true">
+          <v-icon>mdi-information-outline</v-icon>
+        </v-btn>
+        <ChallengeInfo
+          v-model="isInfoDialogOpen"
+          :challenge="currentChallenge"
+        />
+      </template>
     </v-app-bar>
 
     <v-content>
@@ -102,6 +111,7 @@ import {
 } from '@/plugins/firebase';
 import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
+import ChallengeInfo from '@/components/ChallengeInfo.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 
 export default Vue.extend({
@@ -127,6 +137,14 @@ export default Vue.extend({
       },
     },
 
+    isInfoDialogOpen: {
+      get() {
+        return this.$store.state.isInfoDialogOpen;
+      },
+      set(to) {
+        this.$store.commit('toggleInfoDialogOpen', to);
+      },
+    },
     isPrivateDialogOpen: {
       get() {
         return this.$store.state.isPrivateDialogOpen;
@@ -201,6 +219,7 @@ export default Vue.extend({
   components: {
     Loader,
     Picker,
+    ChallengeInfo,
     EditChallenge,
   },
 });
