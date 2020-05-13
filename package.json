@@ -6,10 +6,10 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "emulate": "firebase emulators:start --only=firestore,functions  --import=.",
+    "emulate": "yarn firebase emulators:start --only=firestore,functions --import=.",
     "dev": "yarn --cwd functions run dev & yarn run emulate & yarn run serve",
     "predeploy": "yarn version && yarn --cwd functions run build && yarn run build",
-    "deploy": "firebase deploy",
+    "deploy": "yarn firebase deploy",
     "postdeploy": "git push origin master"
   },
   "dependencies": {
@@ -26,7 +26,6 @@
     "vue-infinite-scroll": "^2.0.2",
     "vue-localstorage": "^0.6.2",
     "vue-router": "^3.1.5",
-    "vuefire": "^2.2.2",
     "vuetify": "^2.2.11",
     "vuex": "^3.1.2",
     "vuex-persist": "^2.2.0",

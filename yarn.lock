@@ -9879,13 +9879,6 @@ vue@^2.5.13, vue@^2.6.11:
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.11.tgz#76594d877d4b12234406e84e35275c6d514125c5"
   integrity sha512-VfPwgcGABbGAue9+sfrD4PuwFar7gPb1yl1UK1MwXoQPAw0BKSqWfoYCT/ThFrdEVWoI51dBuyCoiNU9bZDZxQ==
 
-vuefire@^2.2.2:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/vuefire/-/vuefire-2.2.2.tgz#d69ed4ae821d28fbcda35ff17b86f58e1d2561af"
-  integrity sha512-YlxfdM7bAcj5JTTOirQOv0C6UTNKIGG3ZIBpQqmqkHKhTofgtaAzLJLra+D4yRgsh+l8U1RaFqRmXZdLrJFnTw==
-  dependencies:
-    "@posva/vuefire-core" "^2.3.1"
-
 vuetify-loader@^1.3.0:
   version "1.4.3"
   resolved "https://registry.yarnpkg.com/vuetify-loader/-/vuetify-loader-1.4.3.tgz#df1323c558be09890877e5fbe817b3a71a6c538d"
