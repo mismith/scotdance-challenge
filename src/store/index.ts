@@ -36,6 +36,7 @@ export interface State {
     Group: string;
     Participant: string;
     Entry: string;
+    EntryUnit: string;
     Country: string;
   };
 }
@@ -75,6 +76,7 @@ export default new Vuex.Store<State>({
       Group: 'Group',
       Participant: 'Participant',
       Entry: 'Entry',
+      EntryUnit: '',
       Country: 'Country',
     },
   },

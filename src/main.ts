@@ -27,7 +27,7 @@ new Vue({
   vuetify,
   methods: {
     getLabel(key: keyof State['labels']) {
-      return get(store.getters.currentChallenge, ['labels', key]) || store.state.labels[key];
+      return get(store.getters.currentChallenge, ['labels', key]) || store.state.labels[key] || '';
     },
   },
   render: (h) => h(App),

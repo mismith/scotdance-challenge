@@ -44,6 +44,7 @@
       />
       <v-text-field
         v-model="value"
+        :label="$root.getLabel('EntryUnit')"
         type="number"
         step="1"
         min="1"
