@@ -74,10 +74,10 @@
       </template>
     </v-app-bar>
 
-    <v-content>
+    <v-main>
       <Loader v-if="$route.name !== 'home' && loading" class="ma-auto" />
       <router-view v-show="$route.name === 'home' || !loading" />
-    </v-content>
+    </v-main>
 
     <v-bottom-navigation app grow shift color="primary">
       <v-btn :to="{ name: 'activity' }">
