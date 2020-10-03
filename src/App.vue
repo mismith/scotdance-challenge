@@ -236,6 +236,14 @@ export default Vue.extend({
   }
 }
 
+html,
+body {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 .App {
   &.isDebugging {
     .v-bottom-navigation {
@@ -255,7 +263,7 @@ export default Vue.extend({
     // https://stackoverflow.com/a/55003985/888928
     min-height: -webkit-fill-available;
   }
-  .v-content__wrap {
+  .v-main__wrap {
     display: flex;
     flex-direction: column;
   }
