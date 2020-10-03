@@ -114,6 +114,7 @@ import Picker from '@/components/Picker.vue';
 import ChallengeInfo from '@/components/ChallengeInfo.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default Vue.extend({
   name: 'App',
   data: () => ({
@@ -157,7 +158,7 @@ export default Vue.extend({
   watch: {
     challengeId: {
       async handler(challengeId) {
-        (this as any).loading = true;
+        this.loading = true;
         await Promise.all([
           (this as any).bindGroups({
             mutateQuery: challengeId
@@ -170,7 +171,7 @@ export default Vue.extend({
               : undefined,
           }),
         ]);
-        (this as any).loading = false;
+        this.loading = false;
       },
       immediate: true,
     },
@@ -181,7 +182,6 @@ export default Vue.extend({
       'bindChallenges',
       'bindGroups',
       'bindParticipants',
-      'bindEntries',
     ]),
 
     async handleAddChallenge(challenge: Challenge) {
@@ -192,7 +192,7 @@ export default Vue.extend({
       if (challenge.private) {
         this.$store.dispatch('addPrivateId', id);
       }
-      (this as any).challengeId = id;
+      this.challengeId = id;
     },
 
     getPrivateUrl(challenge: Challenge) {
