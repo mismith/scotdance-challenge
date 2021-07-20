@@ -1,10 +1,15 @@
 <template>
   <v-app class="App" :class="{ isDebugging }">
     <v-app-bar v-if="$route.name !== 'home'" app color="primary" height="56">
+      <!-- <v-btn icon dark @click.prevent="handleNewChallenge()">
+        <v-icon>mdi-plus-circle-outline</v-icon>
+      </v-btn> -->
+
       <Picker
+        ref="challengePicker"
         v-model="challengeId"
         :label="$root.getLabel('Challenge')"
-        :placeholder="`All ${$root.getLabel('Challenge')}s`"
+        :placeholder="`Select ${$root.getLabel('Challenge')}`"
         dense
         solo
         outlined
@@ -17,7 +22,11 @@
         :add-new="name => challengeToEdit = {
           name: capitalize(name),
         }"
-      />
+      >
+        <template #prepend-item>
+          <AddNewTip :label="$root.getLabel('Challenge')" />
+        </template>
+      </Picker>
       <EditChallenge
         v-model="challengeToEdit"
         @done="challenge => handleAddChallenge(challenge)"
@@ -149,6 +158,7 @@ import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
 import ChallengeInfo from '@/components/ChallengeInfo.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
+import AddNewTip from '@/components/AddNewTip.vue';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default Vue.extend({
@@ -228,6 +238,9 @@ export default Vue.extend({
       'bindParticipants',
     ]),
 
+    async handleNewChallenge() {
+      (this.$refs.challengePicker as any).$el.querySelector('input').click();
+    },
     async handleAddChallenge(challenge: Challenge) {
       const { id } = await firestoreRefs.challenges.add({
         createdAt: firestore.FieldValue.serverTimestamp(),
@@ -265,6 +278,7 @@ export default Vue.extend({
     Picker,
     ChallengeInfo,
     EditChallenge,
+    AddNewTip,
   },
 });
 </script>

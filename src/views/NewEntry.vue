@@ -19,7 +19,11 @@
           color: colors[relevantGroups.length % colors.length],
           challengeId,
         }"
-      />
+      >
+        <template #prepend-item>
+          <AddNewTip :label="$root.getLabel('Group')" />
+        </template>
+      </Picker>
       <EditGroup
         v-model="groupToEdit"
         @done="group => handleAddGroup(group)"
@@ -41,7 +45,11 @@
           challengeId,
           groupId,
         }, 'participants')"
-      />
+      >
+        <template #prepend-item>
+          <AddNewTip :label="$root.getLabel('Participant')" />
+        </template>
+      </Picker>
       <v-text-field
         v-model="value"
         :label="$root.getLabel('EntryUnit')"
@@ -100,6 +108,7 @@ import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
+import AddNewTip from '@/components/AddNewTip.vue';
 import { getChallengeStartDate, getChallengeEndDate } from '../services/date';
 
 export default Vue.extend({
@@ -245,6 +254,7 @@ export default Vue.extend({
     Picker,
     EditGroup,
     AddCompliment,
+    AddNewTip,
   },
 });
 </script>
