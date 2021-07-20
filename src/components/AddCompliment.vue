@@ -24,12 +24,13 @@
 
             <v-text-field
               v-model="newCompliment"
-              label="Your Praise"
+              label="Your Compliment"
               placeholder="e.g. well done"
               rounded
               outlined
-              hide-details
-              class="mt-6 mb-2"
+              :rules="rules"
+              autocomplete="off"
+              class="mt-6"
             />
           </v-card-text>
           <v-card-actions class="justify-center pt-0 pa-4">
@@ -39,7 +40,7 @@
               block
               x-large
               color="primary"
-              :disabled="!toCompliment(newCompliment)"
+              :disabled="!rules.every(rule => rule(newCompliment) === true)"
               :loading="submitting"
             >
               Submit
@@ -54,6 +55,7 @@
 <script>
 import Vue from 'vue';
 import { firestore, db, idKey } from '@/plugins/firebase';
+import compliments from '@/store/compliments';
 
 export default Vue.extend({
   name: 'AddCompliment',
@@ -63,13 +65,22 @@ export default Vue.extend({
 
       isOpen: false,
       newCompliment: undefined,
+      rules: [
+        () => Boolean(this.sanitizedCompliment) || 'Required',
+        () => !compliments.includes(this.sanitizedCompliment) || 'Already added — try another one!',
+      ],
       submitting: false,
       debounceTimeout: undefined,
     };
   },
+  computed: {
+    sanitizedCompliment() {
+      return (this.newCompliment || '').trim().toLowerCase().replace(/!$/, '');
+    },
+  },
   watch: {
-    async newCompliment(newCompliment) {
-      await this.handleInput(this.toCompliment(newCompliment));
+    async newCompliment() {
+      await this.handleInput(this.sanitizedCompliment);
     },
     isOpen(isOpen) {
       if (!isOpen) {
@@ -92,15 +103,11 @@ export default Vue.extend({
         this.toast(value, 1000);
       }
     },
-    toCompliment(text) {
-      return (text || '').trim().toLowerCase().replace(/!$/, '');
-    },
     async handleAddCompliment() {
       try {
         this.submitting = true;
-        const text = this.toCompliment(this.newCompliment);
         await db.collection('complimentsSubmitted').add({
-          text,
+          text: this.sanitizedCompliment,
           createdAt: firestore.FieldValue.serverTimestamp(),
         });
         this.newCompliment = null;
@@ -109,7 +116,7 @@ export default Vue.extend({
         if (window.$crisp) {
           window.$crisp.push(['do', 'message:send', [
             'text',
-            `Compliment Submitted: ${text}`,
+            `Compliment Submitted: ${this.sanitizedCompliment}`,
           ]]);
         }
       } finally {
