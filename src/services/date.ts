@@ -1,4 +1,10 @@
-import { parse, startOfDay, endOfDay } from 'date-fns';
+import {
+  parse,
+  startOfDay,
+  endOfDay,
+  isBefore,
+  isAfter,
+} from 'date-fns';
 import { Challenge } from '@/plugins/firebase';
 
 export function getChallengeStartDate(challenge: Challenge) {
@@ -13,4 +19,14 @@ export function getChallengeEndDate(challenge: Challenge) {
     return endOfDay(parse(challenge.endAt, 'yyyy-MM-dd', new Date()));
   }
   return null;
+}
+
+export function isChallengeActive(challenge: Challenge) {
+  if (challenge) {
+    const startDate = getChallengeStartDate(challenge);
+    const endDate = getChallengeEndDate(challenge);
+    return (startDate ? isBefore(startDate, new Date()) : true)
+      && (endDate ? isAfter(endDate, new Date()) : true);
+  }
+  return false;
 }

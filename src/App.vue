@@ -23,6 +23,14 @@
           name: capitalize(name),
         }"
       >
+        <template #item="{ item, parent }">
+          <v-list-item-content :style="{ opacity: !isChallengeActive(item) ? 0.5 : undefined }">
+            <v-list-item-title>
+              <span v-html="parent.genFilteredText(parent.getText(item))" />
+              <em v-if="!isChallengeActive(item)" class="caption ml-2">Inactive</em>
+            </v-list-item-title>
+          </v-list-item-content>
+        </template>
         <template #prepend-item>
           <AddNewTip :label="$root.getLabel('Challenge')" />
         </template>
@@ -159,6 +167,7 @@ import Picker from '@/components/Picker.vue';
 import ChallengeInfo from '@/components/ChallengeInfo.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 import AddNewTip from '@/components/AddNewTip.vue';
+import { isChallengeActive } from './services/date';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default Vue.extend({
@@ -232,6 +241,7 @@ export default Vue.extend({
   },
   methods: {
     capitalize,
+    isChallengeActive,
     ...mapActions([
       'bindChallenges',
       'bindGroups',

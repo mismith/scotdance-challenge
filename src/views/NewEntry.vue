@@ -96,7 +96,6 @@
 import Vue from 'vue';
 import { mapGetters, mapState } from 'vuex';
 import palette from 'vuetify/lib/util/colors';
-import { isBefore, isAfter } from 'date-fns';
 import compliments from '@/store/compliments';
 import {
   firestore,
@@ -109,7 +108,7 @@ import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
 import AddCompliment from '@/components/AddCompliment.vue';
 import AddNewTip from '@/components/AddNewTip.vue';
-import { getChallengeStartDate, getChallengeEndDate } from '../services/date';
+import { isChallengeActive } from '../services/date';
 
 export default Vue.extend({
   name: 'NewEntry',
@@ -176,13 +175,7 @@ export default Vue.extend({
         && Number(this.value) <= 9999;
     },
     isChallengeActive() {
-      if (this.currentChallenge) {
-        const startDate = getChallengeStartDate(this.currentChallenge);
-        const endDate = getChallengeEndDate(this.currentChallenge);
-        return (startDate ? isBefore(startDate, new Date()) : true)
-          && (endDate ? isAfter(endDate, new Date()) : true);
-      }
-      return false;
+      return isChallengeActive(this.currentChallenge);
     },
 
     hasSuccessMessage: {

@@ -14,6 +14,7 @@ import {
   Participant,
   Entry,
 } from '@/plugins/firebase';
+import { isChallengeActive } from '@/services/date';
 
 Vue.use(Vuex);
 
@@ -93,6 +94,14 @@ export default new Vuex.Store<State>({
             return privateIds.includes(challengeId);
           }
           return true;
+        })
+        .sort((a, b) => {
+          const aActive = isChallengeActive(a);
+          const bActive = isChallengeActive(b);
+          if (aActive === bActive) {
+            return 0;
+          }
+          return !bActive ? -1 : 1;
         });
     },
     groups({ groups, privateIds }, { challenges }) {
