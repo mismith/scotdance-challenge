@@ -64,6 +64,7 @@ export default Vue.extend({
       isOpen: false,
       newCompliment: undefined,
       submitting: false,
+      debounceTimeout: undefined,
     };
   },
   watch: {
@@ -77,11 +78,19 @@ export default Vue.extend({
     },
   },
   methods: {
-    async handleInput(value) {
-      // clear it, wait, then set it, so snackbar timer gets reset
-      this.$emit('input', null);
-      await this.$nextTick();
-      this.$emit('input', value);
+    toast(message, delay = 0) {
+      if (this.debounceTimeout) {
+        clearTimeout(this.debounceTimeout);
+      }
+      this.debounceTimeout = setTimeout(async () => {
+        this.$emit('input', message);
+      }, delay);
+    },
+    handleInput(value) {
+      if (value) {
+        this.$emit('input', null);
+        this.toast(value, 1000);
+      }
     },
     toCompliment(text) {
       return (text || '').trim().toLowerCase().replace(/!$/, '');
@@ -104,10 +113,8 @@ export default Vue.extend({
           ]]);
         }
       } finally {
-        setTimeout(() => {
-          this.submitting = false;
-          this.handleInput('🙇 thanks');
-        }, 300);
+        this.submitting = false;
+        this.toast('submitted 🙇 thank you', 300);
       }
     },
   },

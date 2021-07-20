@@ -77,7 +77,7 @@
     />
 
     <v-snackbar v-model="hasSuccessMessage">
-      <div class="title ma-auto" style="text-transform: capitalize;">
+      <div class="title text-center ma-auto" style="text-transform: capitalize;">
         {{ successMessage }}!
       </div>
     </v-snackbar>
