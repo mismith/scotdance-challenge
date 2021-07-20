@@ -46,11 +46,19 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/private/:privateId',
+      path: '/private/:challengeId',
       name: 'private',
-      beforeEnter({ params: { privateId } }, from, next) {
-        store.dispatch('addPrivateId', privateId);
-        store.state.challengeId = privateId; // @HACK: is this allowed/dependable?
+      beforeEnter({ params: { challengeId } }, from, next) {
+        store.dispatch('addPrivateId', challengeId);
+        store.state.challengeId = challengeId; // @HACK: is this allowed/dependable?
+        return next({ name: 'new' });
+      },
+    },
+    {
+      path: '/public/:challengeId',
+      name: 'public',
+      beforeEnter({ params: { challengeId } }, from, next) {
+        store.state.challengeId = challengeId; // @HACK: is this allowed/dependable?
         return next({ name: 'new' });
       },
     },

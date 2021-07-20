@@ -25,6 +25,7 @@ export interface State {
 
   privateIds: string[];
   isPrivateDialogOpen: boolean;
+  isPublicDialogOpen: boolean;
   isInfoDialogOpen: boolean;
 
   challengeId: string;
@@ -65,6 +66,7 @@ export default new Vuex.Store<State>({
 
     privateIds: [],
     isPrivateDialogOpen: false,
+    isPublicDialogOpen: false,
     isInfoDialogOpen: false,
 
     challengeId: '',
@@ -172,6 +174,9 @@ export default new Vuex.Store<State>({
 
     togglePrivateDialogOpen(state, to = !state.isPrivateDialogOpen) {
       state.isPrivateDialogOpen = Boolean(to);
+    },
+    togglePublicDialogOpen(state, to = !state.isPublicDialogOpen) {
+      state.isPublicDialogOpen = Boolean(to);
     },
     toggleInfoDialogOpen(state, to = !state.isInfoDialogOpen) {
       state.isInfoDialogOpen = Boolean(to);

@@ -44,7 +44,7 @@
                   the link below:</p>
 
                 <v-text-field
-                  :value="getPrivateUrl(currentChallenge)"
+                  :value="getChallengeUrl(currentChallenge)"
                   label="Access Link"
                   rounded
                   outlined
@@ -56,6 +56,42 @@
               </v-card-text>
               <v-card-actions class="justify-end">
                 <v-btn rounded large block color="primary" @click="isPrivateDialogOpen = false">
+                  Got It
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-form>
+        </v-dialog>
+      </template>
+      <template v-else-if="currentChallenge && !currentChallenge.private">
+        <v-btn icon dark @click="isPublicDialogOpen = true">
+          <v-icon>mdi-share</v-icon>
+        </v-btn>
+        <v-dialog v-model="isPublicDialogOpen" max-width="320">
+          <v-form>
+            <v-card>
+              <v-card-title>
+                <div class="flex">
+                  Share Challenge
+                  <v-icon color="primary" class="ml-1 mt-n1">mdi-share</v-icon>
+                </div>
+                <v-btn icon class="mr-n1" @click="isPublicDialogOpen = false">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
+              </v-card-title>
+              <v-card-text class="pb-0">
+                <p class="mb-6">This challenge can launched directly using the following link:</p>
+
+                <v-text-field
+                  :value="getChallengeUrl(currentChallenge)"
+                  label="Access Link"
+                  rounded
+                  outlined
+                  readonly
+                />
+              </v-card-text>
+              <v-card-actions class="justify-end">
+                <v-btn rounded large block color="primary" @click="isPublicDialogOpen = false">
                   Got It
                 </v-btn>
               </v-card-actions>
@@ -146,6 +182,14 @@ export default Vue.extend({
         this.$store.commit('toggleInfoDialogOpen', to);
       },
     },
+    isPublicDialogOpen: {
+      get() {
+        return this.$store.state.isPublicDialogOpen;
+      },
+      set(to) {
+        this.$store.commit('togglePublicDialogOpen', to);
+      },
+    },
     isPrivateDialogOpen: {
       get() {
         return this.$store.state.isPrivateDialogOpen;
@@ -195,11 +239,11 @@ export default Vue.extend({
       this.challengeId = id;
     },
 
-    getPrivateUrl(challenge: Challenge) {
+    getChallengeUrl(challenge: Challenge) {
       const { href } = router.resolve({
-        name: 'private',
+        name: challenge.private ? 'private' : 'public',
         params: {
-          privateId: challenge[idKey],
+          challengeId: challenge[idKey],
         },
       });
       return `${window.location.origin}${href}`;
