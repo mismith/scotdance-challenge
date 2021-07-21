@@ -239,7 +239,7 @@ export default Vue.extend({
     },
 
     showField(field, set = undefined) {
-      if (set) {
+      if (set !== undefined) {
         this.$set(this.showFields, field, set);
       }
       return get(this.showFields, field, false);

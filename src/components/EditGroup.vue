@@ -47,6 +47,7 @@
             </template>
           </v-text-field>
           <Picker
+            v-if="showField('country')"
             v-model="value.country"
             :label="$root.getLabel('Country')"
             outlined
@@ -57,6 +58,18 @@
             :item-value="idKey"
             item-text="$name"
           />
+
+          <div class="d-flex flex-wrap">
+            <v-chip
+              v-if="!showField('country')"
+              small
+              class="mr-1 mb-1"
+              @click="showField('country', true)"
+            >
+              <v-icon left small>mdi-plus</v-icon>
+              Country
+            </v-chip>
+          </div>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn
@@ -77,6 +90,7 @@
 
 <script>
 import Vue from 'vue';
+import get from 'lodash.get';
 import { availableCountries, fetchCountryCode } from '@/services/country';
 import { idKey } from '@/plugins/firebase';
 import Picker from '@/components/Picker.vue';
@@ -91,6 +105,7 @@ export default Vue.extend({
       idKey,
       availableCountries,
       isPickingColor: false,
+      showFields: {},
     };
   },
   computed: {
@@ -121,20 +136,36 @@ export default Vue.extend({
         this.isPickingColor = false;
       }
     },
-    async value(value) {
-      if (value && value.country === undefined) {
-        this.$set(value, 'country', null);
+  },
+  methods: {
+    reset() {
+      this.showFields = {};
+      this.$emit('input', null);
+    },
+
+    async autoFillCountry() {
+      if (this.value && this.value.country === undefined) {
+        this.$set(this.value, 'country', null);
         const country = await fetchCountryCode();
-        if (!value.country) {
-          this.$set(value, 'country', country);
+        if (!this.value.country) {
+          this.$set(this.value, 'country', country);
         }
       }
     },
-  },
-  methods: {
+    showField(field, set = undefined) {
+      if (set !== undefined) {
+        this.$set(this.showFields, field, set);
+
+        if (set) {
+          this.autoFillCountry();
+        }
+      }
+      return get(this.showFields, field, false);
+    },
+
     handleDone() {
       this.$emit('done', this.value);
-      this.$emit('input', null);
+      this.reset();
     },
   },
   components: {
