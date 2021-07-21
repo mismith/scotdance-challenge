@@ -61,6 +61,7 @@
                   the link below:</p>
 
                 <v-text-field
+                  ref="privateUrl"
                   :value="getChallengeUrl(currentChallenge)"
                   label="Access Link"
                   rounded
@@ -100,6 +101,7 @@
                 <p class="mb-6">This challenge can launched directly using the following link:</p>
 
                 <v-text-field
+                  ref="publicUrl"
                   :value="getChallengeUrl(currentChallenge)"
                   label="Access Link"
                   rounded
@@ -237,6 +239,18 @@ export default Vue.extend({
         this.loading = false;
       },
       immediate: true,
+    },
+    async isPrivateDialogOpen(isOpen) {
+      if (isOpen) {
+        await this.$nextTick();
+        (this.$refs.privateUrl as any).$el.querySelector('input').select();
+      }
+    },
+    async isPublicDialogOpen(isOpen) {
+      if (isOpen) {
+        await this.$nextTick();
+        (this.$refs.publicUrl as any).$el.querySelector('input').select();
+      }
     },
   },
   methods: {
