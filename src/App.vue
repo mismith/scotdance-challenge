@@ -98,7 +98,9 @@
                 </v-btn>
               </v-card-title>
               <v-card-text class="pb-0">
-                <p class="mb-6">This challenge can launched directly using the following link:</p>
+                <p class="mb-6">
+                  This challenge can be accessed directly using the following link:
+                </p>
 
                 <v-text-field
                   ref="publicUrl"
