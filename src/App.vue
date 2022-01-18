@@ -16,23 +16,39 @@
         rounded
         clearable
         hide-details
-        :items="challenges"
+        :items="challengesForPicker"
         item-text="name"
         :item-value="idKey"
         :add-new="name => challengeToEdit = {
           name: capitalize(name),
         }"
       >
+        <template #prepend-item>
+          <AddNewTip :label="$root.getLabel('Challenge')" />
+        </template>
         <template #item="{ item, parent }">
-          <v-list-item-content :style="{ opacity: !isChallengeActive(item) ? 0.5 : undefined }">
+          <v-list-item-content :style="{ opacity: !item.$isActive ? 0.5 : undefined }">
             <v-list-item-title>
               <span v-html="parent.genFilteredText(parent.getText(item))" />
-              <em v-if="!isChallengeActive(item)" class="caption ml-2">Inactive</em>
+              <em v-if="!item.$isActive" class="caption ml-2">
+                {{
+                  item.$isUpcoming ? 'Upcoming' : (
+                    item.$isRecentlyEnded ? 'Recently Ended' : 'Inactive'
+                  )
+                }}
+              </em>
             </v-list-item-title>
           </v-list-item-content>
         </template>
-        <template #prepend-item>
-          <AddNewTip :label="$root.getLabel('Challenge')" />
+        <template #append-item>
+          <div
+            v-if="!isShowingAllChallenges && relevantChallenges.length < challenges.length"
+            class="caption text-center px-4 my-2"
+          >
+            <v-chip small @click="isShowingAllChallenges = true">
+              Show {{ challenges.length - relevantChallenges.length }} more inactive challenges
+            </v-chip>
+          </div>
         </template>
       </Picker>
       <EditChallenge
@@ -171,7 +187,6 @@ import Picker from '@/components/Picker.vue';
 import ChallengeInfo from '@/components/ChallengeInfo.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 import AddNewTip from '@/components/AddNewTip.vue';
-import { isChallengeActive } from './services/date';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default Vue.extend({
@@ -181,12 +196,26 @@ export default Vue.extend({
     idKey,
     loading: true,
     challengeToEdit: undefined,
+    isShowingAllChallenges: false,
   }),
   computed: {
     ...mapGetters([
       'challenges',
       'currentChallenge',
     ]),
+
+    relevantChallenges() {
+      return this.challenges.filter(
+        (challenge: Challenge) => challenge.$isActive
+          || challenge.$isUpcoming
+          || challenge.$isRecentlyEnded,
+      );
+    },
+    challengesForPicker() {
+      return this.isShowingAllChallenges
+        ? this.challenges
+        : this.relevantChallenges;
+    },
 
     challengeId: {
       get() {
@@ -257,7 +286,6 @@ export default Vue.extend({
   },
   methods: {
     capitalize,
-    isChallengeActive,
     ...mapActions([
       'bindChallenges',
       'bindGroups',

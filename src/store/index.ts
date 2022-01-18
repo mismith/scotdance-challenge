@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import { vuexfireMutations, firestoreAction } from 'vuexfire';
 import VuexPersistence from 'vuex-persist';
+import orderBy from 'lodash.orderby';
 import { $package } from '@/config';
 import { getEmojiFlag } from '@/services/country';
 import {
@@ -14,7 +15,7 @@ import {
   Participant,
   Entry,
 } from '@/plugins/firebase';
-import { isChallengeActive } from '@/services/date';
+import { isChallengeActive, isChallengeUpcoming, isChallengeRecentlyEnded } from '@/services/date';
 
 Vue.use(Vuex);
 
@@ -88,21 +89,23 @@ export default new Vuex.Store<State>({
   getters: {
     /* eslint-disable no-param-reassign */
     challenges({ challenges, privateIds }) {
-      return challenges
-        .filter(({ [idKey]: challengeId, private: isPrivate }) => {
-          if (isPrivate) {
-            return privateIds.includes(challengeId);
-          }
-          return true;
-        })
-        .sort((a, b) => {
-          const aActive = isChallengeActive(a);
-          const bActive = isChallengeActive(b);
-          if (aActive === bActive) {
-            return 0;
-          }
-          return !bActive ? -1 : 1;
-        });
+      return orderBy(
+        challenges
+          .filter(({ [idKey]: challengeId, private: isPrivate }) => {
+            if (isPrivate) {
+              return privateIds.includes(challengeId);
+            }
+            return true;
+          })
+          .map((challenge) => {
+            challenge.$isActive = isChallengeActive(challenge);
+            challenge.$isUpcoming = isChallengeUpcoming(challenge);
+            challenge.$isRecentlyEnded = isChallengeRecentlyEnded(challenge);
+            return challenge;
+          }),
+        ['$isActive', '$isRecentlyEnded', '$isUpcoming', 'name'],
+        ['desc', 'desc', 'desc', 'asc'],
+      );
     },
     groups({ groups, privateIds }, { challenges }) {
       return groups

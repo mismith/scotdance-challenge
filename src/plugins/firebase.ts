@@ -45,6 +45,9 @@ export interface Challenge extends FirebaseObject, WithStats {
   endAt?: string;
   createdAt: firebase.firestore.Timestamp;
   private?: boolean;
+  $isActive?: boolean;
+  $isUpcoming?: boolean;
+  $isRecentlyEnded?: boolean;
 }
 export interface Group extends FirebaseObject, WithStats {
   challengeId: string;
