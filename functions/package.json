@@ -2,7 +2,7 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
-    "dev": "yarn run build -w"
+    "dev": "npm run build -- -w"
   },
   "engines": {
     "node": "14"
