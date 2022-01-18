@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "emulate": "firebase emulators:start --only=firestore,functions --import=.",
+    "emulate": "firebase emulators:start --only=firestore,functions --import=.firebase/emulator-data",
     "dev": "npm --prefix ./functions/ run dev & npm run emulate & npm run serve",
     "predeploy": "npm --prefix ./functions/ run build && npm run build",
     "deploy": "firebase deploy",
