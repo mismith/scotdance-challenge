@@ -106,8 +106,9 @@ export default Vue.extend({
     async handleAddCompliment() {
       try {
         this.submitting = true;
+        const text = this.sanitizedCompliment.toString();
         await db.collection('complimentsSubmitted').add({
-          text: this.sanitizedCompliment,
+          text,
           createdAt: firestore.FieldValue.serverTimestamp(),
         });
         this.newCompliment = null;
@@ -116,8 +117,9 @@ export default Vue.extend({
         if (window.$crisp) {
           window.$crisp.push(['do', 'message:send', [
             'text',
-            `Compliment Submitted: ${this.sanitizedCompliment}`,
+            `Compliment Submitted: ${text}`,
           ]]);
+          window.$crisp.push(['do', 'chat:hide']);
         }
       } finally {
         this.submitting = false;
