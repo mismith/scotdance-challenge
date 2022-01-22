@@ -20,6 +20,8 @@ import { isChallengeActive, isChallengeUpcoming, isChallengeRecentlyEnded } from
 Vue.use(Vuex);
 
 export interface State {
+  me: firebase.User | null;
+
   challenges: Challenge[];
   groups: Group[];
   participants: Participant[];
@@ -61,6 +63,8 @@ const vuexLocal = new VuexPersistence<State>({
 
 export default new Vuex.Store<State>({
   state: {
+    me: null,
+
     challenges: [],
     groups: [],
     participants: [],
@@ -158,6 +162,10 @@ export default new Vuex.Store<State>({
   },
   mutations: {
     ...vuexfireMutations,
+
+    setMe(state, me) {
+      state.me = me;
+    },
 
     setChallengeId(state, to) {
       const challenge = findByIdKey<Challenge>(state.challenges, to);

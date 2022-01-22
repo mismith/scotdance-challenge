@@ -11,6 +11,7 @@ import { $package } from '@/config';
 import router from '@/router';
 import store, { State } from '@/store';
 import vuetify from '@/plugins/vuetify';
+import { firebase } from '@/plugins/firebase';
 import App from '@/App.vue';
 
 Vue.config.productionTip = false;
@@ -29,6 +30,17 @@ new Vue({
     getLabel(key: keyof State['labels']) {
       return get(store.getters.currentChallenge, ['labels', key]) || store.state.labels[key] || '';
     },
+  },
+  created() {
+    firebase.auth().onAuthStateChanged((me) => {
+      store.commit('setMe', me);
+    });
+    try {
+      firebase.auth().signInAnonymously();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn(error);
+    }
   },
   render: (h) => h(App),
 }).$mount('#app');

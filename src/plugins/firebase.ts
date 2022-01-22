@@ -1,4 +1,5 @@
 import firebase from 'firebase/app';
+import 'firebase/auth';
 import 'firebase/analytics';
 import 'firebase/firestore';
 import { isDebugging } from '@/config';
@@ -34,46 +35,47 @@ export const idKey = 'id';
 export interface FirebaseObject {
   [idKey]: string;
 }
+export interface Creatable {
+  createdAt: firebase.firestore.Timestamp;
+  createdBy?: string;
+}
 export interface WithStats {
   $total: number;
   $count: number;
 }
-export interface Challenge extends FirebaseObject, WithStats {
+
+export interface Challenge extends FirebaseObject, Creatable, WithStats {
   name: string;
   description?: string;
   startAt?: string;
   endAt?: string;
-  createdAt: firebase.firestore.Timestamp;
   private?: boolean;
   $isActive?: boolean;
   $isUpcoming?: boolean;
   $isRecentlyEnded?: boolean;
 }
-export interface Group extends FirebaseObject, WithStats {
+export interface Group extends FirebaseObject, Creatable, WithStats {
   challengeId: string;
   name: string;
   color?: string;
   country?: string;
-  createdAt: firebase.firestore.Timestamp;
   private?: boolean;
   $name?: string;
   $challenge?: Challenge;
 }
-export interface Participant extends FirebaseObject, WithStats {
+export interface Participant extends FirebaseObject, Creatable, WithStats {
   challengeId: string;
   groupId: string;
   name: string;
-  createdAt: firebase.firestore.Timestamp;
   private?: boolean;
   $name?: string;
   $group?: Group;
 }
-export interface Entry extends FirebaseObject {
+export interface Entry extends FirebaseObject, Creatable {
   challengeId: string;
   groupId: string;
   participantId: string;
   value: number;
-  createdAt: firebase.firestore.Timestamp;
   private?: boolean;
   $participant?: Participant;
 }

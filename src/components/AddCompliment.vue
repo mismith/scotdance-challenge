@@ -54,6 +54,7 @@
 
 <script>
 import Vue from 'vue';
+import { mapState } from 'vuex';
 import { firestore, db, idKey } from '@/plugins/firebase';
 import compliments from '@/store/compliments';
 
@@ -74,6 +75,10 @@ export default Vue.extend({
     };
   },
   computed: {
+    ...mapState([
+      'me',
+    ]),
+
     sanitizedCompliment() {
       return (this.newCompliment || '').trim().toLowerCase().replace(/!$/, '');
     },
@@ -110,6 +115,7 @@ export default Vue.extend({
         await db.collection('complimentsSubmitted').add({
           text,
           createdAt: firestore.FieldValue.serverTimestamp(),
+          createdBy: this.me && this.me.uid,
         });
         this.newCompliment = null;
         this.isOpen = false;

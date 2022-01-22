@@ -134,6 +134,7 @@ export default Vue.extend({
   },
   computed: {
     ...mapState([
+      'me',
       'challengeId',
     ]),
     ...mapGetters([
@@ -206,6 +207,7 @@ export default Vue.extend({
     async handleAdd(item, refKey) {
       const newItem = {
         createdAt: firestore.FieldValue.serverTimestamp(),
+        createdBy: this.me && this.me.uid,
         ...item,
       };
       if (this.currentChallenge.private) {

@@ -171,7 +171,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapState } from 'vuex';
 import { $package, isDebugging } from '@/config';
 import router from '@/router';
 import {
@@ -199,6 +199,9 @@ export default Vue.extend({
     isShowingAllChallenges: false,
   }),
   computed: {
+    ...mapState([
+      'me',
+    ]),
     ...mapGetters([
       'challenges',
       'currentChallenge',
@@ -292,12 +295,13 @@ export default Vue.extend({
       'bindParticipants',
     ]),
 
-    async handleNewChallenge() {
-      (this.$refs.challengePicker as any).$el.querySelector('input').click();
-    },
+    // async handleNewChallenge() {
+    //   (this.$refs.challengePicker as any).$el.querySelector('input').click();
+    // },
     async handleAddChallenge(challenge: Challenge) {
       const { id } = await firestoreRefs.challenges.add({
         createdAt: firestore.FieldValue.serverTimestamp(),
+        createdBy: this.me && this.me.uid,
         ...challenge,
       });
       if (challenge.private) {
