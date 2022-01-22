@@ -103,8 +103,8 @@
               class="mb-2"
             />
             <v-text-field
-              v-model="labels.Entry"
-              label="Entry"
+              v-model="labels.Amount"
+              label="Amount"
               outlined
               rounded
               clearable

@@ -52,7 +52,7 @@
       </Picker>
       <v-text-field
         v-model="value"
-        :label="$root.getLabel('EntryUnit')"
+        :label="$root.getLabel('Amount')"
         type="number"
         step="1"
         min="1"
@@ -60,7 +60,6 @@
         rounded
         outlined
         required
-        :placeholder="`Add New ${$root.getLabel('Entry')}`"
         :disabled="!isChallengeActive || !challengeId || !groupId || !participantId"
         :error="value !== undefined && value !== null && !isValid"
       />

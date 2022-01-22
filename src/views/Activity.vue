@@ -77,7 +77,7 @@
     <v-dialog v-model="isDeleting" max-width="320">
       <v-card>
         <v-card-title>
-          Delete Entry <v-icon color="primary" class="ml-2">mdi-delete</v-icon>
+          Delete Item <v-icon color="primary" class="ml-2">mdi-delete</v-icon>
 
           <v-spacer />
           <v-btn icon class="mr-n2" @click="isDeleting = false">
@@ -86,7 +86,7 @@
         </v-card-title>
         <v-card-text class="pb-2">
           <p>Did you make a mistake, or does something seem off?</p>
-          <p>You can remove this entry—then submit a new one, if necessary.</p>
+          <p>You can remove this item—then submit a new one, if necessary.</p>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn rounded block x-large color="primary" @click="deleteEntry()">
