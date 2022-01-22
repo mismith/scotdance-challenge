@@ -83,6 +83,8 @@
                   rounded
                   outlined
                   readonly
+                  :append-icon="canCopy ? 'mdi-content-copy' : undefined"
+                  @click:append="handleCopy(getChallengeUrl(currentChallenge))"
                 />
 
                 <p><strong>Do not share this link publicly</strong> &mdash;<br />
@@ -125,6 +127,8 @@
                   rounded
                   outlined
                   readonly
+                  :append-icon="canCopy ? 'mdi-content-copy' : undefined"
+                  @click:append="handleCopy(getChallengeUrl(currentChallenge))"
                 />
               </v-card-text>
               <v-card-actions class="justify-end">
@@ -146,6 +150,10 @@
         />
       </template>
     </v-app-bar>
+    <v-snackbar app v-model="hasCopied">
+      <v-icon color="success">mdi-check</v-icon>
+      Copied to clipboard
+    </v-snackbar>
 
     <v-main>
       <Loader v-if="$route.name !== 'home' && loading" class="ma-auto" />
@@ -197,6 +205,7 @@ export default Vue.extend({
     loading: true,
     challengeToEdit: undefined,
     isShowingAllChallenges: false,
+    hasCopied: false,
   }),
   computed: {
     ...mapState([
@@ -252,6 +261,10 @@ export default Vue.extend({
       set(to) {
         this.$store.commit('togglePrivateDialogOpen', to);
       },
+    },
+
+    canCopy() {
+      return window.navigator.clipboard && typeof window.navigator.clipboard.writeText === 'function';
     },
   },
   watch: {
@@ -318,6 +331,11 @@ export default Vue.extend({
         },
       });
       return `${window.location.origin}${href}`;
+    },
+
+    handleCopy(textToCopy: string) {
+      window.navigator.clipboard.writeText(textToCopy);
+      this.hasCopied = true;
     },
   },
   async created() {
