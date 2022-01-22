@@ -20,7 +20,22 @@
           style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
         />
 
-        <v-btn small icon class="ml-2" @click="$emit('flag', entry)">
+        <v-btn
+          v-if="me && (me.uid === entry.createdBy)"
+          small
+          icon
+          class="ml-2"
+          @click="$emit('delete', entry)"
+        >
+          <v-icon small>mdi-delete-outline</v-icon>
+        </v-btn>
+        <v-btn
+          v-else
+          small
+          icon
+          class="ml-2"
+          @click="$emit('flag', entry)"
+        >
           <v-icon small>mdi-flag-outline</v-icon>
         </v-btn>
       </v-card-title>
@@ -74,6 +89,7 @@ export default Vue.extend({
   },
   computed: {
     ...mapState([
+      'me',
       'challengeId',
     ]),
     ...mapGetters([

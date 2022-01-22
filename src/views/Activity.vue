@@ -34,6 +34,7 @@
           :key="entry[idKey]"
           :entry="entry"
           @flag="flaggedEntry = entry"
+          @delete="deletedEntry = entry"
         />
       </v-timeline>
     </template>
@@ -73,17 +74,38 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="isDeleting" max-width="320">
+      <v-card>
+        <v-card-title>
+          Delete Entry <v-icon color="primary" class="ml-2">mdi-delete</v-icon>
+
+          <v-spacer />
+          <v-btn icon class="mr-n2" @click="isDeleting = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="pb-2">
+          <p>Did you make a mistake, or does something seem off?</p>
+          <p>You can remove this entry—then submit a new one, if necessary.</p>
+        </v-card-text>
+        <v-card-actions class="justify-center pt-0 pa-4">
+          <v-btn rounded block x-large color="primary" @click="deleteEntry()">
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
 import Vue from 'vue';
+import { mapState, mapGetters, mapActions } from 'vuex';
 import AnimatedNumber from 'animated-number-vue';
 import infiniteScroll from 'vue-infinite-scroll';
-import { idKey } from '@/plugins/firebase';
+import { idKey, db } from '@/plugins/firebase';
 import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
-import { mapState, mapGetters, mapActions } from 'vuex';
 
 const INCREMENT = 20;
 
@@ -98,6 +120,9 @@ export default Vue.extend({
 
       isFlagging: false,
       flaggedEntry: undefined,
+
+      isDeleting: false,
+      deletedEntry: undefined,
     };
   },
   computed: {
@@ -131,6 +156,15 @@ export default Vue.extend({
         this.flaggedEntry = null;
       }
     },
+
+    deletedEntry(deletedEntry) {
+      this.isDeleting = Boolean(deletedEntry);
+    },
+    isDeleting(isDeleting) {
+      if (!isDeleting) {
+        this.deletedEntry = null;
+      }
+    },
   },
   methods: {
     ...mapActions([
@@ -150,6 +184,12 @@ export default Vue.extend({
         throw new Error('Live chat not found');
       }
       this.flaggedEntry = null;
+    },
+    async deleteEntry() {
+      if (this.deletedEntry) {
+        await db.collection('entries').doc(this.deletedEntry[idKey]).delete();
+      }
+      this.deletedEntry = null;
     },
 
     async loadMore() {
