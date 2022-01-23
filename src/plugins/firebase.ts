@@ -35,7 +35,7 @@ export const idKey = 'id';
 export interface FirebaseObject {
   [idKey]: string;
 }
-export interface Creatable {
+export interface Createable {
   createdAt: firebase.firestore.Timestamp;
   createdBy?: string;
 }
@@ -44,7 +44,7 @@ export interface WithStats {
   $count: number;
 }
 
-export interface Challenge extends FirebaseObject, Creatable, WithStats {
+export interface Challenge extends FirebaseObject, Createable, WithStats {
   name: string;
   description?: string;
   startAt?: string;
@@ -54,7 +54,7 @@ export interface Challenge extends FirebaseObject, Creatable, WithStats {
   $isUpcoming?: boolean;
   $isRecentlyEnded?: boolean;
 }
-export interface Group extends FirebaseObject, Creatable, WithStats {
+export interface Group extends FirebaseObject, Createable, WithStats {
   challengeId: string;
   name: string;
   color?: string;
@@ -63,7 +63,7 @@ export interface Group extends FirebaseObject, Creatable, WithStats {
   $name?: string;
   $challenge?: Challenge;
 }
-export interface Participant extends FirebaseObject, Creatable, WithStats {
+export interface Participant extends FirebaseObject, Createable, WithStats {
   challengeId: string;
   groupId: string;
   name: string;
@@ -71,7 +71,7 @@ export interface Participant extends FirebaseObject, Creatable, WithStats {
   $name?: string;
   $group?: Group;
 }
-export interface Entry extends FirebaseObject, Creatable {
+export interface Entry extends FirebaseObject, Createable {
   challengeId: string;
   groupId: string;
   participantId: string;
