@@ -258,11 +258,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style lang="scss">
-.NewEntry {
-  .v-snack {
-    margin-bottom: 64px;
-  }
-}
-</style>

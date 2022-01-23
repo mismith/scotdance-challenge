@@ -195,7 +195,7 @@
         </template>
       </template>
     </v-app-bar>
-    <v-snackbar app v-model="hasCopied">
+    <v-snackbar v-model="hasCopied">
       <v-icon color="success">mdi-check</v-icon>
       Copied to clipboard
     </v-snackbar>
