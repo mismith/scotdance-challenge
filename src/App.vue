@@ -77,16 +77,26 @@
                 <p class="mb-6">This challenge can only be 'unlocked' when accessed from
                   the link below:</p>
 
-                <v-text-field
-                  ref="privateUrl"
-                  :value="getChallengeUrl(currentChallenge)"
-                  label="Access Link"
-                  rounded
-                  outlined
-                  readonly
-                  :append-icon="canCopy ? 'mdi-content-copy' : undefined"
-                  @click:append="handleCopy(getChallengeUrl(currentChallenge))"
-                />
+                <div class="d-flex align-center mb-4">
+                  <v-text-field
+                    ref="privateUrl"
+                    :value="getChallengeUrl(currentChallenge)"
+                    label="Access Link"
+                    rounded
+                    outlined
+                    readonly
+                    hide-details
+                  />
+                  <v-btn
+                    v-if="canCopy"
+                    icon
+                    large
+                    class="ml-1"
+                    @click="handleCopy(getChallengeUrl(currentChallenge))"
+                  >
+                    <v-icon>mdi-content-copy</v-icon>
+                  </v-btn>
+                </div>
 
                 <p><strong>Do not share this link publicly</strong> &mdash;<br />
                   anyone who visits it will gain entry.</p>
@@ -121,16 +131,26 @@
                   This challenge can be accessed directly using the following link:
                 </p>
 
-                <v-text-field
-                  ref="publicUrl"
-                  :value="getChallengeUrl(currentChallenge)"
-                  label="Access Link"
-                  rounded
-                  outlined
-                  readonly
-                  :append-icon="canCopy ? 'mdi-content-copy' : undefined"
-                  @click:append="handleCopy(getChallengeUrl(currentChallenge))"
-                />
+                <div class="d-flex align-center mb-4">
+                  <v-text-field
+                    ref="publicUrl"
+                    :value="getChallengeUrl(currentChallenge)"
+                    label="Access Link"
+                    rounded
+                    outlined
+                    readonly
+                    hide-details
+                  />
+                  <v-btn
+                    v-if="canCopy"
+                    icon
+                    large
+                    class="ml-1"
+                    @click="handleCopy(getChallengeUrl(currentChallenge))"
+                  >
+                    <v-icon>mdi-content-copy</v-icon>
+                  </v-btn>
+                </div>
               </v-card-text>
               <v-card-actions class="justify-end">
                 <v-btn rounded large block color="primary" @click="isPublicDialogOpen = false">
@@ -142,13 +162,27 @@
         </v-dialog>
       </template>
       <template v-if="currentChallenge">
-        <v-btn icon dark @click="isInfoDialogOpen = true">
-          <v-icon>mdi-information-outline</v-icon>
+        <v-btn
+          v-if="me && (me.uid === currentChallenge.createdBy)"
+          icon
+          dark
+          @click="challengeToEdit = currentChallenge"
+        >
+          <v-icon>mdi-pencil</v-icon>
         </v-btn>
-        <ChallengeInfo
-          v-model="isInfoDialogOpen"
-          :challenge="currentChallenge"
-        />
+        <template v-else>
+          <ChallengeInfo
+            v-model="isInfoDialogOpen"
+            :challenge="currentChallenge"
+          />
+          <v-btn
+            icon
+            dark
+            @click="isInfoDialogOpen = true"
+          >
+            <v-icon>mdi-information-outline</v-icon>
+          </v-btn>
+        </template>
       </template>
     </v-app-bar>
     <v-snackbar app v-model="hasCopied">
