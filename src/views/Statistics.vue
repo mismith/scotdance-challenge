@@ -2,7 +2,7 @@
   <div class="Statistics flex-page">
     <div v-if="!currentChallenge" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large class="mb-3">mdi-chevron-up</v-icon>
-      Select a {{ $root.getLabel('Challenge') }} first.
+      Select a {{ $root.getLabel('Challenge').toLowerCase() }} first
     </div>
     <div v-else-if="!filteredParticipants.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>

@@ -88,15 +88,3 @@ export interface Entry extends FirebaseObject, Createable {
 export function findByIdKey<T extends FirebaseObject>(items: T[], id: string) {
   return items.find((item) => item[idKey] === id);
 }
-
-export function capitalize(text: string) {
-  const str = (text || '').trim();
-  if (str) {
-    const words = str.split(' ');
-    for (let i = 0; i < words.length; i += 1) {
-      words[i] = words[i][0].toUpperCase() + words[i].substr(1);
-    }
-    return words.join(' ');
-  }
-  return str;
-}

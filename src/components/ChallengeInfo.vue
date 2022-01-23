@@ -4,7 +4,7 @@
       <v-form>
         <v-card-title>
           <div class="flex">
-            Challenge Info
+            {{ $root.getLabel('Challenge') }} Info
             <v-icon color="primary" class="ml-1 mt-n1">mdi-information</v-icon>
           </div>
           <v-btn icon class="mr-n1" @click="isOpen = false">

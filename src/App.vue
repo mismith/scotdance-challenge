@@ -24,7 +24,7 @@
         }"
       >
         <template #prepend-item>
-          <AddNewTip :label="$root.getLabel('Challenge')" />
+          <AddNewTip :label="$root.getLabel('Challenge').toLowerCase()" />
         </template>
         <template #item="{ item, parent }">
           <v-list-item-content :style="{ opacity: !item.$isActive ? 0.5 : undefined }">
@@ -47,8 +47,13 @@
             class="caption text-center px-4 my-2"
           >
             <v-chip small @click="isShowingAllChallenges = true">
-              Show {{ challenges.length - relevantChallenges.length }} more
-              inactive {{ $root.getLabel('Challenge') }}(s)
+              Show {{ challenges.length - relevantChallenges.length }} more inactive
+              {{
+                pluralize(
+                  challenges.length - relevantChallenges.length,
+                  $root.getLabel('Challenge').toLowerCase(),
+                )
+              }}
             </v-chip>
           </div>
         </template>
@@ -68,7 +73,7 @@
             <v-card>
               <v-card-title>
                 <div class="flex">
-                  Private Challenge
+                  Private {{ $root.getLabel('Challenge') }}
                   <v-icon color="primary" class="ml-1 mt-n1">mdi-shield-lock</v-icon>
                 </div>
                 <v-btn icon class="mr-n1" @click="isPrivateDialogOpen = false">
@@ -76,8 +81,10 @@
                 </v-btn>
               </v-card-title>
               <v-card-text class="pb-0">
-                <p class="mb-6">This challenge can only be 'unlocked' when accessed from
-                  the link below:</p>
+                <p class="mb-6">
+                  This {{ $root.getLabel('Challenge').toLowerCase() }}
+                  can only be 'unlocked' when accessed from the link below:
+                </p>
 
                 <div class="d-flex align-center mb-4">
                   <v-text-field
@@ -121,7 +128,7 @@
             <v-card>
               <v-card-title>
                 <div class="flex">
-                  Share Challenge
+                  Share {{ $root.getLabel('Challenge') }}
                   <v-icon color="primary" class="ml-1 mt-n1">mdi-share</v-icon>
                 </div>
                 <v-btn icon class="mr-n1" @click="isPublicDialogOpen = false">
@@ -130,7 +137,8 @@
               </v-card-title>
               <v-card-text class="pb-0">
                 <p class="mb-6">
-                  This challenge can be accessed directly using the following link:
+                  This {{ $root.getLabel('Challenge').toLowerCase() }} can be accessed directly
+                  using the following link:
                 </p>
 
                 <div class="d-flex align-center mb-4">
@@ -224,9 +232,12 @@ import {
   firestore,
   firestoreRefs,
   idKey,
-  capitalize,
   Challenge,
 } from '@/plugins/firebase';
+import {
+  capitalize,
+  pluralize,
+} from '@/services/strings';
 import Loader from '@/components/Loader.vue';
 import Picker from '@/components/Picker.vue';
 import ChallengeInfo from '@/components/ChallengeInfo.vue';
@@ -340,6 +351,7 @@ export default Vue.extend({
   },
   methods: {
     capitalize,
+    pluralize,
     ...mapActions([
       'bindChallenges',
       'bindGroups',

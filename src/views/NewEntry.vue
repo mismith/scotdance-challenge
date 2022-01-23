@@ -2,7 +2,7 @@
   <div class="NewEntry flex-page">
     <div v-if="!currentChallenge" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large class="mb-3">mdi-chevron-up</v-icon>
-      Select a {{ $root.getLabel('Challenge') }} first.
+      Select a {{ $root.getLabel('Challenge').toLowerCase() }} first
     </div>
     <template v-else>
       <ChallengeProgress v-if="currentChallenge" :challenge="currentChallenge" />
@@ -26,7 +26,7 @@
           }"
         >
           <template #prepend-item>
-            <AddNewTip :label="$root.getLabel('Group')" />
+            <AddNewTip :label="$root.getLabel('Group').toLowerCase()" />
           </template>
         </Picker>
         <EditGroup
@@ -52,7 +52,7 @@
           }, 'participants')"
         >
           <template #prepend-item>
-            <AddNewTip :label="$root.getLabel('Participant')" />
+            <AddNewTip :label="$root.getLabel('Participant').toLowerCase()" />
           </template>
         </Picker>
         <v-text-field
@@ -106,8 +106,8 @@ import {
   firestore,
   firestoreRefs,
   idKey,
-  capitalize,
 } from '@/plugins/firebase';
+import { capitalize } from '@/services/strings';
 import ChallengeProgress from '@/components/ChallengeProgress.vue';
 import Picker from '@/components/Picker.vue';
 import EditGroup from '@/components/EditGroup.vue';
