@@ -47,7 +47,8 @@
             class="caption text-center px-4 my-2"
           >
             <v-chip small @click="isShowingAllChallenges = true">
-              Show {{ challenges.length - relevantChallenges.length }} more inactive challenges
+              Show {{ challenges.length - relevantChallenges.length }} more
+              inactive {{ $root.getLabel('Challenge') }}(s)
             </v-chip>
           </div>
         </template>
@@ -256,7 +257,8 @@ export default Vue.extend({
       return this.challenges.filter(
         (challenge: Challenge) => challenge.$isActive
           || challenge.$isUpcoming
-          || challenge.$isRecentlyEnded,
+          || challenge.$isRecentlyEnded
+          || (this.currentChallenge && this.currentChallenge[idKey] === challenge[idKey]),
       );
     },
     challengesForPicker() {
