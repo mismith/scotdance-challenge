@@ -83,7 +83,7 @@
           <div v-if="showField('labels')" class="mb-10">
             <v-subheader class="mb-1 pl-6" style="height: auto;">Label Overrides</v-subheader>
             <v-text-field
-              v-model="labels.Group"
+              :value="challenge.labels && challenge.labels.Group || null"
               label="Group"
               outlined
               rounded
@@ -91,9 +91,10 @@
               dense
               hide-details
               class="mb-2"
+              @input="v => $set(challenge, 'labels.Group', v)"
             />
             <v-text-field
-              v-model="labels.Participant"
+              :value="challenge.labels && challenge.labels.Participant || null"
               label="Participant"
               outlined
               rounded
@@ -101,9 +102,10 @@
               dense
               hide-details
               class="mb-2"
+              @input="v => $set(challenge, 'labels.Participant', v)"
             />
             <v-text-field
-              v-model="labels.Amount"
+              :value="challenge.labels && challenge.labels.Amount || null"
               label="Amount"
               outlined
               rounded
@@ -111,6 +113,7 @@
               dense
               hide-details
               class="mb-2"
+              @input="v => $set(challenge, 'labels.Amount', v)"
             />
           </div>
           <v-switch
@@ -206,6 +209,11 @@ import Vue from 'vue';
 import get from 'lodash.get';
 import { idKey } from '@/plugins/firebase';
 
+function isEmpty(obj) {
+  if (typeof obj === 'object') return Boolean(Object.values(obj || {}).filter(Boolean).length);
+  return Boolean(obj);
+}
+
 export default Vue.extend({
   name: 'EditChallenge',
   props: {
@@ -217,7 +225,6 @@ export default Vue.extend({
       challenge: {},
       isPickingStartAt: false,
       isPickingEndAt: false,
-      labels: {},
       showFields: {},
     };
   },
@@ -255,7 +262,6 @@ export default Vue.extend({
         this.challenge = {};
         this.isPickingStartAt = false;
         this.isPickingEndAt = false;
-        this.labels = {};
         this.showFields = {};
       }
     },
@@ -265,7 +271,7 @@ export default Vue.extend({
       if (set !== undefined) {
         this.$set(this.showFields, field, set);
       }
-      return get(this.showFields, field, Boolean(this.challenge && this.challenge[field]));
+      return get(this.showFields, field, isEmpty(this.value && this.value[field]));
     },
 
     handleSubmit() {
