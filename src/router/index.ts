@@ -62,6 +62,13 @@ const router = new VueRouter({
         return next({ name: 'new' });
       },
     },
+    {
+      path: '*',
+      name: '404',
+      component: {
+        render: (h) => h('h1', { class: 'ma-auto' }, 'Not Found'),
+      },
+    },
   ],
 });
 
