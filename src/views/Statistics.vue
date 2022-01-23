@@ -7,6 +7,7 @@
     <div v-else-if="!filteredParticipants.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
+      <div class="mt-2"><router-link :to="{ name: 'new' }">Add one</router-link></div>
     </div>
     <v-carousel
       v-else
@@ -89,6 +90,7 @@
           >
             <v-icon x-large>mdi-cancel</v-icon>
             No entries yet
+            <div class="mt-2"><router-link :to="{ name: 'new' }">Add one</router-link></div>
           </div>
           <HorizontalBarChart
             v-else

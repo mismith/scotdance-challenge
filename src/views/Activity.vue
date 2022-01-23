@@ -3,6 +3,7 @@
     <div v-if="!entries.length" class="d-flex flex-column align-center ma-auto">
       <v-icon x-large>mdi-cancel</v-icon>
       No entries yet
+      <div class="mt-2"><router-link :to="{ name: 'new' }">Add one</router-link></div>
     </div>
     <template v-else>
       <ChallengeProgress v-if="currentChallenge" :challenge="currentChallenge" />
