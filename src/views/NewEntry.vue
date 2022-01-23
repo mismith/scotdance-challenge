@@ -1,93 +1,99 @@
 <template>
   <div class="NewEntry flex-page">
-    <ChallengeProgress v-if="currentChallenge" :challenge="currentChallenge" />
+    <div v-if="!currentChallenge" class="d-flex flex-column align-center ma-auto">
+      <v-icon x-large class="mb-3">mdi-chevron-up</v-icon>
+      Select a {{ $root.getLabel('Challenge') }} first.
+    </div>
+    <template v-else>
+      <ChallengeProgress v-if="currentChallenge" :challenge="currentChallenge" />
 
-    <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
-      <Picker
-        v-model="groupId"
-        :label="$root.getLabel('Group')"
-        outlined
-        rounded
-        clearable
-        required
-        :items="relevantGroups"
-        item-text="$name"
-        :item-value="idKey"
-        :disabled="!isChallengeActive || !challengeId"
-        :add-new="name => groupToEdit = {
-          name: capitalize(name),
-          color: colors[relevantGroups.length % colors.length],
-          challengeId,
-        }"
-      >
-        <template #prepend-item>
-          <AddNewTip :label="$root.getLabel('Group')" />
-        </template>
-      </Picker>
-      <EditGroup
-        v-model="groupToEdit"
-        @done="group => handleAddGroup(group)"
+      <v-form autocomplete="off" class="px-4 py-6" @submit.prevent="handleAddEntry()">
+        <Picker
+          v-model="groupId"
+          :label="$root.getLabel('Group')"
+          outlined
+          rounded
+          clearable
+          required
+          :items="relevantGroups"
+          item-text="$name"
+          :item-value="idKey"
+          :disabled="!isChallengeActive || !challengeId"
+          :add-new="name => groupToEdit = {
+            name: capitalize(name),
+            color: colors[relevantGroups.length % colors.length],
+            challengeId,
+          }"
+        >
+          <template #prepend-item>
+            <AddNewTip :label="$root.getLabel('Group')" />
+          </template>
+        </Picker>
+        <EditGroup
+          v-model="groupToEdit"
+          @done="group => handleAddGroup(group)"
+        />
+
+        <Picker
+          v-model="participantId"
+          :label="$root.getLabel('Participant')"
+          outlined
+          rounded
+          clearable
+          required
+          :items="relevantParticipants"
+          item-text="name"
+          :item-value="idKey"
+          :disabled="!isChallengeActive || !challengeId || !groupId"
+          :add-new="name => handleAdd({
+            name: capitalize(name),
+            challengeId,
+            groupId,
+          }, 'participants')"
+        >
+          <template #prepend-item>
+            <AddNewTip :label="$root.getLabel('Participant')" />
+          </template>
+        </Picker>
+        <v-text-field
+          v-model="value"
+          :label="$root.getLabel('Amount')"
+          type="number"
+          step="1"
+          min="1"
+          max="9999"
+          rounded
+          outlined
+          required
+          :disabled="!isChallengeActive || !challengeId || !groupId || !participantId"
+          :error="value !== undefined && value !== null && !isValid"
+        />
+
+        <v-btn
+          type="submit"
+          rounded
+          x-large
+          block
+          color="primary"
+          :disabled="!isChallengeActive || !isValid"
+          :loading="isAddEntryLoading"
+        >
+          Submit
+        </v-btn>
+      </v-form>
+
+      <v-spacer />
+      <AddCompliment
+        class="d-flex justify-center pb-6"
+        @input="msg => successMessage = msg"
       />
 
-      <Picker
-        v-model="participantId"
-        :label="$root.getLabel('Participant')"
-        outlined
-        rounded
-        clearable
-        required
-        :items="relevantParticipants"
-        item-text="name"
-        :item-value="idKey"
-        :disabled="!isChallengeActive || !challengeId || !groupId"
-        :add-new="name => handleAdd({
-          name: capitalize(name),
-          challengeId,
-          groupId,
-        }, 'participants')"
-      >
-        <template #prepend-item>
-          <AddNewTip :label="$root.getLabel('Participant')" />
-        </template>
-      </Picker>
-      <v-text-field
-        v-model="value"
-        :label="$root.getLabel('Amount')"
-        type="number"
-        step="1"
-        min="1"
-        max="9999"
-        rounded
-        outlined
-        required
-        :disabled="!isChallengeActive || !challengeId || !groupId || !participantId"
-        :error="value !== undefined && value !== null && !isValid"
-      />
-
-      <v-btn
-        type="submit"
-        rounded
-        x-large
-        block
-        color="primary"
-        :disabled="!isChallengeActive || !isValid"
-        :loading="isAddEntryLoading"
-      >
-        Submit
-      </v-btn>
-    </v-form>
-
-    <v-spacer />
-    <AddCompliment
-      class="d-flex justify-center pb-6"
-      @input="msg => successMessage = msg"
-    />
-
-    <v-snackbar v-model="hasSuccessMessage">
-      <div class="title text-center ma-auto" style="text-transform: capitalize;">
-        {{ successMessage }}!
-      </div>
-    </v-snackbar>
+      <v-snackbar v-model="hasSuccessMessage">
+        <div class="title text-center ma-auto" style="text-transform: capitalize;">
+          {{ successMessage }}!
+        </div>
+      </v-snackbar>
+    </template>
   </div>
 </template>
 
