@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="isOpen" max-width="320">
     <v-card class="EditChallenge">
-      <v-form autocomplete="off" @submit.prevent="handleDone()">
+      <v-form autocomplete="off" @submit.prevent="handleSubmit()">
         <v-card-title>
           <div class="flex">
             {{ isNew ? 'Add' : 'Edit' }} {{ $root.getLabel('Challenge') }}
@@ -10,9 +10,9 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text v-if="value">
+        <v-card-text v-if="challenge">
           <v-text-field
-            v-model="value.name"
+            v-model="challenge.name"
             label="Name *"
             outlined
             rounded
@@ -20,7 +20,7 @@
           />
           <v-textarea
             v-if="showField('description')"
-            v-model="value.description"
+            v-model="challenge.description"
             label="Description"
             outlined
             rounded
@@ -36,7 +36,7 @@
           >
             <template v-slot:activator="{ on }">
               <v-text-field
-                v-model="value.startAt"
+                v-model="challenge.startAt"
                 label="Start Date"
                 outlined
                 rounded
@@ -48,7 +48,7 @@
               />
             </template>
             <v-date-picker
-              v-model="value.startAt"
+              v-model="challenge.startAt"
               no-title
               @input="isPickingStartAt = false"
             />
@@ -63,7 +63,7 @@
           >
             <template v-slot:activator="{ on }">
               <v-text-field
-                v-model="value.endAt"
+                v-model="challenge.endAt"
                 label="End Date"
                 outlined
                 rounded
@@ -75,7 +75,7 @@
               />
             </template>
             <v-date-picker
-              v-model="value.endAt"
+              v-model="challenge.endAt"
               no-title
               @input="isPickingEndAt = false"
             />
@@ -114,7 +114,8 @@
             />
           </div>
           <v-switch
-            v-model="value.private"
+            v-model="challenge.private"
+            :disabled="!isNew"
             inset
             class="v-input--reverse mt-0 pa-0"
           >
@@ -173,6 +174,15 @@
               Labels
             </v-chip>
           </div>
+
+          <div v-if="challenge.createdAt" class="my-4">
+            <div class="overline">Created</div>
+            {{ challenge.createdAt.toDate().toLocaleString() }}
+          </div>
+          <div v-if="challenge.updatedAt" class="my-4">
+            <div class="overline">Updated</div>
+            {{ challenge.updatedAt.toDate().toLocaleString() }}
+          </div>
         </v-card-text>
         <v-card-actions class="justify-center pt-0 pa-4">
           <v-btn
@@ -204,6 +214,7 @@ export default Vue.extend({
   data() {
     return {
       idKey,
+      challenge: {},
       isPickingStartAt: false,
       isPickingEndAt: false,
       labels: {},
@@ -213,11 +224,11 @@ export default Vue.extend({
   computed: {
     isOpen: {
       get() {
-        return this.value;
+        return Boolean(this.value);
       },
       set(isOpen) {
         if (!isOpen) {
-          this.reset();
+          this.$emit('input', null);
         }
       },
     },
@@ -225,29 +236,44 @@ export default Vue.extend({
       return this.value && !this.value[idKey];
     },
     isValid() {
-      if (this.value) {
-        if (!this.value.name || !this.value.name.trim()) return false;
+      if (this.challenge) {
+        if (!this.challenge.name || !this.challenge.name.trim()) return false;
       }
       return true;
     },
   },
-  methods: {
-    reset() {
-      this.labels = {};
-      this.showFields = {};
-      this.$emit('input', null);
+  watch: {
+    value: {
+      handler(value) {
+        this.challenge = { ...value };
+      },
+      immediate: true,
     },
-
+    isOpen(isOpen) {
+      if (!isOpen) {
+        // reset on close
+        this.challenge = {};
+        this.isPickingStartAt = false;
+        this.isPickingEndAt = false;
+        this.labels = {};
+        this.showFields = {};
+      }
+    },
+  },
+  methods: {
     showField(field, set = undefined) {
       if (set !== undefined) {
         this.$set(this.showFields, field, set);
       }
-      return get(this.showFields, field, false);
+      return get(this.showFields, field, Boolean(this.challenge && this.challenge[field]));
     },
 
-    handleDone() {
-      this.$emit('done', this.value);
-      this.reset();
+    handleSubmit() {
+      if (this.isNew) {
+        this.$emit('add', this.challenge);
+      } else {
+        this.$emit('save', this.challenge);
+      }
     },
   },
 });

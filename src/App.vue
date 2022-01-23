@@ -54,7 +54,8 @@
       </Picker>
       <EditChallenge
         v-model="challengeToEdit"
-        @done="challenge => handleAddChallenge(challenge)"
+        @add="challenge => handleAddChallenge(challenge)"
+        @save="challenge => handleSaveChallenge(challenge)"
       />
 
       <template v-if="currentChallenge && currentChallenge.private">
@@ -238,7 +239,7 @@ export default Vue.extend({
     isDebugging,
     idKey,
     loading: true,
-    challengeToEdit: undefined,
+    challengeToEdit: undefined as Challenge | null | undefined,
     isShowingAllChallenges: false,
     hasCopied: false,
   }),
@@ -347,7 +348,7 @@ export default Vue.extend({
     //   (this.$refs.challengePicker as any).$el.querySelector('input').click();
     // },
     async handleAddChallenge(challenge: Challenge) {
-      const { id } = await firestoreRefs.challenges.add({
+      const { [idKey]: id } = await firestoreRefs.challenges.add({
         createdAt: firestore.FieldValue.serverTimestamp(),
         createdBy: this.me && this.me.uid,
         ...challenge,
@@ -356,6 +357,18 @@ export default Vue.extend({
         this.$store.dispatch('addPrivateId', id);
       }
       this.challengeId = id;
+      this.challengeToEdit = undefined;
+    },
+    async handleSaveChallenge(challenge: Challenge) {
+      const { [idKey]: id } = this.challengeToEdit || {};
+      if (id) {
+        await firestoreRefs.challenges.doc(id).update({
+          ...challenge,
+          updatedAt: firestore.FieldValue.serverTimestamp(),
+          updatedBy: this.me && this.me.uid,
+        });
+      }
+      this.challengeToEdit = undefined;
     },
 
     getChallengeUrl(challenge: Challenge) {

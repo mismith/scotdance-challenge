@@ -39,12 +39,16 @@ export interface Createable {
   createdAt: firebase.firestore.Timestamp;
   createdBy?: string;
 }
+export interface Updateable {
+  updatedAt?: firebase.firestore.Timestamp;
+  updatedBy?: string;
+}
 export interface WithStats {
   $total: number;
   $count: number;
 }
 
-export interface Challenge extends FirebaseObject, Createable, WithStats {
+export interface Challenge extends FirebaseObject, Createable, Updateable, WithStats {
   name: string;
   description?: string;
   startAt?: string;

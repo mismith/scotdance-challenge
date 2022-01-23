@@ -60,6 +60,17 @@ const vuexLocal = new VuexPersistence<State>({
   }),
 });
 
+function augment<T extends Record<any, any>>(item: T, augmentations: Partial<T>) {
+  const config = Object.entries(augmentations).reduce((acc, [key, value]) => {
+    acc[key] = {
+      value,
+      configurable: true,
+    };
+    return acc;
+  }, {} as any);
+  Object.defineProperties(item, config);
+}
+
 export default new Vuex.Store<State>({
   state: {
     me: null,
@@ -99,11 +110,13 @@ export default new Vuex.Store<State>({
             }
             return true;
           })
-          .map((challenge) => {
-            challenge.$isActive = isChallengeActive(challenge);
-            challenge.$isUpcoming = isChallengeUpcoming(challenge);
-            challenge.$isRecentlyEnded = isChallengeRecentlyEnded(challenge);
-            return challenge;
+          .map((item) => {
+            augment(item, {
+              $isActive: isChallengeActive(item),
+              $isUpcoming: isChallengeUpcoming(item),
+              $isRecentlyEnded: isChallengeRecentlyEnded(item),
+            });
+            return item;
           }),
         ['$isActive', '$isRecentlyEnded', '$isUpcoming', 'name'],
         ['desc', 'desc', 'desc', 'asc'],
@@ -118,8 +131,10 @@ export default new Vuex.Store<State>({
           return true;
         })
         .map((item) => {
-          item.$challenge = findByIdKey(challenges, item.challengeId);
-          item.$name = `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`;
+          augment(item, {
+            $challenge: findByIdKey(challenges, item.challengeId),
+            $name: `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`,
+          });
           return item;
         });
     },
@@ -132,10 +147,12 @@ export default new Vuex.Store<State>({
           return true;
         })
         .map((item) => {
-          item.$group = findByIdKey(groups, item.groupId);
-          item.$name = item.$group && item.$group.country
-            ? `${item.name} ${getEmojiFlag(item.$group.country)}`
-            : item.name;
+          augment(item, {
+            $group: findByIdKey(groups, item.groupId),
+            $name: item.$group && item.$group.country
+              ? `${item.name} ${getEmojiFlag(item.$group.country)}`
+              : item.name,
+          });
           return item;
         });
     },
@@ -148,7 +165,9 @@ export default new Vuex.Store<State>({
           return true;
         })
         .map((item) => {
-          item.$participant = findByIdKey(participants, item.participantId);
+          augment(item, {
+            $participant: findByIdKey(participants, item.participantId),
+          });
           return item;
         });
     },
