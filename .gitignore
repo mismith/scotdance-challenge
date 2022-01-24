@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
-/dist
+dist/
 .firebase
 firebase-debug.log
 firestore-debug.log

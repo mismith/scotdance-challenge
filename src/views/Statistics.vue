@@ -192,51 +192,51 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { mapGetters } from 'vuex';
-import get from 'lodash.get';
-import orderBy from 'lodash.orderby';
-import runes from 'runes';
-import { idKey, findByIdKey } from '@/plugins/firebase';
-import { getName } from '@/services/country';
-import { isChallengeInFinalCountdown, getChallengeEndDate } from '@/services/date';
-import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
-import FilterBy from '@/components/FilterBy.vue';
-import SortBy from '@/components/SortBy.vue';
+import Vue from 'vue'
+import { mapGetters } from 'vuex'
+import get from 'lodash.get'
+import orderBy from 'lodash.orderby'
+import runes from 'runes'
+import { idKey, findByIdKey } from '@/plugins/firebase'
+import { getName } from '@/services/country'
+import { isChallengeInFinalCountdown, getChallengeEndDate } from '@/services/date'
+import HorizontalBarChart from '@/components/HorizontalBarChart.vue'
+import FilterBy from '@/components/FilterBy.vue'
+import SortBy from '@/components/SortBy.vue'
 
 // exponentially curb values to that outliers are less prominent in chart axes
-const flatten = (v) => v ** (1 / 2);
-const unflatten = (v) => Math.round(v ** 2);
+const flatten = (v) => v ** (1 / 2)
+const unflatten = (v) => Math.round(v ** 2)
 
 function getParticipantRelativeValue(value, participants, id) {
-  const numGroupParticipants = participants.filter(({ groupId }) => groupId === id).length;
-  return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0;
+  const numGroupParticipants = participants.filter(({ groupId }) => groupId === id).length
+  return numGroupParticipants ? Math.round(value / numGroupParticipants) : 0
 }
 
-const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E'];
+const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E']
 function abbreviateNumber(number) {
-  const tier = Math.log10(number) / 3 | 0; // eslint-disable-line no-bitwise
-  if (!tier) return number;
+  const tier = Math.log10(number) / 3 | 0 // eslint-disable-line no-bitwise
+  if (!tier) return number
 
-  const suffix = SI_SYMBOL[tier];
-  const scale = 10 ** (tier * 3);
-  const scaled = number / scale;
-  return `${scaled.toFixed(1)}${suffix}`;
+  const suffix = SI_SYMBOL[tier]
+  const scale = 10 ** (tier * 3)
+  const scaled = number / scale
+  return `${scaled.toFixed(1)}${suffix}`
 }
 
 function truncateLabel(label, limit = 22) {
-  if (!label) return label;
+  if (!label) return label
 
-  const chars = runes(label.trim());
-  if (chars.length <= limit) return label; // don't trim a single character
+  const chars = runes(label.trim())
+  if (chars.length <= limit) return label // don't trim a single character
 
-  const truncate = (num) => chars.slice(0, num).join('').trim();
-  const lastChar = chars[chars.length - 1];
+  const truncate = (num) => chars.slice(0, num).join('').trim()
+  const lastChar = chars[chars.length - 1]
   if (!/[\w\s]/.test(lastChar)) { // last char is emoji-like; preserve it in place
-    return `${truncate(limit - 2)}…${lastChar}`;
+    return `${truncate(limit - 2)}…${lastChar}`
   }
 
-  return `${truncate(limit - 1)}…`;
+  return `${truncate(limit - 1)}…`
 }
 
 export default Vue.extend({
@@ -267,7 +267,7 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-    };
+    }
   },
   computed: {
     ...mapGetters([
@@ -278,10 +278,10 @@ export default Vue.extend({
     ]),
 
     hasMultipleGroups() {
-      return this.groups.length > 1;
+      return this.groups.length > 1
     },
     firstSlideIndexWithGroupFilters() {
-      return this.hasMultipleGroups ? 2 : 0;
+      return this.hasMultipleGroups ? 2 : 0
     },
 
     extendedGroups() {
@@ -292,60 +292,60 @@ export default Vue.extend({
             item.$total,
             this.relevantParticipants,
             item[idKey],
-          );
-          return item;
+          )
+          return item
         })
-        .filter(({ $total }) => $total);
+        .filter(({ $total }) => $total)
     },
     filteredGroups() {
-      let filteredGroups = this.extendedGroups;
+      let filteredGroups = this.extendedGroups
       if (this.filterDataByCountryIds.length) {
         filteredGroups = filteredGroups
-          .filter(({ country }) => this.filterDataByCountryIds.includes(country));
+          .filter(({ country }) => this.filterDataByCountryIds.includes(country))
       }
-      return filteredGroups;
+      return filteredGroups
     },
     relevantGroups() {
-      let relevantGroups = this.filteredGroups;
+      let relevantGroups = this.filteredGroups
       if (this.orderDataBy) {
-        relevantGroups = orderBy(relevantGroups, this.orderDataBy.keys, this.orderDataBy.dirs);
+        relevantGroups = orderBy(relevantGroups, this.orderDataBy.keys, this.orderDataBy.dirs)
       }
-      return relevantGroups;
+      return relevantGroups
     },
 
     filteredParticipants() {
-      return this.participants.filter(({ $total }) => $total);
+      return this.participants.filter(({ $total }) => $total)
     },
     relevantParticipants() {
       let relevantParticipants = this.participants
-        .filter(({ $total }) => $total);
+        .filter(({ $total }) => $total)
 
       if (this.filterDataByCountryIds.length) {
         relevantParticipants = relevantParticipants
-          .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
+          .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country))
       }
       if (
         this.filterDataByGroupIds.length
         && this.currentSlideIndex >= this.firstSlideIndexWithGroupFilters
       ) {
         relevantParticipants = relevantParticipants
-          .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
+          .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]))
       }
       // always sort by value since Top 100 on alphabetical makes no sense
-      const orderDataBy = findByIdKey(this.orderDataBys, 'value');
+      const orderDataBy = findByIdKey(this.orderDataBys, 'value')
       if (orderDataBy) {
-        relevantParticipants = orderBy(relevantParticipants, orderDataBy.keys, orderDataBy.dirs);
+        relevantParticipants = orderBy(relevantParticipants, orderDataBy.keys, orderDataBy.dirs)
       }
       relevantParticipants = relevantParticipants
         .map((item, index) => {
           // @TODO: use augment
-          item.$rank = index + 1;
-          return item;
-        });
-      return relevantParticipants;
+          item.$rank = index + 1
+          return item
+        })
+      return relevantParticipants
     },
     relevantParticipantsData() {
-      return this.relevantParticipants.slice(0, 100);
+      return this.relevantParticipants.slice(0, 100)
     },
 
     orderDataBys() {
@@ -361,10 +361,10 @@ export default Vue.extend({
           keys: [this.hasMultipleGroups && this.currentSlideIndex === 0 ? '$average' : '$total'],
           dirs: ['desc'],
         },
-      ];
+      ]
     },
     orderDataBy() {
-      return findByIdKey(this.orderDataBys, this.orderDataById);
+      return findByIdKey(this.orderDataBys, this.orderDataById)
     },
 
     chartOptions() {
@@ -391,9 +391,9 @@ export default Vue.extend({
             label: ({ xLabel }) => unflatten(xLabel).toLocaleString(),
             title: ([{ yLabel, index }]) => {
               if (this.orderDataBy && this.orderDataBy[idKey] === 'value') {
-                return `${yLabel} [${index + 1}]`;
+                return `${yLabel} [${index + 1}]`
               }
-              return yLabel;
+              return yLabel
             },
           },
         },
@@ -406,7 +406,7 @@ export default Vue.extend({
             ),
           },
         },
-      };
+      }
     },
     participantChartOptions() {
       return {
@@ -416,10 +416,10 @@ export default Vue.extend({
           callbacks: {
             ...this.chartOptions.tooltips.callbacks,
             afterTitle: ([{ index }]) => {
-              if (this.filterDataByGroupIds.length === 1) return null;
+              if (this.filterDataByGroupIds.length === 1) return null
 
-              const participant = this.relevantParticipantsData[index] || {};
-              return participant && `${participant.$group.name}`;
+              const participant = this.relevantParticipantsData[index] || {}
+              return participant && `${participant.$group.name}`
             },
           },
         },
@@ -432,37 +432,37 @@ export default Vue.extend({
             ),
           },
         },
-      };
+      }
     },
 
     groupDataPerParticipant() {
-      const groupDataPerParticipant = this.gatherData(this.relevantGroups, '$average');
+      const groupDataPerParticipant = this.gatherData(this.relevantGroups, '$average')
       // console.log(groupDataPerParticipant);
-      return groupDataPerParticipant;
+      return groupDataPerParticipant
     },
     groupData() {
-      const groupData = this.gatherData(this.relevantGroups);
+      const groupData = this.gatherData(this.relevantGroups)
       // console.log(groupData);
-      return groupData;
+      return groupData
     },
     participantData() {
-      const participantData = this.gatherData(this.relevantParticipantsData);
+      const participantData = this.gatherData(this.relevantParticipantsData)
       // console.log(participantData);
-      return participantData;
+      return participantData
     },
 
     isInFinalCountdown() {
-      return isChallengeInFinalCountdown(this.currentChallenge);
+      return isChallengeInFinalCountdown(this.currentChallenge)
     },
     endDate() {
-      return getChallengeEndDate(this.currentChallenge);
+      return getChallengeEndDate(this.currentChallenge)
     },
   },
   watch: {
     orderDataBys(orderDataBys) {
-      const orderDataBy = findByIdKey(orderDataBys, this.orderDataById);
+      const orderDataBy = findByIdKey(orderDataBys, this.orderDataById)
       if (!orderDataBy) {
-        this.orderDataById = this.orderDataBys[0][idKey];
+        this.orderDataById = this.orderDataBys[0][idKey]
       }
     },
   },
@@ -476,10 +476,10 @@ export default Vue.extend({
         datasets: [{
           data: items.map((item) => flatten(item[key])),
         }],
-      };
+      }
     },
   },
-});
+})
 </script>
 
 <style lang="scss">

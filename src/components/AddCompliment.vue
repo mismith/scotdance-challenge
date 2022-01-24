@@ -53,10 +53,10 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { mapState } from 'vuex';
-import { firestore, db, idKey } from '@/plugins/firebase';
-import compliments from '@/store/compliments';
+import Vue from 'vue'
+import { mapState } from 'vuex'
+import { firestore, db, idKey } from '@/plugins/firebase'
+import compliments from '@/store/compliments'
 
 export default Vue.extend({
   name: 'AddCompliment',
@@ -72,7 +72,7 @@ export default Vue.extend({
       ],
       submitting: false,
       debounceTimeout: undefined,
-    };
+    }
   },
   computed: {
     ...mapState([
@@ -80,58 +80,58 @@ export default Vue.extend({
     ]),
 
     sanitizedCompliment() {
-      return (this.newCompliment || '').trim().toLowerCase().replace(/!$/, '');
+      return (this.newCompliment || '').trim().toLowerCase().replace(/!$/, '')
     },
   },
   watch: {
     async newCompliment() {
-      await this.handleInput(this.sanitizedCompliment);
+      await this.handleInput(this.sanitizedCompliment)
     },
     isOpen(isOpen) {
       if (!isOpen) {
-        this.newCompliment = null;
+        this.newCompliment = null
       }
     },
   },
   methods: {
     toast(message, delay = 0) {
       if (this.debounceTimeout) {
-        clearTimeout(this.debounceTimeout);
+        clearTimeout(this.debounceTimeout)
       }
       this.debounceTimeout = setTimeout(async () => {
-        this.$emit('input', message);
-      }, delay);
+        this.$emit('input', message)
+      }, delay)
     },
     handleInput(value) {
       if (value) {
-        this.$emit('input', null);
-        this.toast(value, 1000);
+        this.$emit('input', null)
+        this.toast(value, 1000)
       }
     },
     async handleAddCompliment() {
       try {
-        this.submitting = true;
-        const text = this.sanitizedCompliment.toString();
+        this.submitting = true
+        const text = this.sanitizedCompliment.toString()
         await db.collection('complimentsSubmitted').add({
           text,
           createdAt: firestore.FieldValue.serverTimestamp(),
           createdBy: this.me && this.me.uid,
-        });
-        this.newCompliment = null;
-        this.isOpen = false;
+        })
+        this.newCompliment = null
+        this.isOpen = false
 
         if (window.$crisp) {
           window.$crisp.push(['do', 'message:send', [
             'text',
             `Compliment Submitted: ${text}`,
-          ]]);
-          window.$crisp.push(['do', 'chat:hide']);
+          ]])
+          window.$crisp.push(['do', 'chat:hide'])
         }
       } finally {
-        this.submitting = false;
-        this.toast('submitted 🙇 thank you', 300);
+        this.submitting = false
+        this.toast('submitted 🙇 thank you', 300)
       }
     },
   },
-});
+})
 </script>

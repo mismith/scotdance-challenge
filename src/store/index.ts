@@ -1,10 +1,10 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
-import { vuexfireMutations, firestoreAction } from 'vuexfire';
-import VuexPersistence from 'vuex-persist';
-import orderBy from 'lodash.orderby';
-import { $package } from '@/config';
-import { getEmojiFlag } from '@/services/country';
+import Vue from 'vue'
+import Vuex from 'vuex'
+import { vuexfireMutations, firestoreAction } from 'vuexfire'
+import VuexPersistence from 'vuex-persist'
+import orderBy from 'lodash.orderby'
+import { $package } from '@/config'
+import { getEmojiFlag } from '@/services/country'
 import {
   firebase,
   firestoreRefs,
@@ -14,10 +14,10 @@ import {
   Group,
   Participant,
   Entry,
-} from '@/plugins/firebase';
-import { isChallengeActive, isChallengeUpcoming, isChallengeRecentlyEnded } from '@/services/date';
+} from '@/plugins/firebase'
+import { isChallengeActive, isChallengeUpcoming, isChallengeRecentlyEnded } from '@/services/date'
 
-Vue.use(Vuex);
+Vue.use(Vuex)
 
 export interface State {
   me: firebase.User | null;
@@ -58,17 +58,17 @@ const vuexLocal = new VuexPersistence<State>({
     groupId,
     participantId,
   }),
-});
+})
 
 function augment<T extends Record<any, any>>(item: T, augmentations: Partial<T>) {
   const config = Object.entries(augmentations).reduce((acc, [key, value]) => {
     acc[key] = {
       value,
       configurable: true,
-    };
-    return acc;
-  }, {} as any);
-  Object.defineProperties(item, config);
+    }
+    return acc
+  }, {} as any)
+  Object.defineProperties(item, config)
 }
 
 export default new Vuex.Store<State>({
@@ -103,45 +103,45 @@ export default new Vuex.Store<State>({
         challenges
           .filter(({ [idKey]: challengeId, private: isPrivate }) => {
             if (isPrivate) {
-              return privateIds.includes(challengeId);
+              return privateIds.includes(challengeId)
             }
-            return true;
+            return true
           })
           .map((item) => {
             augment(item, {
               $isActive: isChallengeActive(item),
               $isUpcoming: isChallengeUpcoming(item),
               $isRecentlyEnded: isChallengeRecentlyEnded(item),
-            });
-            return item;
+            })
+            return item
           }),
         ['$isActive', '$isRecentlyEnded', '$isUpcoming', 'name'],
         ['desc', 'desc', 'desc', 'asc'],
-      );
+      )
     },
     groups({ groups, privateIds }, { challenges }) {
       return groups
         .filter(({ challengeId, private: isPrivate }) => {
           if (isPrivate) {
-            return privateIds.includes(challengeId);
+            return privateIds.includes(challengeId)
           }
-          return true;
+          return true
         })
         .map((item) => {
           augment(item, {
             $challenge: findByIdKey(challenges, item.challengeId),
             $name: `${item.name}${item.country ? ` ${getEmojiFlag(item.country)}` : ''}`,
-          });
-          return item;
-        });
+          })
+          return item
+        })
     },
     participants({ participants, privateIds }, { groups }) {
       return participants
         .filter(({ challengeId, private: isPrivate }) => {
           if (isPrivate) {
-            return privateIds.includes(challengeId);
+            return privateIds.includes(challengeId)
           }
-          return true;
+          return true
         })
         .map((item) => {
           augment(item, {
@@ -149,108 +149,108 @@ export default new Vuex.Store<State>({
             $name: item.$group && item.$group.country
               ? `${item.name} ${getEmojiFlag(item.$group.country)}`
               : item.name,
-          });
-          return item;
-        });
+          })
+          return item
+        })
     },
     entries({ entries, privateIds }, { participants }) {
       return entries
         .filter(({ challengeId, private: isPrivate }) => {
           if (isPrivate) {
-            return privateIds.includes(challengeId);
+            return privateIds.includes(challengeId)
           }
-          return true;
+          return true
         })
         .map((item) => {
           augment(item, {
             $participant: findByIdKey(participants, item.participantId),
-          });
-          return item;
-        });
+          })
+          return item
+        })
     },
 
     currentChallenge({ challengeId }, { challenges }) {
-      return findByIdKey(challenges, challengeId);
+      return findByIdKey(challenges, challengeId)
     },
   },
   mutations: {
     ...vuexfireMutations,
 
     setMe(state, me) {
-      state.me = me;
+      state.me = me
     },
 
     setChallengeId(state, to) {
-      const challenge = findByIdKey<Challenge>(state.challenges, to);
-      state.challengeId = (challenge && challenge[idKey]) || '';
+      const challenge = findByIdKey<Challenge>(state.challenges, to)
+      state.challengeId = (challenge && challenge[idKey]) || ''
 
       if (window.$crisp && challenge) {
-        window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]]);
+        window.$crisp.push(['set', 'session:data', [[['Challenge', challenge.name]]]])
       }
     },
     setGroupId(state, to) {
-      const group = findByIdKey<Group>(state.groups, to);
-      state.groupId = (group && group[idKey]) || '';
+      const group = findByIdKey<Group>(state.groups, to)
+      state.groupId = (group && group[idKey]) || ''
 
       if (window.$crisp && group) {
-        window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]]);
+        window.$crisp.push(['set', 'session:data', [[['Group', group.name]]]])
       }
     },
     setParticipantId(state, to) {
-      const participant = findByIdKey<Participant>(state.participants, to);
-      state.participantId = (participant && participant[idKey]) || '';
+      const participant = findByIdKey<Participant>(state.participants, to)
+      state.participantId = (participant && participant[idKey]) || ''
 
       if (window.$crisp && participant) {
-        window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]]);
+        window.$crisp.push(['set', 'session:data', [[['Participant', participant.name]]]])
       }
     },
 
     togglePrivateDialogOpen(state, to = !state.isPrivateDialogOpen) {
-      state.isPrivateDialogOpen = Boolean(to);
+      state.isPrivateDialogOpen = Boolean(to)
     },
     togglePublicDialogOpen(state, to = !state.isPublicDialogOpen) {
-      state.isPublicDialogOpen = Boolean(to);
+      state.isPublicDialogOpen = Boolean(to)
     },
     toggleInfoDialogOpen(state, to = !state.isInfoDialogOpen) {
-      state.isInfoDialogOpen = Boolean(to);
+      state.isInfoDialogOpen = Boolean(to)
     },
   },
   actions: {
     bindChallenges: firestoreAction(({ bindFirestoreRef }, {
       mutateQuery = (query: firebase.firestore.Query) => query,
     } = {}) => {
-      const query = firestoreRefs.challenges.orderBy('name');
-      return bindFirestoreRef('challenges', mutateQuery(query));
+      const query = firestoreRefs.challenges.orderBy('name')
+      return bindFirestoreRef('challenges', mutateQuery(query))
     }),
     bindGroups: firestoreAction(({ bindFirestoreRef }, {
       mutateQuery = (query: firebase.firestore.Query) => query,
     } = {}) => {
-      const query = firestoreRefs.groups.orderBy('name');
-      return bindFirestoreRef('groups', mutateQuery(query));
+      const query = firestoreRefs.groups.orderBy('name')
+      return bindFirestoreRef('groups', mutateQuery(query))
     }),
     bindParticipants: firestoreAction(({ bindFirestoreRef }, {
       mutateQuery = (query: firebase.firestore.Query) => query,
     } = {}) => {
-      const query = firestoreRefs.participants.orderBy('name');
-      return bindFirestoreRef('participants', mutateQuery(query));
+      const query = firestoreRefs.participants.orderBy('name')
+      return bindFirestoreRef('participants', mutateQuery(query))
     }),
     bindEntries: firestoreAction(({ bindFirestoreRef }, {
       mutateQuery = (query: firebase.firestore.Query) => query,
       limit = 50,
       options = {},
     } = {}) => {
-      const query = firestoreRefs.entries.orderBy('createdAt', 'desc').limit(limit);
-      return bindFirestoreRef('entries', mutateQuery(query), options);
+      const query = firestoreRefs.entries.orderBy('createdAt', 'desc').limit(limit)
+      return bindFirestoreRef('entries', mutateQuery(query), options)
     }),
 
     addPrivateId({ state, commit }, id) {
       if (!state.privateIds.includes(id)) {
-        state.privateIds.push(id);
-        commit('togglePrivateDialogOpen', true);
+        state.privateIds.push(id)
+        commit('togglePrivateDialogOpen', true)
       }
     },
   },
   plugins: [
     vuexLocal.plugin,
   ],
-});
+})

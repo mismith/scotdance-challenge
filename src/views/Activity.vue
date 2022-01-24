@@ -100,15 +100,15 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { mapState, mapGetters, mapActions } from 'vuex';
-import AnimatedNumber from 'animated-number-vue';
-import infiniteScroll from 'vue-infinite-scroll';
-import { idKey, db } from '@/plugins/firebase';
-import ChallengeProgress from '@/components/ChallengeProgress.vue';
-import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue';
+import Vue from 'vue'
+import { mapState, mapGetters, mapActions } from 'vuex'
+import AnimatedNumber from 'animated-number-vue'
+import infiniteScroll from 'vue-infinite-scroll'
+import { idKey, db } from '@/plugins/firebase'
+import ChallengeProgress from '@/components/ChallengeProgress.vue'
+import ActivityTimelineItem from '@/components/ActivityTimelineItem.vue'
 
-const INCREMENT = 20;
+const INCREMENT = 20
 
 export default Vue.extend({
   name: 'Activity',
@@ -132,7 +132,7 @@ export default Vue.extend({
 
       isDeleting: false,
       deletedEntry: undefined,
-    };
+    }
   },
   computed: {
     ...mapState([
@@ -145,33 +145,33 @@ export default Vue.extend({
     ]),
 
     isShowingAllEntries() {
-      return this.entries.length < this.limit;
+      return this.entries.length < this.limit
     },
   },
   watch: {
     challengeId: {
       handler() {
-        this.limit = 0;
-        this.loadMore();
+        this.limit = 0
+        this.loadMore()
       },
       immediate: true,
     },
 
     flaggedEntry(flaggedEntry) {
-      this.isFlagging = Boolean(flaggedEntry);
+      this.isFlagging = Boolean(flaggedEntry)
     },
     isFlagging(isFlagging) {
       if (!isFlagging) {
-        this.flaggedEntry = null;
+        this.flaggedEntry = null
       }
     },
 
     deletedEntry(deletedEntry) {
-      this.isDeleting = Boolean(deletedEntry);
+      this.isDeleting = Boolean(deletedEntry)
     },
     isDeleting(isDeleting) {
       if (!isDeleting) {
-        this.deletedEntry = null;
+        this.deletedEntry = null
       }
     },
   },
@@ -186,26 +186,26 @@ export default Vue.extend({
           window.$crisp.push(['do', 'message:send', [
             'text',
             `Flagged Entry ID: ${this.flaggedEntry[idKey]}`,
-          ]]);
+          ]])
         }
-        window.$crisp.push(['do', 'chat:open']);
+        window.$crisp.push(['do', 'chat:open'])
       } else {
-        throw new Error('Live chat not found');
+        throw new Error('Live chat not found')
       }
-      this.flaggedEntry = null;
+      this.flaggedEntry = null
     },
     async deleteEntry() {
       if (this.deletedEntry) {
-        await db.collection('entries').doc(this.deletedEntry[idKey]).delete();
+        await db.collection('entries').doc(this.deletedEntry[idKey]).delete()
       }
-      this.deletedEntry = null;
+      this.deletedEntry = null
     },
 
     async loadMore() {
-      if (this.isShowingAllEntries || this.isLoadingMore) return;
+      if (this.isShowingAllEntries || this.isLoadingMore) return
 
-      this.isLoadingMore = true;
-      this.limit += INCREMENT;
+      this.isLoadingMore = true
+      this.limit += INCREMENT
       await this.bindEntries({
         mutateQuery: this.challengeId
           ? (query) => query.where('challengeId', '==', this.challengeId)
@@ -214,9 +214,9 @@ export default Vue.extend({
         options: {
           wait: true,
         },
-      });
-      this.isLoadingMore = false;
+      })
+      this.isLoadingMore = false
     },
   },
-});
+})
 </script>

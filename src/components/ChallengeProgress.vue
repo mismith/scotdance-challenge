@@ -21,9 +21,9 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { differenceInMilliseconds, formatDistanceStrict, isAfter } from 'date-fns';
-import { getChallengeStartDate, getChallengeEndDate } from '@/services/date';
+import Vue from 'vue'
+import { differenceInMilliseconds, formatDistanceStrict, isAfter } from 'date-fns'
+import { getChallengeStartDate, getChallengeEndDate } from '@/services/date'
 
 export default Vue.extend({
   name: 'ChallengeProgress',
@@ -35,39 +35,39 @@ export default Vue.extend({
   },
   computed: {
     startDate() {
-      return getChallengeStartDate(this.challenge);
+      return getChallengeStartDate(this.challenge)
     },
     endDate() {
-      return getChallengeEndDate(this.challenge);
+      return getChallengeEndDate(this.challenge)
     },
     status() {
-      const { startDate, endDate } = (this as any);
+      const { startDate, endDate } = (this as any)
       if (startDate) {
-        const distance = formatDistanceStrict(startDate, new Date(), { addSuffix: true });
+        const distance = formatDistanceStrict(startDate, new Date(), { addSuffix: true })
         if (isAfter(startDate, new Date())) {
-          return ['starts', distance];
+          return ['starts', distance]
         }
         if (!endDate) {
-          return ['started', distance];
+          return ['started', distance]
         }
       }
       if (endDate) {
-        const distance = formatDistanceStrict(endDate, new Date(), { addSuffix: true });
+        const distance = formatDistanceStrict(endDate, new Date(), { addSuffix: true })
         if (isAfter(endDate, new Date())) {
-          return ['ends', distance];
+          return ['ends', distance]
         }
-        return ['ended', distance];
+        return ['ended', distance]
       }
-      return null;
+      return null
     },
     percentComplete() {
       if (this.startDate && this.endDate) {
-        const elapsed = differenceInMilliseconds(new Date(), (this as any).startDate);
-        const total = differenceInMilliseconds((this as any).endDate, (this as any).startDate);
-        return Math.round((elapsed / total) * 100);
+        const elapsed = differenceInMilliseconds(new Date(), (this as any).startDate)
+        const total = differenceInMilliseconds((this as any).endDate, (this as any).startDate)
+        return Math.round((elapsed / total) * 100)
       }
-      return null;
+      return null
     },
   },
-});
+})
 </script>

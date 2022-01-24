@@ -7,7 +7,7 @@
     "dev:functions": "npm run --prefix functions/ dev",
     "dev:www": "vite --host",
     "dev": "run-p dev:functions \"emulate -- --export-on-exit\" dev:www",
-    "lint": "eslint './{functions,src}/**/*.{js,ts,vue}'",
+    "lint": "eslint './{{functions,src}/**,}/*.{js,ts,vue}'",
     "lint:fix": "npm run lint -- --fix",
     "build:functions": "npm run --prefix functions/ build",
     "build:www": "vite build",

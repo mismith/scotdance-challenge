@@ -23,6 +23,10 @@ module.exports = {
     'plugin:vue/recommended',
   ],
   rules: {
+    'comma-dangle': ['error', 'always-multiline'],
+    'eol-last': ['error', 'always'],
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'semi': ['error', 'never'],
     'vue/html-self-closing': ['error', {
       html: {
         void: 'always',
@@ -36,4 +40,4 @@ module.exports = {
     'vue/multi-word-component-names': 0,
     'vue/singleline-html-element-content-newline': 0,
   },
-};
+}

@@ -44,10 +44,10 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { isAfter } from 'date-fns';
-import { idKey } from '@/plugins/firebase';
-import { getChallengeStartDate, getChallengeEndDate } from '@/services/date';
+import Vue from 'vue'
+import { isAfter } from 'date-fns'
+import { idKey } from '@/plugins/firebase'
+import { getChallengeStartDate, getChallengeEndDate } from '@/services/date'
 
 export default Vue.extend({
   name: 'ChallengeInfo',
@@ -67,24 +67,24 @@ export default Vue.extend({
   computed: {
     isOpen: {
       get() {
-        return this.value;
+        return this.value
       },
       set(isOpen) {
         if (!isOpen) {
-          this.$emit('input', null);
+          this.$emit('input', null)
         }
       },
     },
 
     startDate() {
-      return getChallengeStartDate(this.challenge);
+      return getChallengeStartDate(this.challenge)
     },
     endDate() {
-      return getChallengeEndDate(this.challenge);
+      return getChallengeEndDate(this.challenge)
     },
   },
   methods: {
     isAfter,
   },
-});
+})
 </script>

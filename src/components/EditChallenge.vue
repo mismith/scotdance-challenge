@@ -205,13 +205,13 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import get from 'lodash.get';
-import { idKey } from '@/plugins/firebase';
+import Vue from 'vue'
+import get from 'lodash.get'
+import { idKey } from '@/plugins/firebase'
 
 function isEmpty(obj) {
-  if (typeof obj === 'object') return Boolean(Object.values(obj || {}).filter(Boolean).length);
-  return Boolean(obj);
+  if (typeof obj === 'object') return Boolean(Object.values(obj || {}).filter(Boolean).length)
+  return Boolean(obj)
 }
 
 export default Vue.extend({
@@ -219,7 +219,7 @@ export default Vue.extend({
   props: {
     value: {
       type: Object,
-      required: true,
+      default: null,
     },
   },
   data() {
@@ -229,61 +229,61 @@ export default Vue.extend({
       isPickingStartAt: false,
       isPickingEndAt: false,
       showFields: {},
-    };
+    }
   },
   computed: {
     isOpen: {
       get() {
-        return Boolean(this.value);
+        return Boolean(this.value)
       },
       set(isOpen) {
         if (!isOpen) {
-          this.$emit('input', null);
+          this.$emit('input', null)
         }
       },
     },
     isNew() {
-      return this.value && !this.value[idKey];
+      return this.value && !this.value[idKey]
     },
     isValid() {
       if (this.challenge) {
-        if (!this.challenge.name || !this.challenge.name.trim()) return false;
+        if (!this.challenge.name || !this.challenge.name.trim()) return false
       }
-      return true;
+      return true
     },
   },
   watch: {
     value: {
       handler(value) {
-        this.challenge = { ...value };
+        this.challenge = { ...value }
       },
       immediate: true,
     },
     isOpen(isOpen) {
       if (!isOpen) {
         // reset on close
-        this.challenge = {};
-        this.isPickingStartAt = false;
-        this.isPickingEndAt = false;
-        this.showFields = {};
+        this.challenge = {}
+        this.isPickingStartAt = false
+        this.isPickingEndAt = false
+        this.showFields = {}
       }
     },
   },
   methods: {
     showField(field, set = undefined) {
       if (set !== undefined) {
-        this.$set(this.showFields, field, set);
+        this.$set(this.showFields, field, set)
       }
-      return get(this.showFields, field, isEmpty(this.value && this.value[field]));
+      return get(this.showFields, field, isEmpty(this.value && this.value[field]))
     },
 
     handleSubmit() {
       if (this.isNew) {
-        this.$emit('add', this.challenge);
+        this.$emit('add', this.challenge)
       } else {
-        this.$emit('save', this.challenge);
+        this.$emit('save', this.challenge)
       }
     },
   },
-});
+})
 </script>

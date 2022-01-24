@@ -72,10 +72,10 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { mapGetters, mapState } from 'vuex';
-import { getEmojiFlag } from '@/services/country';
-import { idKey, findByIdKey } from '@/plugins/firebase';
+import Vue from 'vue'
+import { mapGetters, mapState } from 'vuex'
+import { getEmojiFlag } from '@/services/country'
+import { idKey, findByIdKey } from '@/plugins/firebase'
 
 export default Vue.extend({
   name: 'ActivityTimelineItem',
@@ -88,7 +88,7 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-    };
+    }
   },
   computed: {
     ...mapState([
@@ -102,17 +102,17 @@ export default Vue.extend({
     ]),
 
     challenge() {
-      return this.entry && findByIdKey(this.challenges, this.entry.challengeId);
+      return this.entry && findByIdKey(this.challenges, this.entry.challengeId)
     },
     group() {
-      return this.entry && findByIdKey(this.groups, this.entry.groupId);
+      return this.entry && findByIdKey(this.groups, this.entry.groupId)
     },
     participant() {
-      return this.entry && findByIdKey(this.participants, this.entry.participantId);
+      return this.entry && findByIdKey(this.participants, this.entry.participantId)
     },
   },
   methods: {
     getEmojiFlag,
   },
-});
+})
 </script>

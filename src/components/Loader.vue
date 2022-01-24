@@ -1,5 +1,5 @@
 <script>
-import VProgressCircular from 'vuetify/lib/components/VProgressCircular';
+import VProgressCircular from 'vuetify/lib/components/VProgressCircular'
 
 export default VProgressCircular.extend({
   name: 'Loader',
@@ -14,5 +14,5 @@ export default VProgressCircular.extend({
       default: 'primary',
     },
   },
-});
+})
 </script>

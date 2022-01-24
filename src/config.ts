@@ -1,4 +1,4 @@
-import $package from '@/../package.json';
+import $package from '@/../package.json'
 
-export { $package };
-export const isDebugging = window.location.hostname === 'localhost';
+export { $package }
+export const isDebugging = window.location.hostname === 'localhost'

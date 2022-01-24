@@ -69,10 +69,10 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { availableCountries } from '@/services/country';
-import { idKey } from '@/plugins/firebase';
-import Picker from '@/components/Picker.vue';
+import Vue from 'vue'
+import { availableCountries } from '@/services/country'
+import { idKey } from '@/plugins/firebase'
+import Picker from '@/components/Picker.vue'
 
 export default Vue.extend({
   name: 'FilterBy',
@@ -82,20 +82,20 @@ export default Vue.extend({
   props: {
     allGroups: {
       type: Array,
-      default: undefined,
+      default: () => [],
     },
     countryIds: {
       type: Array,
-      default: undefined,
+      default: () => [],
     },
 
     filteredGroups: {
       type: Array,
-      default: undefined,
+      default: () => [],
     },
     groupIds: {
       type: Array,
-      default: undefined,
+      default: () => [],
     },
 
     searchable: {
@@ -104,57 +104,57 @@ export default Vue.extend({
     },
     searchQuery: {
       type: String,
-      default: undefined,
+      default: null,
     },
   },
   data() {
     return {
       idKey,
-    };
+    }
   },
   computed: {
     countryCodes() {
       return (this.allGroups || [])
         .map(({ country }) => country)
         .filter(Boolean)
-        .filter((v, i, a) => a.indexOf(v) === i);
+        .filter((v, i, a) => a.indexOf(v) === i)
     },
     relevantCountries() {
       return availableCountries
-        .filter(({ [idKey]: code }) => this.countryCodes.includes(code));
+        .filter(({ [idKey]: code }) => this.countryCodes.includes(code))
     },
     currentCountryIds: {
       get() {
-        return this.countryIds;
+        return this.countryIds
       },
       set(countryIds) {
-        this.$emit('update:country-ids', countryIds);
+        this.$emit('update:country-ids', countryIds)
       },
     },
 
     currentGroupIds: {
       get() {
-        return this.groupIds;
+        return this.groupIds
       },
       set(groupIds) {
-        this.$emit('update:group-ids', groupIds);
+        this.$emit('update:group-ids', groupIds)
       },
     },
 
     currentSearchQuery: {
       get() {
-        return this.searchQuery;
+        return this.searchQuery
       },
       set(searchQuery) {
-        this.$emit('update:searchQuery', searchQuery);
+        this.$emit('update:searchQuery', searchQuery)
       },
     },
 
     isDirty() {
       return (this.currentCountryIds && this.currentCountryIds.length)
         || (this.currentGroupIds && this.currentGroupIds.length)
-        || (this.searchable && this.currentSearchQuery);
+        || (this.searchable && this.currentSearchQuery)
     },
   },
-});
+})
 </script>

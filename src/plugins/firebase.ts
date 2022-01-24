@@ -1,26 +1,26 @@
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/analytics';
-import 'firebase/firestore';
-import { isDebugging } from '@/config';
+import firebase from 'firebase/app'
+import 'firebase/auth'
+import 'firebase/analytics'
+import 'firebase/firestore'
+import { isDebugging } from '@/config'
 
-const { firestore } = firebase;
-export { firebase, firestore };
+const { firestore } = firebase
+export { firebase, firestore }
 
 export const app = firebase.initializeApp({
   projectId: 'scotdance-challenge',
   apiKey: 'AIzaSyDO7TA2MeaR90Fjc5wmcMumXWC9dDw_DSM',
   appId: '1:925970077234:web:6ded4b043fe3ff76424e2b',
   measurementId: 'G-4EKW3LECT3',
-});
-export const analytics = firebase.analytics();
-export const db = app.firestore();
+})
+export const analytics = firebase.analytics()
+export const db = app.firestore()
 
 if (isDebugging) {
   db.settings({
     host: 'localhost:5002',
     ssl: false,
-  });
+  })
 }
 
 export const firestoreRefs = {
@@ -28,9 +28,9 @@ export const firestoreRefs = {
   groups: db.collection('groups'),
   participants: db.collection('participants'),
   entries: db.collection('entries'),
-};
+}
 
-export const idKey = 'id';
+export const idKey = 'id'
 
 export interface FirebaseObject {
   [idKey]: string;
@@ -86,5 +86,5 @@ export interface Entry extends FirebaseObject, Createable {
 }
 
 export function findByIdKey<T extends FirebaseObject>(items: T[], id: string) {
-  return items.find((item) => item[idKey] === id);
+  return items.find((item) => item[idKey] === id)
 }

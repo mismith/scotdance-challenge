@@ -225,26 +225,26 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { mapGetters, mapActions, mapState } from 'vuex';
-import { $package, isDebugging } from '@/config';
-import router from '@/router';
+import Vue from 'vue'
+import { mapGetters, mapActions, mapState } from 'vuex'
+import { $package, isDebugging } from '@/config'
+import router from '@/router'
 import {
   firebase,
   firestore,
   firestoreRefs,
   idKey,
   Challenge,
-} from '@/plugins/firebase';
+} from '@/plugins/firebase'
 import {
   capitalize,
   pluralize,
-} from '@/services/strings';
-import Loader from '@/components/Loader.vue';
-import Picker from '@/components/Picker.vue';
-import ChallengeInfo from '@/components/ChallengeInfo.vue';
-import EditChallenge from '@/components/EditChallenge.vue';
-import AddNewTip from '@/components/AddNewTip.vue';
+} from '@/services/strings'
+import Loader from '@/components/Loader.vue'
+import Picker from '@/components/Picker.vue'
+import ChallengeInfo from '@/components/ChallengeInfo.vue'
+import EditChallenge from '@/components/EditChallenge.vue'
+import AddNewTip from '@/components/AddNewTip.vue'
 
 export default Vue.extend({
   name: 'App',
@@ -278,56 +278,56 @@ export default Vue.extend({
           || challenge.$isUpcoming
           || challenge.$isRecentlyEnded
           || (this.currentChallenge && this.currentChallenge[idKey] === challenge[idKey]),
-      );
+      )
     },
     challengesForPicker() {
       return this.isShowingAllChallenges
         ? this.challenges
-        : this.relevantChallenges;
+        : this.relevantChallenges
     },
 
     challengeId: {
       get() {
-        return this.$store.state.challengeId;
+        return this.$store.state.challengeId
       },
       set(challengeId) {
-        return this.$store.commit('setChallengeId', challengeId);
+        return this.$store.commit('setChallengeId', challengeId)
       },
     },
 
     isInfoDialogOpen: {
       get() {
-        return this.$store.state.isInfoDialogOpen;
+        return this.$store.state.isInfoDialogOpen
       },
       set(to) {
-        this.$store.commit('toggleInfoDialogOpen', to);
+        this.$store.commit('toggleInfoDialogOpen', to)
       },
     },
     isPublicDialogOpen: {
       get() {
-        return this.$store.state.isPublicDialogOpen;
+        return this.$store.state.isPublicDialogOpen
       },
       set(to) {
-        this.$store.commit('togglePublicDialogOpen', to);
+        this.$store.commit('togglePublicDialogOpen', to)
       },
     },
     isPrivateDialogOpen: {
       get() {
-        return this.$store.state.isPrivateDialogOpen;
+        return this.$store.state.isPrivateDialogOpen
       },
       set(to) {
-        this.$store.commit('togglePrivateDialogOpen', to);
+        this.$store.commit('togglePrivateDialogOpen', to)
       },
     },
 
     canCopy() {
-      return window.navigator.clipboard && typeof window.navigator.clipboard.writeText === 'function';
+      return window.navigator.clipboard && typeof window.navigator.clipboard.writeText === 'function'
     },
   },
   watch: {
     challengeId: {
       async handler(challengeId) {
-        this.loading = true;
+        this.loading = true
         await Promise.all([
           (this as any).bindGroups({
             mutateQuery: challengeId
@@ -339,33 +339,33 @@ export default Vue.extend({
               ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
               : undefined,
           }),
-        ]);
-        this.loading = false;
+        ])
+        this.loading = false
       },
       immediate: true,
     },
     async isPrivateDialogOpen(isOpen) {
       if (isOpen) {
         await this.$nextTick();
-        (this.$refs.privateUrl as any).$el.querySelector('input').select();
+        (this.$refs.privateUrl as any).$el.querySelector('input').select()
       }
     },
     async isPublicDialogOpen(isOpen) {
       if (isOpen) {
         await this.$nextTick();
-        (this.$refs.publicUrl as any).$el.querySelector('input').select();
+        (this.$refs.publicUrl as any).$el.querySelector('input').select()
       }
     },
   },
   async created() {
     if (window.$crisp) {
-      window.$crisp.push(['set', 'session:data', [[['AppVersion', $package.version]]]]);
+      window.$crisp.push(['set', 'session:data', [[['AppVersion', $package.version]]]])
     }
 
-    await (this as any).bindChallenges();
+    await (this as any).bindChallenges()
     if (!this.challengeId && this.challenges.length === 1) {
       // auto-pick first challenge if it's the only one
-      this.challengeId = this.challenges[0][idKey];
+      this.challengeId = this.challenges[0][idKey]
     }
   },
   methods: {
@@ -385,23 +385,23 @@ export default Vue.extend({
         ...challenge,
         createdAt: firestore.FieldValue.serverTimestamp(),
         createdBy: this.me && this.me.uid,
-      });
+      })
       if (challenge.private) {
-        this.$store.dispatch('addPrivateId', id);
+        this.$store.dispatch('addPrivateId', id)
       }
-      this.challengeId = id;
-      this.challengeToEdit = undefined;
+      this.challengeId = id
+      this.challengeToEdit = undefined
     },
     async handleSaveChallenge(challenge: Challenge) {
-      const { [idKey]: id } = this.challengeToEdit || {};
+      const { [idKey]: id } = this.challengeToEdit || {}
       if (id) {
         await firestoreRefs.challenges.doc(id).update({
           ...challenge,
           updatedAt: firestore.FieldValue.serverTimestamp(),
           updatedBy: this.me && this.me.uid,
-        });
+        })
       }
-      this.challengeToEdit = undefined;
+      this.challengeToEdit = undefined
     },
 
     getChallengeUrl(challenge: Challenge) {
@@ -410,16 +410,16 @@ export default Vue.extend({
         params: {
           challengeId: challenge[idKey],
         },
-      });
-      return `${window.location.origin}${href}`;
+      })
+      return `${window.location.origin}${href}`
     },
 
     handleCopy(textToCopy: string) {
-      window.navigator.clipboard.writeText(textToCopy);
-      this.hasCopied = true;
+      window.navigator.clipboard.writeText(textToCopy)
+      this.hasCopied = true
     },
   },
-});
+})
 </script>
 
 <style lang="scss">

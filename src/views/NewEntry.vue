@@ -98,22 +98,22 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { mapGetters, mapState } from 'vuex';
-import palette from 'vuetify/lib/util/colors';
-import compliments from '@/store/compliments';
+import Vue from 'vue'
+import { mapGetters, mapState } from 'vuex'
+import palette from 'vuetify/lib/util/colors'
+import compliments from '@/store/compliments'
 import {
   firestore,
   firestoreRefs,
   idKey,
-} from '@/plugins/firebase';
-import { capitalize } from '@/services/strings';
-import ChallengeProgress from '@/components/ChallengeProgress.vue';
-import Picker from '@/components/Picker.vue';
-import EditGroup from '@/components/EditGroup.vue';
-import AddCompliment from '@/components/AddCompliment.vue';
-import AddNewTip from '@/components/AddNewTip.vue';
-import { isChallengeActive } from '../services/date';
+} from '@/plugins/firebase'
+import { capitalize } from '@/services/strings'
+import ChallengeProgress from '@/components/ChallengeProgress.vue'
+import Picker from '@/components/Picker.vue'
+import EditGroup from '@/components/EditGroup.vue'
+import AddCompliment from '@/components/AddCompliment.vue'
+import AddNewTip from '@/components/AddNewTip.vue'
+import { isChallengeActive } from '../services/date'
 
 export default Vue.extend({
   name: 'NewEntry',
@@ -142,7 +142,7 @@ export default Vue.extend({
       value: undefined,
       isAddEntryLoading: false,
       successMessage: undefined,
-    };
+    }
   },
   computed: {
     ...mapState([
@@ -158,26 +158,26 @@ export default Vue.extend({
 
     groupId: {
       get() {
-        return this.$store.state.groupId;
+        return this.$store.state.groupId
       },
       set(groupId) {
-        return this.$store.commit('setGroupId', groupId);
+        return this.$store.commit('setGroupId', groupId)
       },
     },
     participantId: {
       get() {
-        return this.$store.state.participantId;
+        return this.$store.state.participantId
       },
       set(participantId) {
-        return this.$store.commit('setParticipantId', participantId);
+        return this.$store.commit('setParticipantId', participantId)
       },
     },
 
     relevantGroups() {
-      return this.groups;
+      return this.groups
     },
     relevantParticipants() {
-      return this.participants.filter(({ groupId }) => groupId === this.groupId);
+      return this.participants.filter(({ groupId }) => groupId === this.groupId)
     },
 
     isValid() {
@@ -185,35 +185,35 @@ export default Vue.extend({
         && this.groupId
         && this.participantId
         && Number(this.value) > 0
-        && Number(this.value) <= 9999;
+        && Number(this.value) <= 9999
     },
     isChallengeActive() {
-      return isChallengeActive(this.currentChallenge);
+      return isChallengeActive(this.currentChallenge)
     },
 
     hasSuccessMessage: {
       get() {
-        return Boolean(this.successMessage);
+        return Boolean(this.successMessage)
       },
       set(on) {
-        if (!on) this.successMessage = null;
+        if (!on) this.successMessage = null
       },
     },
   },
   watch: {
     challengeId() {
-      this.groupId = null;
-      this.participantId = null;
+      this.groupId = null
+      this.participantId = null
     },
     groupId() {
-      this.participantId = null;
+      this.participantId = null
     },
   },
   methods: {
     capitalize,
 
     getRandomCompliment() {
-      return compliments[Math.round(Math.random() * compliments.length - 1)];
+      return compliments[Math.round(Math.random() * compliments.length - 1)]
     },
 
     async handleAdd(item, refKey) {
@@ -221,41 +221,41 @@ export default Vue.extend({
         createdAt: firestore.FieldValue.serverTimestamp(),
         createdBy: this.me && this.me.uid,
         ...item,
-      };
-      if (this.currentChallenge.private) {
-        newItem.private = this.currentChallenge.private;
       }
-      return firestoreRefs[refKey].add(newItem);
+      if (this.currentChallenge.private) {
+        newItem.private = this.currentChallenge.private
+      }
+      return firestoreRefs[refKey].add(newItem)
     },
     async handleAddGroup(group) {
-      const { id } = await this.handleAdd(group, 'groups');
-      this.groupId = id;
-      this.groupToEdit = null;
+      const { id } = await this.handleAdd(group, 'groups')
+      this.groupId = id
+      this.groupToEdit = null
     },
     async handleAddEntry() {
-      if (this.isAddEntryLoading) return; // don't allow dupes
-      if (!this.isValid) return; // don't allow invalids
-      if (!this.isChallengeActive) return; // don't allow submissions to inactive challenges
-      if (!this.currentChallenge) return; // can't add to non-existing challenge
+      if (this.isAddEntryLoading) return // don't allow dupes
+      if (!this.isValid) return // don't allow invalids
+      if (!this.isChallengeActive) return // don't allow submissions to inactive challenges
+      if (!this.currentChallenge) return // can't add to non-existing challenge
 
       try {
-        this.isAddEntryLoading = true;
+        this.isAddEntryLoading = true
         const entry = {
           challengeId: this.challengeId,
           groupId: this.groupId,
           participantId: this.participantId,
           value: Number(this.value) || 0,
-        };
-        await this.handleAdd(entry, 'entries');
-        this.value = null;
+        }
+        await this.handleAdd(entry, 'entries')
+        this.value = null
 
-        this.successMessage = this.getRandomCompliment();
+        this.successMessage = this.getRandomCompliment()
       } finally {
         setTimeout(() => {
-          this.isAddEntryLoading = false;
-        }, 500);
+          this.isAddEntryLoading = false
+        }, 500)
       }
     },
   },
-});
+})
 </script>

@@ -1,14 +1,14 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-import store from '@/store';
-import Home from '@/views/Home.vue';
-import Activity from '@/views/Activity.vue';
-import NewEntry from '@/views/NewEntry.vue';
-import Statistics from '@/views/Statistics.vue';
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import store from '@/store'
+import Home from '@/views/Home.vue'
+import Activity from '@/views/Activity.vue'
+import NewEntry from '@/views/NewEntry.vue'
+import Statistics from '@/views/Statistics.vue'
 
-Vue.use(VueRouter);
+Vue.use(VueRouter)
 
-const title = 'challenge';
+const title = 'challenge'
 const router = new VueRouter({
   mode: 'history',
   routes: [
@@ -48,17 +48,17 @@ const router = new VueRouter({
       path: '/private/:challengeId',
       name: 'private',
       beforeEnter({ params: { challengeId } }, from, next) {
-        store.dispatch('addPrivateId', challengeId);
-        store.state.challengeId = challengeId; // @HACK: is this allowed/dependable?
-        return next({ name: 'new' });
+        store.dispatch('addPrivateId', challengeId)
+        store.state.challengeId = challengeId // @HACK: is this allowed/dependable?
+        return next({ name: 'new' })
       },
     },
     {
       path: '/public/:challengeId',
       name: 'public',
       beforeEnter({ params: { challengeId } }, from, next) {
-        store.state.challengeId = challengeId; // @HACK: is this allowed/dependable?
-        return next({ name: 'new' });
+        store.state.challengeId = challengeId // @HACK: is this allowed/dependable?
+        return next({ name: 'new' })
       },
     },
     {
@@ -69,13 +69,13 @@ const router = new VueRouter({
       },
     },
   ],
-});
+})
 
 router.beforeEach(async (to, from, next) => {
   if (to?.meta?.title) {
-    document.title = to.meta.title;
+    document.title = to.meta.title
   }
-  return next();
-});
+  return next()
+})
 
-export default router;
+export default router

@@ -33,8 +33,8 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { idKey } from '@/plugins/firebase';
+import Vue from 'vue'
+import { idKey } from '@/plugins/firebase'
 
 export default Vue.extend({
   name: 'Home',
@@ -72,9 +72,9 @@ export default Vue.extend({
         //   text: 'customize colors and country',
         // },
       ],
-    };
+    }
   },
-});
+})
 </script>
 
 <style lang="scss">

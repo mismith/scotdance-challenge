@@ -19,8 +19,8 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import { idKey } from '@/plugins/firebase';
+import Vue from 'vue'
+import { idKey } from '@/plugins/firebase'
 
 export default Vue.extend({
   name: 'SortBy',
@@ -37,7 +37,7 @@ export default Vue.extend({
   data() {
     return {
       idKey,
-    };
+    }
   },
-});
+})
 </script>

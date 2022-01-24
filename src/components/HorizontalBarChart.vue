@@ -1,6 +1,6 @@
 <script>
-import Vue from 'vue';
-import { HorizontalBar, mixins } from 'vue-chartjs';
+import Vue from 'vue'
+import { HorizontalBar, mixins } from 'vue-chartjs'
 
 export default Vue.extend({
   name: 'HorizontalBarChart',
@@ -13,7 +13,7 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.renderChart(this.chartData, this.chartOptions);
+    this.renderChart(this.chartData, this.chartOptions)
   },
-});
+})
 </script>
