@@ -20,9 +20,20 @@ module.exports = {
   },
   extends: [
     '@vue/eslint-config-typescript',
-    'plugin:vue/essential',
+    'plugin:vue/recommended',
   ],
   rules: {
-    'vue/multi-word-component-names': 1,
+    'vue/html-self-closing': ['error', {
+      html: {
+        void: 'always',
+        normal: 'always',
+        component: 'always',
+      },
+      svg: 'always',
+      math: 'always',
+    }],
+    'vue/max-attributes-per-line': 0,
+    'vue/multi-word-component-names': 0,
+    'vue/singleline-html-element-content-newline': 0,
   },
 };

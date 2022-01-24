@@ -16,6 +16,7 @@ export default VAutocomplete.extend({
     },
     addNew: {
       type: Function,
+      required: false,
     },
     getAddNewText: {
       type: Function,

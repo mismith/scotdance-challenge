@@ -28,7 +28,10 @@ import { getChallengeStartDate, getChallengeEndDate } from '@/services/date';
 export default Vue.extend({
   name: 'ChallengeProgress',
   props: {
-    challenge: Object,
+    challenge: {
+      type: Object,
+      required: true,
+    },
   },
   computed: {
     startDate() {

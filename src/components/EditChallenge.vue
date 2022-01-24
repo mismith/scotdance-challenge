@@ -34,7 +34,7 @@
             nudge-top="24"
             min-width="290"
           >
-            <template v-slot:activator="{ on }">
+            <template #activator="{ on }">
               <v-text-field
                 v-model="challenge.startAt"
                 label="Start Date"
@@ -61,7 +61,7 @@
             nudge-top="24"
             min-width="290"
           >
-            <template v-slot:activator="{ on }">
+            <template #activator="{ on }">
               <v-text-field
                 v-model="challenge.endAt"
                 label="End Date"
@@ -217,7 +217,10 @@ function isEmpty(obj) {
 export default Vue.extend({
   name: 'EditChallenge',
   props: {
-    value: Object,
+    value: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {

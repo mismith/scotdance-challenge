@@ -107,8 +107,10 @@
                   </v-btn>
                 </div>
 
-                <p><strong>Do not share this link publicly</strong> &mdash;<br />
-                  anyone who visits it will gain entry.</p>
+                <p>
+                  <strong>Do not share this link publicly</strong> &mdash;<br />
+                  anyone who visits it will gain entry.
+                </p>
               </v-card-text>
               <v-card-actions class="justify-end">
                 <v-btn rounded large block color="primary" @click="isPrivateDialogOpen = false">
@@ -246,6 +248,13 @@ import AddNewTip from '@/components/AddNewTip.vue';
 
 export default Vue.extend({
   name: 'App',
+  components: {
+    Loader,
+    Picker,
+    ChallengeInfo,
+    EditChallenge,
+    AddNewTip,
+  },
   data: () => ({
     isDebugging,
     idKey,
@@ -348,6 +357,17 @@ export default Vue.extend({
       }
     },
   },
+  async created() {
+    if (window.$crisp) {
+      window.$crisp.push(['set', 'session:data', [[['AppVersion', $package.version]]]]);
+    }
+
+    await (this as any).bindChallenges();
+    if (!this.challengeId && this.challenges.length === 1) {
+      // auto-pick first challenge if it's the only one
+      this.challengeId = this.challenges[0][idKey];
+    }
+  },
   methods: {
     capitalize,
     pluralize,
@@ -362,9 +382,9 @@ export default Vue.extend({
     // },
     async handleAddChallenge(challenge: Challenge) {
       const { [idKey]: id } = await firestoreRefs.challenges.add({
+        ...challenge,
         createdAt: firestore.FieldValue.serverTimestamp(),
         createdBy: this.me && this.me.uid,
-        ...challenge,
       });
       if (challenge.private) {
         this.$store.dispatch('addPrivateId', id);
@@ -398,24 +418,6 @@ export default Vue.extend({
       window.navigator.clipboard.writeText(textToCopy);
       this.hasCopied = true;
     },
-  },
-  async created() {
-    if (window.$crisp) {
-      window.$crisp.push(['set', 'session:data', [[['AppVersion', $package.version]]]]);
-    }
-
-    await (this as any).bindChallenges();
-    if (!this.challengeId && this.challenges.length === 1) {
-      // auto-pick first challenge if it's the only one
-      this.challengeId = this.challenges[0][idKey];
-    }
-  },
-  components: {
-    Loader,
-    Picker,
-    ChallengeInfo,
-    EditChallenge,
-    AddNewTip,
   },
 });
 </script>

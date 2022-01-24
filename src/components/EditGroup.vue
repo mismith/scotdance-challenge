@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="isOpen" max-width="320">
     <v-card class="EditGroup">
-      <v-form autocomplete="off" @submit.prevent="handleDone()">
+      <v-form autocomplete="off" @submit.prevent="handleSubmit()">
         <v-card-title>
           <div class="flex">
             {{ isNew ? 'Add' : 'Edit' }} {{ $root.getLabel('Group') }}
@@ -10,16 +10,16 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text v-if="value">
+        <v-card-text v-if="group">
           <v-text-field
-            v-model="value.name"
+            v-model="group.name"
             label="Name *"
             outlined
             rounded
             required
           />
           <v-text-field
-            v-model="value.color"
+            v-model="group.color"
             label="Color"
             outlined
             rounded
@@ -35,10 +35,10 @@
                 offset-y
               >
                 <template #activator="{ on }">
-                  <v-avatar size="32" :color="value.color" v-on="on" />
+                  <v-avatar size="32" :color="group.color" v-on="on" />
                 </template>
                 <v-card>
-                  <v-color-picker v-model="value.color" hide-inputs flat :canvas-height="100" />
+                  <v-color-picker v-model="group.color" hide-inputs flat :canvas-height="100" />
                   <v-card-actions class="justify-end">
                     <v-btn text @click="isPickingColor = false">Done</v-btn>
                   </v-card-actions>
@@ -48,7 +48,7 @@
           </v-text-field>
           <Picker
             v-if="showField('country')"
-            v-model="value.country"
+            v-model="group.country"
             :label="$root.getLabel('Country')"
             outlined
             rounded
@@ -97,13 +97,20 @@ import Picker from '@/components/Picker.vue';
 
 export default Vue.extend({
   name: 'EditGroup',
+  components: {
+    Picker,
+  },
   props: {
-    value: Object,
+    value: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
       idKey,
       availableCountries,
+      group,
       isPickingColor: false,
       showFields: {},
     };
@@ -123,32 +130,35 @@ export default Vue.extend({
       return this.value && !this.value[idKey];
     },
     isValid() {
-      if (this.value) {
-        if (!this.value.name || !this.value.name.trim()) return false;
-        if (!this.value.color || !/^#[a-f0-9]{6}$/i.test(this.value.color.trim())) return false;
+      if (this.group) {
+        if (!this.group.name || !this.group.name.trim()) return false;
+        if (!this.group.color || !/^#[a-f0-9]{6}$/i.test(this.group.color.trim())) return false;
       }
       return true;
     },
   },
   watch: {
+    value: {
+      handler(value) {
+        this.group = { ...value };
+      },
+      immediate: true,
+    },
     isOpen(isOpen) {
       if (!isOpen) {
+        this.group = {};
         this.isPickingColor = false;
+        this.showFields = {};
       }
     },
   },
   methods: {
-    reset() {
-      this.showFields = {};
-      this.$emit('input', null);
-    },
-
     async autoFillCountry() {
-      if (this.value && this.value.country === undefined) {
-        this.$set(this.value, 'country', null);
+      if (this.group && this.group.country === undefined) {
+        this.$set(this.group, 'country', null);
         const country = await fetchCountryCode();
-        if (!this.value.country) {
-          this.$set(this.value, 'country', country);
+        if (!this.group.country) {
+          this.$set(this.group, 'country', country);
         }
       }
     },
@@ -163,13 +173,9 @@ export default Vue.extend({
       return get(this.showFields, field, false);
     },
 
-    handleDone() {
-      this.$emit('done', this.value);
-      this.reset();
+    handleSubmit() {
+      this.$emit('add', this.group);
     },
-  },
-  components: {
-    Picker,
   },
 });
 </script>

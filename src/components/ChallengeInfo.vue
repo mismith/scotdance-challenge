@@ -52,8 +52,14 @@ import { getChallengeStartDate, getChallengeEndDate } from '@/services/date';
 export default Vue.extend({
   name: 'ChallengeInfo',
   props: {
-    value: Boolean,
-    challenge: Object,
+    value: {
+      type: Boolean,
+      required: true,
+    },
+    challenge: {
+      type: Object,
+      required: true,
+    },
   },
   data: () => ({
     idKey,

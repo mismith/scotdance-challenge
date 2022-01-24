@@ -43,8 +43,6 @@ export default defineConfig({
           VuetifyResolver(),
         ],
     }),
-    eslintPlugin({
-      throwOnWarning: false,
-    }),
+    eslintPlugin(),
   ],
 });

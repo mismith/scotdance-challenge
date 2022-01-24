@@ -31,7 +31,7 @@
         </Picker>
         <EditGroup
           v-model="groupToEdit"
-          @done="group => handleAddGroup(group)"
+          @add="group => handleAddGroup(group)"
         />
 
         <Picker
@@ -117,6 +117,13 @@ import { isChallengeActive } from '../services/date';
 
 export default Vue.extend({
   name: 'NewEntry',
+  components: {
+    ChallengeProgress,
+    Picker,
+    EditGroup,
+    AddCompliment,
+    AddNewTip,
+  },
   data() {
     return {
       idKey,
@@ -223,6 +230,7 @@ export default Vue.extend({
     async handleAddGroup(group) {
       const { id } = await this.handleAdd(group, 'groups');
       this.groupId = id;
+      this.groupToEdit = null;
     },
     async handleAddEntry() {
       if (this.isAddEntryLoading) return; // don't allow dupes
@@ -248,13 +256,6 @@ export default Vue.extend({
         }, 500);
       }
     },
-  },
-  components: {
-    ChallengeProgress,
-    Picker,
-    EditGroup,
-    AddCompliment,
-    AddNewTip,
   },
 });
 </script>

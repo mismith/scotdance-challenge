@@ -49,8 +49,8 @@
         />
         <v-text-field
           v-if="searchable"
-          type="search"
           v-model="currentSearchQuery"
+          type="search"
           :label="$root.getLabel('Participant')"
           outlined
           rounded
@@ -76,15 +76,36 @@ import Picker from '@/components/Picker.vue';
 
 export default Vue.extend({
   name: 'FilterBy',
+  components: {
+    Picker,
+  },
   props: {
-    allGroups: Array,
-    countryIds: Array,
+    allGroups: {
+      type: Array,
+      default: undefined,
+    },
+    countryIds: {
+      type: Array,
+      default: undefined,
+    },
 
-    filteredGroups: Array,
-    groupIds: Array,
+    filteredGroups: {
+      type: Array,
+      default: undefined,
+    },
+    groupIds: {
+      type: Array,
+      default: undefined,
+    },
 
-    searchable: Boolean,
-    searchQuery: String,
+    searchable: {
+      type: Boolean,
+      default: false,
+    },
+    searchQuery: {
+      type: String,
+      default: undefined,
+    },
   },
   data() {
     return {
@@ -134,9 +155,6 @@ export default Vue.extend({
         || (this.currentGroupIds && this.currentGroupIds.length)
         || (this.searchable && this.currentSearchQuery);
     },
-  },
-  components: {
-    Picker,
   },
 });
 </script>

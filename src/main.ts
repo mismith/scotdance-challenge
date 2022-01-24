@@ -22,11 +22,6 @@ new Vue({
   router,
   store,
   vuetify,
-  methods: {
-    getLabel(key: keyof State['labels']) {
-      return get(store.getters.currentChallenge, ['labels', key]) || store.state.labels[key] || '';
-    },
-  },
   created() {
     firebase.auth().onAuthStateChanged((me) => {
       store.commit('setMe', me);
@@ -37,6 +32,11 @@ new Vue({
       // eslint-disable-next-line no-console
       console.warn(error);
     }
+  },
+  methods: {
+    getLabel(key: keyof State['labels']) {
+      return get(store.getters.currentChallenge, ['labels', key]) || store.state.labels[key] || '';
+    },
   },
   render: (h) => h(App),
 }).$mount('#app');

@@ -18,7 +18,7 @@
         <big class="display-1">
           <AnimatedNumber
             :value="currentChallenge.$total"
-            :formatValue="v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })"
+            :format-value="v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })"
             :duration="2000"
             round
           />
@@ -41,6 +41,8 @@
     </template>
     <v-btn
       v-if="!isShowingAllEntries || isLoadingMore"
+      v-infinite-scroll="loadMore"
+      :infinite-scroll-distance="100"
       fab
       small
       color="primary"
@@ -48,8 +50,6 @@
       class="mr-auto mb-10"
       :style="{ marginLeft: $vuetify.breakpoint.smAndDown ? '28px' : 'auto' }"
       @click="loadMore()"
-      v-infinite-scroll="loadMore"
-      :infinite-scroll-distance="100"
     >
       <v-icon>mdi-dots-vertical</v-icon>
     </v-btn>
@@ -112,6 +112,14 @@ const INCREMENT = 20;
 
 export default Vue.extend({
   name: 'Activity',
+  components: {
+    ChallengeProgress,
+    AnimatedNumber,
+    ActivityTimelineItem,
+  },
+  directives: {
+    infiniteScroll,
+  },
   data() {
     return {
       idKey,
@@ -209,14 +217,6 @@ export default Vue.extend({
       });
       this.isLoadingMore = false;
     },
-  },
-  components: {
-    ChallengeProgress,
-    AnimatedNumber,
-    ActivityTimelineItem,
-  },
-  directives: {
-    infiniteScroll,
   },
 });
 </script>

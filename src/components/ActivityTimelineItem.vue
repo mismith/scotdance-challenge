@@ -80,7 +80,10 @@ import { idKey, findByIdKey } from '@/plugins/firebase';
 export default Vue.extend({
   name: 'ActivityTimelineItem',
   props: {
-    entry: Object,
+    entry: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {

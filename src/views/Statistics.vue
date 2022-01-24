@@ -162,17 +162,17 @@
             }"
             :class="{ 'mb-6': $vuetify.breakpoint.xsOnly }"
           >
-            <template v-slot:[`item.$rank`]="{ item }">
+            <template #[`item.$rank`]="{ item }">
               {{ item.$rank }}
             </template>
-            <template v-slot:[`item.$group.name`]="{ item }">
+            <template #[`item.$group.name`]="{ item }">
               <v-avatar size="12" :color="item.$group.color" class="mr-1 mt-n1" />
               {{ item.$group.name }}
             </template>
-            <template v-slot:[`item.$group.country`]="{ item }">
+            <template #[`item.$group.country`]="{ item }">
               {{ getName(item.$group.country) }}
             </template>
-            <template v-slot:[`item.$total`]="{ item }">
+            <template #[`item.$total`]="{ item }">
               {{ item.$total.toLocaleString() }}
             </template>
           </v-data-table>
@@ -241,6 +241,11 @@ function truncateLabel(label, limit = 22) {
 
 export default Vue.extend({
   name: 'Statistics',
+  components: {
+    HorizontalBarChart,
+    FilterBy,
+    SortBy,
+  },
   localStorage: {
     currentSlideIndex: {
       type: Number,
@@ -264,14 +269,6 @@ export default Vue.extend({
       idKey,
     };
   },
-  watch: {
-    orderDataBys(orderDataBys) {
-      const orderDataBy = findByIdKey(orderDataBys, this.orderDataById);
-      if (!orderDataBy) {
-        this.orderDataById = this.orderDataBys[0][idKey];
-      }
-    },
-  },
   computed: {
     ...mapGetters([
       'challenges',
@@ -290,7 +287,7 @@ export default Vue.extend({
     extendedGroups() {
       return this.groups
         .map((item) => {
-          // eslint-disable-next-line no-param-reassign
+          // @TODO: use augment
           item.$average = getParticipantRelativeValue(
             item.$total,
             this.relevantParticipants,
@@ -341,7 +338,7 @@ export default Vue.extend({
       }
       relevantParticipants = relevantParticipants
         .map((item, index) => {
-          // eslint-disable-next-line no-param-reassign
+          // @TODO: use augment
           item.$rank = index + 1;
           return item;
         });
@@ -461,6 +458,14 @@ export default Vue.extend({
       return getChallengeEndDate(this.currentChallenge);
     },
   },
+  watch: {
+    orderDataBys(orderDataBys) {
+      const orderDataBy = findByIdKey(orderDataBys, this.orderDataById);
+      if (!orderDataBy) {
+        this.orderDataById = this.orderDataBys[0][idKey];
+      }
+    },
+  },
   methods: {
     get,
     getName,
@@ -473,11 +478,6 @@ export default Vue.extend({
         }],
       };
     },
-  },
-  components: {
-    HorizontalBarChart,
-    FilterBy,
-    SortBy,
   },
 });
 </script>

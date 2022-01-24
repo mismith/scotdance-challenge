@@ -1,6 +1,6 @@
 <template>
   <div class="caption text-center px-4 mb-2">
-    <kbd>TIP</kbd> <span>&mdash; Begin typing to add a new {{label}}</span>
+    <kbd>TIP</kbd> <span>&mdash; Begin typing to add a new {{ label }}</span>
   </div>
 </template>
 

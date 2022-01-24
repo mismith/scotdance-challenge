@@ -25,8 +25,14 @@ import { idKey } from '@/plugins/firebase';
 export default Vue.extend({
   name: 'SortBy',
   props: {
-    value: String,
-    items: Array,
+    value: {
+      type: String,
+      required: true,
+    },
+    items: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
