@@ -244,7 +244,6 @@ import ChallengeInfo from '@/components/ChallengeInfo.vue';
 import EditChallenge from '@/components/EditChallenge.vue';
 import AddNewTip from '@/components/AddNewTip.vue';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export default Vue.extend({
   name: 'App',
   data: () => ({

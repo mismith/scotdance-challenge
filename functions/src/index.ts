@@ -1,10 +1,10 @@
-import { initializeApp, firestore } from 'firebase-admin';
-import * as functions from 'firebase-functions';
+import { initializeApp } from 'firebase-admin';
+import { firestore, https } from 'firebase-functions';
 
 const app = initializeApp();
 const db = app.firestore();
 
-exports.aggregateStatistics = functions.firestore
+exports.aggregateStatistics = firestore
   .document('entries/{entryId}')
   .onWrite(({ before, after }) => {
     const { challengeId, groupId, participantId, value } = after.data() || before.data() || {};
@@ -59,7 +59,7 @@ function tally(collection: CollectionTally, id: string, value: number) {
   collection[id].$total += value;
   collection[id].$count += 1;
 }
-exports.syncAggregateStatistics = functions.https.onRequest((req, res) => {
+exports.syncAggregateStatistics = https.onRequest((req, res) => {
   return db.runTransaction(async (transaction) => {
     const toAggregate = ['challenges', 'groups', 'participants'];
     const [entriesSnap, ...toAggregateSnaps] = await Promise.all([
@@ -87,14 +87,10 @@ exports.syncAggregateStatistics = functions.https.onRequest((req, res) => {
           if (key === 'participants' && participantId) return doc.id === participantId;
           return true;
         })
-        .map((doc) => transaction.set(doc.ref, {
-          $total: firestore.FieldValue.delete(),
-          $count: firestore.FieldValue.delete(),
-          ...stats[key][doc.id],
-        }, { merge: true }))),
+        .map((doc) => transaction.set(doc.ref, stats[key][doc.id], { merge: true }))),
       [] as FirebaseFirestore.Transaction[],
     ));
 
     return res.send(stats);
-  });
+  }) as any;
 });

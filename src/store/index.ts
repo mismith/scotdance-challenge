@@ -97,10 +97,7 @@ export default new Vuex.Store<State>({
       Country: 'Country',
     },
   },
-  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-  // @ts-ignore
   getters: {
-    /* eslint-disable no-param-reassign */
     challenges({ challenges, privateIds }) {
       return orderBy(
         challenges
@@ -171,7 +168,6 @@ export default new Vuex.Store<State>({
           return item;
         });
     },
-    /* eslint-enable no-param-reassign */
 
     currentChallenge({ challengeId }, { challenges }) {
       return findByIdKey(challenges, challengeId);

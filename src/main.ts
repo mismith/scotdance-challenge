@@ -1,9 +1,5 @@
 import Vue from 'vue';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
 import VueLocalStorage from 'vue-localstorage';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
 import VueInfiniteScroll from 'vue-infinite-scroll';
 import get from 'lodash.get';
 

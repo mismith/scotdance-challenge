@@ -24,8 +24,8 @@
     "source": "functions"
   },
   "emulators": {
-    "firestore": {
-      "port": "5002"
+    "ui": {
+      "enabled": true
     },
     "auth": {
       "port": 9099
@@ -33,11 +33,11 @@
     "functions": {
       "port": 5001
     },
-    "hosting": {
-      "port": 5000
+    "firestore": {
+      "port": 5002
     },
-    "ui": {
-      "enabled": true
+    "hosting": {
+      "port": 5050
     }
   }
 }

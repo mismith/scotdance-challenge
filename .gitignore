@@ -4,6 +4,7 @@ node_modules
 .firebase
 firebase-debug.log
 firestore-debug.log
+/stats.html
 
 # local env files
 .env.local

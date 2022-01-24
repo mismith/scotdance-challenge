@@ -3,14 +3,19 @@
   "version": "0.15.1",
   "private": true,
   "scripts": {
-    "serve": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service serve",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "emulate": "firebase emulators:start --only=firestore,functions --import=.firebase/emulator-data",
-    "dev": "npm --prefix ./functions/ run dev & npm run emulate & npm run serve",
-    "predeploy": "npm --prefix ./functions/ run build && npm run build",
+    "emulate": "firebase emulators:start --import=.firebase/emulator-data",
+    "dev:functions": "npm run --prefix functions/ dev",
+    "dev:www": "vite --host",
+    "dev": "run-p dev:functions \"emulate -- --export-on-exit\" dev:www",
+    "lint": "eslint './{functions,src}/**/*.{js,ts,vue}'",
+    "lint:fix": "npm run lint -- --fix",
+    "build:functions": "npm run --prefix functions/ build",
+    "build:www": "vite build",
+    "build": "npm run build:functions && npm run build:www",
+    "predeploy": "npm run build",
     "deploy": "firebase deploy",
-    "postdeploy": "git push origin master",
+    "postdeploy": "git push origin HEAD:master --tags",
+    "report": "npm run build:www && open stats.html",
     "postinstall": "npm --prefix ./functions/ i"
   },
   "dependencies": {
@@ -37,45 +42,20 @@
     "@types/lodash.get": "^4.4.6",
     "@types/lodash.orderby": "^4.6.6",
     "@types/runes": "^0.4.1",
-    "@typescript-eslint/eslint-plugin": "^2.18.0",
-    "@typescript-eslint/parser": "^2.18.0",
-    "@vue/cli-plugin-eslint": "^4.5.15",
-    "@vue/cli-plugin-router": "~4.2.0",
-    "@vue/cli-plugin-typescript": "~4.2.0",
-    "@vue/cli-plugin-vuex": "~4.2.0",
-    "@vue/cli-service": "~4.2.0",
-    "@vue/eslint-config-airbnb": "^5.0.2",
-    "@vue/eslint-config-typescript": "^5.0.1",
-    "eslint": "^6.7.2",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-vue": "^6.1.2",
-    "firebase-tools": "^13.30.0",
-    "sass": "^1.25.0",
-    "sass-loader": "^8.0.2",
-    "typescript": "~3.7.5",
-    "vue-cli-plugin-vuetify": "~2.0.5",
-    "vue-template-compiler": "^2.6.14",
-    "vuetify-loader": "^1.3.0"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "@vue/airbnb",
-      "@vue/typescript/recommended"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2020
-    },
-    "rules": {
-      "@typescript-eslint/no-explicit-any": "off"
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions"
-  ]
+    "@vue/eslint-config-typescript": "^10.0.0",
+    "eslint": "^8.7.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-vue": "^8.3.0",
+    "firebase-tools": "^10.1.2",
+    "npm-run-all": "^4.1.5",
+    "rollup-plugin-visualizer": "^5.5.4",
+    "sass": "^1.32.13",
+    "typescript": "^4.5.5",
+    "unplugin-vue-components": "^0.17.14",
+    "vite": "^2.7.13",
+    "vite-plugin-eslint": "^1.3.0",
+    "vite-plugin-vue2": "^1.9.2",
+    "vue-template-compiler": "^2.6.14"
+  }
 }
