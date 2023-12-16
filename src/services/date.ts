@@ -5,6 +5,7 @@ import {
   isBefore,
   isAfter,
   subWeeks,
+  addDays,
 } from 'date-fns';
 import { Challenge } from '@/plugins/firebase';
 
@@ -43,6 +44,14 @@ export function isChallengeRecentlyEnded(challenge: Challenge) {
   if (challenge) {
     const endDate = getChallengeEndDate(challenge);
     return endDate ? isAfter(endDate, subWeeks(new Date(), 2)) : false;
+  }
+  return false;
+}
+export function isChallengeInFinalCountdown(challenge: Challenge) {
+  if (challenge && challenge.hasFinalCountdown) {
+    const endDate = getChallengeEndDate(challenge);
+    if (!endDate) return false;
+    return isChallengeActive(challenge) && isBefore(endDate, addDays(new Date(), 7));
   }
   return false;
 }

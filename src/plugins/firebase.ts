@@ -57,6 +57,7 @@ export interface Challenge extends FirebaseObject, Createable, Updateable, WithS
   $isActive?: boolean;
   $isUpcoming?: boolean;
   $isRecentlyEnded?: boolean;
+  hasFinalCountdown?: boolean;
 }
 export interface Group extends FirebaseObject, Createable, WithStats {
   challengeId: string;

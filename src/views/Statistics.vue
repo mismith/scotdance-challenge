@@ -83,25 +83,36 @@
           <v-btn icon style="visibility: hidden;" />
         </v-subheader>
 
-        <div class="chartjs-size-wrapper">
-          <div
-            v-if="!relevantParticipantsData.length"
-            class="d-flex flex-column align-center ma-auto"
-          >
-            <v-icon x-large>mdi-cancel</v-icon>
-            No entries yet
-            <div class="mt-2"><router-link :to="{ name: 'new' }">Add one</router-link></div>
+        <template v-if="!isInFinalCountdown">
+          <div class="chartjs-size-wrapper">
+            <div
+              v-if="!relevantParticipantsData.length"
+              class="d-flex flex-column align-center ma-auto"
+            >
+              <v-icon x-large>mdi-cancel</v-icon>
+              No entries yet
+              <div class="mt-2"><router-link :to="{ name: 'new' }">Add one</router-link></div>
+            </div>
+            <HorizontalBarChart
+              v-else
+              :chart-data="participantData"
+              :chart-options="participantChartOptions"
+              class="flex-shrink-0"
+              :styles="{
+                position: 'relative',
+                height: `${Math.max(128, 24 * (relevantParticipantsData.length + 1))}px`,
+              }"
+            />
           </div>
-          <HorizontalBarChart
-            v-else
-            :chart-data="participantData"
-            :chart-options="participantChartOptions"
-            class="flex-shrink-0"
-            :styles="{
-              position: 'relative',
-              height: `${Math.max(128, 24 * (relevantParticipantsData.length + 1))}px`,
-            }"
-          />
+        </template>
+        <div v-else class="d-flex flex-column align-center text-center ma-auto pa-4">
+          <h1>Almost done!</h1>
+          <h3>Keep working to finish strongly 💪</h3>
+          <br />
+          <p v-if="endDate">
+            Final results will be available once the challenge finishes on
+            {{ endDate.toLocaleString() }}
+          </p>
         </div>
       </v-carousel-item>
       <v-carousel-item>
@@ -120,50 +131,61 @@
           <v-btn icon style="visibility: hidden;" />
         </v-subheader>
 
-        <v-data-table
-          :headers="[
-            {
-              text: '#',
-              value: '$rank',
-            },
-            {
-              text: $root.getLabel('Participant'),
-              value: 'name',
-            },
-            {
-              text: $root.getLabel('Group'),
-              value: '$group.name',
-            },
-            {
-              text: $root.getLabel('Country'),
-              value: '$group.country',
-            },
-            {
-              text: 'Total',
-              value: '$total',
-            },
-          ]"
-          :items="relevantParticipants"
-          :search="filterDataBySearch"
-          :footer-props="{
-            itemsPerPageOptions: [100],
-          }"
-          :class="{ 'mb-6': $vuetify.breakpoint.xsOnly }"
-        >
-          <template v-slot:[`item.$rank`]="{ item }">
-            {{ item.$rank }}
-          </template>
-          <template v-slot:[`item.$group.name`]="{ item }">
-            <v-avatar size="12" :color="item.$group.color" class="mr-1 mt-n1" />
-            {{ item.$group.name }}
-          </template>
-          <template v-slot:[`item.$group.country`]="{ item }">
-            {{ getName(item.$group.country) }}
-          </template>
-          <template v-slot:[`item.$total`]="{ item }">
-            {{ item.$total.toLocaleString() }}
-          </template>
-        </v-data-table>
+        <template v-if="!isInFinalCountdown">
+          <v-data-table
+            :headers="[
+              {
+                text: '#',
+                value: '$rank',
+              },
+              {
+                text: $root.getLabel('Participant'),
+                value: 'name',
+              },
+              {
+                text: $root.getLabel('Group'),
+                value: '$group.name',
+              },
+              {
+                text: $root.getLabel('Country'),
+                value: '$group.country',
+              },
+              {
+                text: 'Total',
+                value: '$total',
+              },
+            ]"
+            :items="relevantParticipants"
+            :search="filterDataBySearch"
+            :footer-props="{
+              itemsPerPageOptions: [100],
+            }"
+            :class="{ 'mb-6': $vuetify.breakpoint.xsOnly }"
+          >
+            <template v-slot:[`item.$rank`]="{ item }">
+              {{ item.$rank }}
+            </template>
+            <template v-slot:[`item.$group.name`]="{ item }">
+              <v-avatar size="12" :color="item.$group.color" class="mr-1 mt-n1" />
+              {{ item.$group.name }}
+            </template>
+            <template v-slot:[`item.$group.country`]="{ item }">
+              {{ getName(item.$group.country) }}
+            </template>
+            <template v-slot:[`item.$total`]="{ item }">
+              {{ item.$total.toLocaleString() }}
+            </template>
+          </v-data-table>
+        </template>
+        <div v-else class="d-flex flex-column align-center text-center ma-auto pa-4">
+          <h1>Almost done!</h1>
+          <h3>Keep working to finish strongly 💪</h3>
+          <br />
+          <p v-if="endDate">
+            Final results will be available once the challenge finishes on
+            {{ endDate.toLocaleString() }}
+          </p>
+        </div>
       </v-carousel-item>
     </v-carousel>
   </div>
@@ -177,6 +199,7 @@ import orderBy from 'lodash.orderby';
 import runes from 'runes';
 import { idKey, findByIdKey } from '@/plugins/firebase';
 import { getName } from '@/services/country';
+import { isChallengeInFinalCountdown, getChallengeEndDate } from '@/services/date';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
 import FilterBy from '@/components/FilterBy.vue';
 import SortBy from '@/components/SortBy.vue';
@@ -419,6 +442,13 @@ export default Vue.extend({
       const participantData = this.gatherData(this.relevantParticipantsData);
       // console.log(participantData);
       return participantData;
+    },
+
+    isInFinalCountdown() {
+      return isChallengeInFinalCountdown(this.currentChallenge);
+    },
+    endDate() {
+      return getChallengeEndDate(this.currentChallenge);
     },
   },
   methods: {
