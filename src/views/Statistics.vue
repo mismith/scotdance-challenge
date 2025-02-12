@@ -360,8 +360,8 @@ export default Vue.extend({
         },
         {
           [idKey]: 'value',
-          name: this.currentSlideIndex === 0 ? 'Average' : 'Total',
-          keys: [this.currentSlideIndex === 0 ? '$average' : '$total'],
+          name: this.hasMultipleGroups && this.currentSlideIndex === 0 ? 'Average' : 'Total',
+          keys: [this.hasMultipleGroups && this.currentSlideIndex === 0 ? '$average' : '$total'],
           dirs: ['desc'],
         },
       ];
