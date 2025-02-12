@@ -414,7 +414,8 @@ export default Vue.extend({
   #crisp-chatbox {
     z-index: 200; // less than v-overlay
 
-    a[data-cshid] {
+    a[aria-label='Open chat'],
+    a[aria-label='Close chat']{
       margin-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
     }
   }
