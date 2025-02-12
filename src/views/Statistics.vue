@@ -11,13 +11,13 @@
     </div>
     <v-carousel
       v-else
-      v-model="currentSlide"
+      v-model="currentSlideIndex"
       :show-arrows="false"
       hide-delimiter-background
       light
       height="100%"
     >
-      <v-carousel-item>
+      <v-carousel-item v-if="hasMultipleGroups">
         <v-subheader class="primary--text subtitle-1 justify-space-between">
           <FilterBy
             :all-groups="extendedGroups"
@@ -39,7 +39,7 @@
           />
         </div>
       </v-carousel-item>
-      <v-carousel-item>
+      <v-carousel-item v-if="hasMultipleGroups">
         <v-subheader class="primary--text subtitle-1 justify-space-between">
           <FilterBy
             :all-groups="extendedGroups"
@@ -242,7 +242,7 @@ function truncateLabel(label, limit = 22) {
 export default Vue.extend({
   name: 'Statistics',
   localStorage: {
-    currentSlide: {
+    currentSlideIndex: {
       type: Number,
     },
     filterDataByGroupIds: {
@@ -279,6 +279,13 @@ export default Vue.extend({
       'participants',
       'currentChallenge',
     ]),
+
+    hasMultipleGroups() {
+      return this.groups.length > 1;
+    },
+    firstSlideIndexWithGroupFilters() {
+      return this.hasMultipleGroups ? 2 : 0;
+    },
 
     extendedGroups() {
       return this.groups
@@ -320,7 +327,10 @@ export default Vue.extend({
         relevantParticipants = relevantParticipants
           .filter(({ $group }) => $group && this.filterDataByCountryIds.includes($group.country));
       }
-      if (this.filterDataByGroupIds.length && this.currentSlide >= 2) {
+      if (
+        this.filterDataByGroupIds.length
+        && this.currentSlideIndex >= this.firstSlideIndexWithGroupFilters
+      ) {
         relevantParticipants = relevantParticipants
           .filter(({ $group }) => $group && this.filterDataByGroupIds.includes($group[idKey]));
       }
@@ -350,8 +360,8 @@ export default Vue.extend({
         },
         {
           [idKey]: 'value',
-          name: this.currentSlide === 0 ? 'Average' : 'Total',
-          keys: [this.currentSlide === 0 ? '$average' : '$total'],
+          name: this.currentSlideIndex === 0 ? 'Average' : 'Total',
+          keys: [this.currentSlideIndex === 0 ? '$average' : '$total'],
           dirs: ['desc'],
         },
       ];
