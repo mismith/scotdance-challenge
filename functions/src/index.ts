@@ -1,12 +1,13 @@
-import { initializeApp } from 'firebase-admin'
-import { firestore, https } from 'firebase-functions'
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
+import { onDocumentWritten } from 'firebase-functions/v2/firestore'
+import { onRequest } from 'firebase-functions/v2/https'
 
 const app = initializeApp()
-const db = app.firestore()
+const db = getFirestore(app)
 
-exports.aggregateStatistics = firestore
-  .document('entries/{entryId}')
-  .onWrite(({ before, after }) => {
+exports.aggregateStatistics = onDocumentWritten('entries/{entryId}', (event) => {
+    const { before, after } = event.data!
     const { challengeId, groupId, participantId, value } = after.data() || before.data() || {}
     const [totalDiff, countDiff] = (() => {
       let totalDiff
@@ -59,7 +60,7 @@ function tally(collection: CollectionTally, id: string, value: number) {
   collection[id].$total += value
   collection[id].$count += 1
 }
-exports.syncAggregateStatistics = https.onRequest((req, res) => {
+exports.syncAggregateStatistics = onRequest((req, res) => {
   return db.runTransaction(async (transaction) => {
     const toAggregate = ['challenges', 'groups', 'participants']
     const [entriesSnap, ...toAggregateSnaps] = await Promise.all([
@@ -87,7 +88,7 @@ exports.syncAggregateStatistics = https.onRequest((req, res) => {
           if (key === 'participants' && participantId) return doc.id === participantId
           return true
         })
-        .map((doc) => transaction.set(doc.ref, stats[key][doc.id], { merge: true }))),
+        .map((doc) => transaction.set(doc.ref, stats[key][doc.id] ?? {}, { merge: true }))),
       [] as FirebaseFirestore.Transaction[],
     ))
 
