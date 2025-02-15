@@ -12,9 +12,6 @@
     "build:functions": "npm run --prefix functions/ build",
     "build:www": "vite build",
     "build": "npm run build:functions && npm run build:www",
-    "predeploy": "npm run build",
-    "deploy": "firebase deploy",
-    "postdeploy": "git push origin HEAD:master --tags",
     "report": "npm run build:www && open stats.html",
     "postinstall": "npm --prefix ./functions/ i"
   },
