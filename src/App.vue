@@ -29,7 +29,7 @@
         <template #item="{ item, parent }">
           <v-list-item-content :style="{ opacity: !item.$isActive ? 0.5 : undefined }">
             <v-list-item-title>
-              <span v-html="parent.genFilteredText(parent.getText(item))" />
+              <span>{{ parent.getText(item) }}</span>
               <v-icon v-if="item.private" class="ml-2">mdi-shield-lock</v-icon>
               <em v-if="!item.$isActive" class="caption ml-2">
                 {{
