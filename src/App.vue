@@ -28,11 +28,11 @@
           <AddNewTip :label="$root.getLabel('Challenge').toLowerCase()" />
         </template>
         <template #item="{ item, parent }">
-          <v-list-item-content :style="{ opacity: !item.$isActive ? 0.5 : undefined }">
+          <v-list-item-content :style="{ opacity: !item.$isActive && item[idKey] !== ADD_NEW_KEY ? 0.5 : undefined }">
             <v-list-item-title>
               <span>{{ parent.getText(item) }}</span>
               <v-icon v-if="item.private" class="ml-2">mdi-shield-lock</v-icon>
-              <em v-if="!item.$isActive" class="caption ml-2">
+              <em v-if="!item.$isActive && item[idKey] !== ADD_NEW_KEY" class="caption ml-2">
                 {{
                   item.$isUpcoming ? 'Upcoming' : (
                     item.$isRecentlyEnded ? 'Recently Ended' : 'Inactive'
@@ -242,7 +242,7 @@ import {
   pluralize,
 } from '@/services/strings'
 import Loader from '@/components/Loader.vue'
-import Picker from '@/components/Picker.vue'
+import Picker, { ADD_NEW_KEY } from '@/components/Picker.vue'
 import ChallengeInfo from '@/components/ChallengeInfo.vue'
 import EditChallenge from '@/components/EditChallenge.vue'
 import AddNewTip from '@/components/AddNewTip.vue'
@@ -257,6 +257,7 @@ export default Vue.extend({
     AddNewTip,
   },
   data: () => ({
+    ADD_NEW_KEY,
     isDebugging,
     idKey,
     loading: true,

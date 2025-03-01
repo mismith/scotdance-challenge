@@ -1,7 +1,7 @@
 <script>
 import VAutocomplete from 'vuetify/lib/components/VAutocomplete'
 
-const ADD_NEW_KEY = '__new__'
+export const ADD_NEW_KEY = '__new__'
 
 export default VAutocomplete.extend({
   name: 'Picker',
