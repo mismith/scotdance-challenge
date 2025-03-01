@@ -22,6 +22,7 @@
         :add-new="name => challengeToEdit = {
           name: capitalize(name),
         }"
+        auto-select-first
       >
         <template #prepend-item>
           <AddNewTip :label="$root.getLabel('Challenge').toLowerCase()" />
