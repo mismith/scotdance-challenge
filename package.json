@@ -24,7 +24,7 @@
     "lodash.get": "^4.4.2",
     "lodash.orderby": "^4.6.0",
     "runes": "^0.4.3",
-    "vue": "^2.6.11",
+    "vue": "^3.0.0",
     "vue-chartjs": "^3.5.0",
     "vue-infinite-scroll": "^2.0.2",
     "vue-localstorage": "^0.6.2",
