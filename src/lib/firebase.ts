@@ -7,6 +7,7 @@ import {
   connectFirestoreEmulator,
   getFirestore,
 } from 'firebase/firestore'
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
 
 // local dev talks to the emulators unless VITE_FIREBASE_EMULATORS=false (see `npm run dev:prod`)
 export const isUsingEmulators =
@@ -21,10 +22,12 @@ export const app = initializeApp({
 })
 export const auth = getAuth(app)
 export const db = getFirestore(app)
+export const functions = getFunctions(app)
 
 if (isUsingEmulators) {
   connectAuthEmulator(auth, `http://${window.location.hostname}:9099`, { disableWarnings: true })
   connectFirestoreEmulator(db, window.location.hostname, 5002)
+  connectFunctionsEmulator(functions, window.location.hostname, 5001)
 } else {
   isSupported().then((supported) => supported && getAnalytics(app))
 }
@@ -77,7 +80,7 @@ export interface Participant extends FirebaseObject, Createable, WithStats {
   name: string
   private?: boolean
 }
-export interface Entry extends FirebaseObject, Createable {
+export interface Entry extends FirebaseObject, Createable, Updateable {
   challengeId: string
   groupId: string
   participantId: string

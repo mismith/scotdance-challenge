@@ -1,7 +1,10 @@
 import { initializeApp } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
+import { defineSecret } from 'firebase-functions/params'
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
-import { onRequest } from 'firebase-functions/v2/https'
+import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https'
+import { verifyPass } from './pass'
 
 const app = initializeApp()
 const db = getFirestore(app)
@@ -94,4 +97,63 @@ exports.syncAggregateStatistics = onRequest((req, res) => {
 
     return res.send(stats)
   }) as any
+})
+
+const toolPassSecret = defineSecret('TOOL_PASS_SECRET')
+
+/** Keep the account's email and name on its Auth user, not in (publicly readable) Firestore */
+async function upsertUser(uid: string, email: string, displayName: string | null) {
+  const auth = getAuth(app)
+  const update = async (withEmail: boolean) => {
+    const props = { displayName, ...(withEmail && email ? { email } : {}) }
+    try {
+      await auth.updateUser(uid, props)
+    } catch (error: any) {
+      if (error?.code !== 'auth/user-not-found') throw error
+      await auth.createUser({ uid, ...props })
+    }
+  }
+  try {
+    await update(true)
+  } catch (error: any) {
+    // another account in this project already has that email; keep the name only
+    if (error?.code !== 'auth/email-already-exists') throw error
+    await update(false)
+  }
+}
+
+/** Hand everything an anonymous user created over to their account */
+async function moveCreatedBy(fromUid: string, toUid: string) {
+  let moved = 0
+  for (const collection of ['entries', 'participants', 'groups', 'challenges']) {
+    const snapshot = await db.collection(collection).where('createdBy', '==', fromUid).get()
+    for (let i = 0; i < snapshot.docs.length; i += 500) {
+      const batch = db.batch()
+      snapshot.docs.slice(i, i + 500).forEach((doc) => batch.update(doc.ref, { createdBy: toUid }))
+      await batch.commit()
+    }
+    if (collection === 'entries') moved = snapshot.size
+  }
+  return moved
+}
+
+exports.signInWithScotDance = onCall({ secrets: [toolPassSecret] }, async (request) => {
+  let pass
+  try {
+    pass = verifyPass(request.data?.pass, toolPassSecret.value())
+  } catch (error) {
+    throw new HttpsError('unauthenticated', `Invalid pass: ${(error as Error).message}`)
+  }
+
+  const uid = `sd_${pass.sub}`
+  await upsertUser(uid, pass.email, pass.name ?? null)
+
+  const caller = request.auth
+  const isAnonymous = caller?.token.firebase?.sign_in_provider === 'anonymous'
+  const movedEntries = caller && isAnonymous && caller.uid !== uid
+    ? await moveCreatedBy(caller.uid, uid)
+    : 0
+
+  const token = await getAuth(app).createCustomToken(uid)
+  return { token, movedEntries }
 })

@@ -17,7 +17,7 @@
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/ e2e/",
-    "test:e2e": "npm run build:functions && firebase emulators:exec --only auth,firestore,functions \"playwright test\"",
+    "test:e2e": "node e2e/ensure-secret.mjs && npm run build:functions && firebase emulators:exec --only auth,firestore,functions \"playwright test\"",
     "test": "npm run test:e2e",
     "deploy": "npm run build && wrangler deploy",
     "analyze": "ANALYZE=true vite build",

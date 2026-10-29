@@ -1,5 +1,11 @@
 import { useLocalStorage } from '@vueuse/core'
-import { type User, onAuthStateChanged, signInAnonymously } from 'firebase/auth'
+import {
+  type User,
+  onAuthStateChanged,
+  signInAnonymously,
+  signInWithCustomToken,
+  signOut as signOutOfFirebase,
+} from 'firebase/auth'
 import {
   type DocumentData,
   type Query,
@@ -15,8 +21,9 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef, triggerRef } from 'vue'
 import { getFlag } from '@/lib/country'
 import { isChallengeActive, isChallengeRecentlyEnded, isChallengeUpcoming } from '@/lib/date'
 import {
@@ -27,8 +34,10 @@ import {
   type Participant,
   auth,
   findById,
+  functions,
   refs,
 } from '@/lib/firebase'
+import { requestPass } from '@/lib/scotdance'
 import { crisp, orderBy } from '@/lib/utils'
 
 export interface ChallengeItem extends Challenge {
@@ -53,9 +62,37 @@ const defaultLabels: Record<LabelKey, string> = {
 }
 
 export const useAppStore = defineStore('app', () => {
-  const me = ref<User | null>(null)
+  const me = shallowRef<User | null>(null)
   onAuthStateChanged(auth, (user) => (me.value = user))
-  signInAnonymously(auth).catch(console.warn)
+  // everyone gets an anonymous user, unless they've signed in with ScotDance.app before
+  auth
+    .authStateReady()
+    .then(async () => {
+      if (!auth.currentUser) await signInAnonymously(auth)
+    })
+    .catch(console.warn)
+
+  const isSignedIn = computed(() => Boolean(me.value && !me.value.isAnonymous))
+  const exchangePass = httpsCallable<{ pass: string }, { token: string; movedEntries: number }>(
+    functions,
+    'signInWithScotDance',
+  )
+  /** Sign in via ScotDance.app; entries made anonymously move to the account */
+  async function signIn() {
+    const result = await requestPass()
+    if (!result.signedIn) return null
+    const { data } = await exchangePass({ pass: result.pass })
+    await signInWithCustomToken(auth, data.token)
+    // the Auth user's name and email are set just before the token is made
+    await auth.currentUser?.reload()
+    triggerRef(me)
+    return data
+  }
+  /** Back to a fresh anonymous user */
+  async function signOut() {
+    await signOutOfFirebase(auth)
+    await signInAnonymously(auth)
+  }
 
   // same key and shape as the old vuex-persist state, so unlocked private challenges carry over
   const persisted = useLocalStorage(
@@ -205,6 +242,13 @@ export const useAppStore = defineStore('app', () => {
     if (currentChallenge.value?.private) newItem.private = true
     return addDoc(refs[key], newItem)
   }
+  async function updateEntry(id: string, value: number) {
+    await updateDoc(doc(refs.entries, id), {
+      value,
+      updatedAt: serverTimestamp(),
+      updatedBy: me.value?.uid ?? null,
+    })
+  }
   async function deleteEntry(id: string) {
     await deleteDoc(doc(refs.entries, id))
   }
@@ -214,6 +258,9 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     me,
+    isSignedIn,
+    signIn,
+    signOut,
     challenges,
     groups,
     participants,
@@ -234,6 +281,7 @@ export const useAppStore = defineStore('app', () => {
     addChallenge,
     saveChallenge,
     add,
+    updateEntry,
     deleteEntry,
     addCompliment,
   }

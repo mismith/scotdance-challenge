@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/app'
 import { type Entry, findById } from '@/lib/firebase'
 
 const props = defineProps<{ entry: Entry }>()
-defineEmits<{ delete: [entry: Entry]; flag: [entry: Entry] }>()
+defineEmits<{ edit: [entry: Entry]; delete: [entry: Entry]; flag: [entry: Entry] }>()
 const store = useAppStore()
 
 const challenge = computed(() => findById(store.challenges, props.entry.challengeId))
@@ -34,6 +34,16 @@ const isMine = computed(() => Boolean(store.me && store.me.uid === props.entry.c
           variant="text"
           size="small"
           class="ml-2"
+          aria-label="Edit"
+          @click="$emit('edit', entry)"
+        >
+          <v-icon size="small">mdi-pencil-outline</v-icon>
+        </v-btn>
+        <v-btn
+          v-if="isMine"
+          icon
+          variant="text"
+          size="small"
           aria-label="Delete"
           @click="$emit('delete', entry)"
         >

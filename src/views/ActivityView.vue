@@ -18,6 +18,8 @@ const limit = ref(0)
 const isLoadingMore = ref(false)
 const flaggedEntry = ref<Entry | null>(null)
 const deletedEntry = ref<Entry | null>(null)
+const editedEntry = ref<Entry | null>(null)
+const editedValue = ref<string | number | null>(null)
 
 const isShowingAllEntries = computed(() => store.entries.length < limit.value)
 
@@ -25,6 +27,13 @@ const isFlagging = computed({
   get: () => Boolean(flaggedEntry.value),
   set: (on) => !on && (flaggedEntry.value = null),
 })
+const isEditing = computed({
+  get: () => Boolean(editedEntry.value),
+  set: (on) => !on && (editedEntry.value = null),
+})
+const isEditedValueValid = computed(
+  () => Number(editedValue.value) > 0 && Number(editedValue.value) <= 9999,
+)
 const isDeleting = computed({
   get: () => Boolean(deletedEntry.value),
   set: (on) => !on && (deletedEntry.value = null),
@@ -64,6 +73,15 @@ function openLiveChat() {
   crisp('do', 'chat:open')
   flaggedEntry.value = null
 }
+function startEditing(entry: Entry) {
+  editedEntry.value = entry
+  editedValue.value = entry.value
+}
+async function saveEntry() {
+  if (!editedEntry.value || !isEditedValueValid.value) return
+  await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
+  editedEntry.value = null
+}
 async function deleteEntry() {
   if (deletedEntry.value) await store.deleteEntry(deletedEntry.value.id)
   deletedEntry.value = null
@@ -102,6 +120,7 @@ async function deleteEntry() {
           v-for="entry in store.entries"
           :key="entry.id"
           :entry="entry"
+          @edit="startEditing(entry)"
           @flag="flaggedEntry = entry"
           @delete="deletedEntry = entry"
         />
@@ -153,6 +172,52 @@ async function deleteEntry() {
             Flag
           </v-btn>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="isEditing" max-width="320">
+      <v-card>
+        <v-form autocomplete="off" @submit.prevent="saveEntry()">
+          <v-card-title class="d-flex align-center">
+            Edit Item <v-icon color="primary" class="ml-2">mdi-pencil</v-icon>
+            <v-spacer />
+            <v-btn
+              icon
+              variant="text"
+              density="comfortable"
+              class="mr-n2"
+              @click="isEditing = false"
+            >
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-card-title>
+          <v-card-text class="pb-0">
+            <v-text-field
+              v-model="editedValue"
+              :label="store.label('Amount')"
+              type="number"
+              step="1"
+              min="1"
+              max="9999"
+              variant="outlined"
+              rounded
+              autofocus
+              :error="!isEditedValueValid"
+            />
+          </v-card-text>
+          <v-card-actions class="pa-4 pt-0">
+            <v-btn
+              type="submit"
+              rounded
+              block
+              size="x-large"
+              variant="flat"
+              color="primary"
+              :disabled="!isEditedValueValid"
+            >
+              Save
+            </v-btn>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
     <v-dialog v-model="isDeleting" max-width="320">

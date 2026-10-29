@@ -1,0 +1,74 @@
+import { addChallenge, addEntry, expect, test, unique } from './helpers'
+import { newAccount, stubEmbed } from './scotdance'
+
+test('moves anonymous entries to the account, then signs out', async ({ page }) => {
+  await addChallenge(page, unique('Account'))
+  await addEntry(page, 'Red Team', 'Ada', 12)
+
+  const account = newAccount('Jane Dancer')
+  await stubEmbed(page, account)
+  await page.getByRole('button', { name: 'Sign in with ScotDance.app' }).click()
+  await expect(page.locator('.v-snackbar')).toContainText(
+    'Signed in as Jane Dancer. 1 entry moved to your account.',
+  )
+  await expect(page.locator('.ScotDanceAccount')).toContainText('Signed in as Jane Dancer')
+
+  // still yours: the challenge and the entry can be edited
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+  await page.getByRole('link', { name: /Activity/ }).click()
+  const entry = page.locator('.ActivityTimelineItem').filter({ hasText: 'by Ada' })
+  await entry.getByRole('button', { name: 'Edit' }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Amount').fill('15')
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(entry).toContainText('+15')
+  await expect(page.getByText(/^15$/)).toBeVisible({ timeout: 15_000 })
+
+  // signed out, you're a new anonymous user: the entry is the account's now
+  await page.getByRole('link', { name: /New/ }).click()
+  await page.getByRole('button', { name: 'Sign out' }).click()
+  await expect(page.getByRole('button', { name: 'Sign in with ScotDance.app' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Info' })).toBeVisible()
+  await page.getByRole('link', { name: /Activity/ }).click()
+  await expect(entry.getByRole('button', { name: 'Flag' })).toBeVisible()
+  await expect(entry.getByRole('button', { name: 'Delete' })).toHaveCount(0)
+})
+
+test('keeps your entries across devices', async ({ page, browser }) => {
+  const account = newAccount()
+  await addChallenge(page, unique('Devices'))
+  await stubEmbed(page, account)
+  await page.getByRole('button', { name: 'Sign in with ScotDance.app' }).click()
+  await expect(page.locator('.ScotDanceAccount')).toContainText('Signed in as Test Dancer')
+  await addEntry(page, 'Blue Team', 'Bea', 8)
+
+  await page.getByRole('button', { name: 'Share' }).click()
+  const link = await page.getByLabel('Access Link').inputValue()
+
+  // another device: anonymous until it signs in to the same account
+  const other = await browser.newPage()
+  await stubEmbed(other, account)
+  await other.goto(link)
+  await other.getByRole('button', { name: 'Sign in with ScotDance.app' }).click()
+  await expect(other.locator('.v-snackbar')).toContainText('Signed in as Test Dancer')
+  await other.getByRole('link', { name: /Activity/ }).click()
+  const entry = other.locator('.ActivityTimelineItem').filter({ hasText: '+8' })
+  await expect(entry.getByRole('button', { name: 'Delete' })).toBeVisible()
+  await other.close()
+})
+
+test('stays anonymous when the sheet is closed', async ({ page }) => {
+  await addChallenge(page, unique('Closed'))
+  await stubEmbed(page, null)
+  await page.getByRole('button', { name: 'Sign in with ScotDance.app' }).click()
+  await expect(page.getByRole('button', { name: 'Sign in with ScotDance.app' })).toBeEnabled()
+  await expect(page.getByText('Signed in as')).toHaveCount(0)
+})
+
+test('refuses a pass signed with the wrong secret', async ({ page }) => {
+  await addChallenge(page, unique('Forged'))
+  await stubEmbed(page, newAccount(), { signingSecret: 'not-the-secret' })
+  await page.getByRole('button', { name: 'Sign in with ScotDance.app' }).click()
+  await expect(page.locator('.v-snackbar')).toContainText("Couldn't sign in")
+  await expect(page.getByRole('button', { name: 'Sign in with ScotDance.app' })).toBeVisible()
+})

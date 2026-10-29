@@ -7,6 +7,7 @@ import AddNewTip from '@/components/AddNewTip.vue'
 import AppPicker from '@/components/AppPicker.vue'
 import ChallengeProgress from '@/components/ChallengeProgress.vue'
 import EditGroup, { type NewGroup } from '@/components/EditGroup.vue'
+import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import compliments from '@/lib/compliments'
 import { isChallengeActive } from '@/lib/date'
 import { capitalize } from '@/lib/strings'
@@ -173,7 +174,8 @@ async function handleAddEntry() {
       </v-form>
 
       <v-spacer />
-      <AddCompliment class="d-flex justify-center pb-6" @message="successMessage = $event" />
+      <AddCompliment class="d-flex justify-center pb-2" @message="successMessage = $event" />
+      <ScotDanceAccount class="pb-6" />
 
       <v-snackbar v-model="hasSuccessMessage">
         <div class="text-h6 text-center ma-auto" style="text-transform: capitalize">
