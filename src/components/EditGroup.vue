@@ -1,197 +1,139 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { useAppStore } from '@/stores/app'
+import AppPicker from '@/components/AppPicker.vue'
+import { availableCountries, fetchCountryCode } from '@/lib/country'
+import type { Group } from '@/lib/firebase'
+
+export type NewGroup = Pick<Group, 'challengeId' | 'name' | 'color' | 'country'>
+
+const value = defineModel<NewGroup | null | undefined>()
+const emit = defineEmits<{ add: [group: NewGroup] }>()
+const store = useAppStore()
+
+const group = ref<Partial<NewGroup>>({})
+const isPickingColor = ref(false)
+const isShowingCountry = ref(false)
+
+const isOpen = computed({
+  get: () => Boolean(value.value),
+  set(open) {
+    if (!open) value.value = null
+  },
+})
+const isValid = computed(
+  () =>
+    Boolean(group.value.name?.trim()) && /^#[a-f0-9]{6}$/i.test(group.value.color?.trim() ?? ''),
+)
+
+watch(
+  value,
+  (to) => {
+    group.value = { ...to }
+    isPickingColor.value = false
+    isShowingCountry.value = false
+  },
+  { immediate: true },
+)
+
+async function showCountry() {
+  isShowingCountry.value = true
+  if (group.value.country === undefined) {
+    group.value.country = null
+    const country = await fetchCountryCode().catch(() => null)
+    if (!group.value.country && country) group.value.country = country
+  }
+}
+
+function handleSubmit() {
+  // Firestore rejects `undefined` values
+  const { country, ...rest } = group.value
+  emit('add', (country === undefined ? rest : { ...rest, country }) as NewGroup)
+}
+</script>
+
 <template>
   <v-dialog v-model="isOpen" max-width="320">
     <v-card class="EditGroup">
       <v-form autocomplete="off" @submit.prevent="handleSubmit()">
-        <v-card-title>
-          <div class="flex">
-            {{ isNew ? 'Add' : 'Edit' }} {{ $root.getLabel('Group') }}
-          </div>
-          <v-btn icon class="mr-n1" @click="isOpen = false">
+        <v-card-title class="d-flex align-center">
+          <div class="flex-grow-1">Add {{ store.label('Group') }}</div>
+          <v-btn icon variant="text" density="comfortable" class="mr-n2" @click="isOpen = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text v-if="group">
-          <v-text-field
-            v-model="group.name"
-            label="Name *"
-            outlined
-            rounded
-            required
-          />
+        <v-card-text>
+          <v-text-field v-model="group.name" label="Name *" variant="outlined" rounded required />
           <v-text-field
             v-model="group.color"
             label="Color"
-            outlined
+            variant="outlined"
             rounded
             @click="isPickingColor = true"
           >
-            <template #append>
+            <template #append-inner>
               <v-menu
                 v-model="isPickingColor"
                 :close-on-content-click="false"
-                left
-                :nudge-bottom="16"
-                :nudge-right="20"
-                offset-y
+                location="bottom end"
               >
-                <template #activator="{ on }">
-                  <v-avatar size="32" :color="group.color" v-on="on" />
+                <template #activator="{ props: activatorProps }">
+                  <v-avatar size="32" :color="group.color" v-bind="activatorProps" />
                 </template>
                 <v-card>
-                  <v-color-picker :value="group.color" hide-inputs flat :canvas-height="100" @input="handleColorPick" />
+                  <v-color-picker
+                    :model-value="group.color"
+                    mode="hex"
+                    :modes="['hex']"
+                    hide-inputs
+                    flat
+                    :canvas-height="100"
+                    @update:model-value="group.color = $event"
+                  />
                   <v-card-actions class="justify-end">
-                    <v-btn text @click="isPickingColor = false">Done</v-btn>
+                    <v-btn variant="text" @click="isPickingColor = false">Done</v-btn>
                   </v-card-actions>
                 </v-card>
               </v-menu>
             </template>
           </v-text-field>
-          <Picker
-            v-if="showField('country')"
+          <AppPicker
+            v-if="isShowingCountry"
             v-model="group.country"
-            :label="$root.getLabel('Country')"
-            outlined
+            :label="store.label('Country')"
+            variant="outlined"
             rounded
             :menu-props="{ maxWidth: 288 }"
             :hide-no-data="false"
             :items="availableCountries"
-            :item-value="idKey"
-            item-text="$name"
+            item-title="$name"
           />
 
-          <div class="d-flex flex-wrap">
+          <div class="d-flex flex-wrap ga-1">
             <v-chip
-              v-if="!showField('country')"
-              small
-              class="mr-1 mb-1"
-              @click="showField('country', true)"
+              v-if="!isShowingCountry"
+              size="small"
+              prepend-icon="mdi-plus"
+              @click="showCountry()"
             >
-              <v-icon left small>mdi-plus</v-icon>
               Country
             </v-chip>
           </div>
         </v-card-text>
-        <v-card-actions class="justify-center pt-0 pa-4">
+        <v-card-actions class="pt-0 pa-4">
           <v-btn
             type="submit"
             rounded
             block
-            x-large
+            size="x-large"
+            variant="flat"
             color="primary"
             :disabled="!isValid"
           >
-            {{ isNew ? 'Add' : 'Save' }}
+            Add
           </v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
   </v-dialog>
 </template>
-
-<script>
-import Vue from 'vue'
-import get from 'lodash.get'
-import { availableCountries, fetchCountryCode } from '@/services/country'
-import { idKey } from '@/plugins/firebase'
-import Picker from '@/components/Picker.vue'
-
-export default Vue.extend({
-  name: 'EditGroup',
-  components: {
-    Picker,
-  },
-  props: {
-    value: {
-      type: Object,
-      default: null,
-    },
-  },
-  data() {
-    return {
-      idKey,
-      availableCountries,
-      group: {},
-      isPickingColor: false,
-      showFields: {},
-    }
-  },
-  computed: {
-    isOpen: {
-      get() {
-        return this.value
-      },
-      set(isOpen) {
-        if (!isOpen) {
-          this.$emit('input', null)
-        }
-      },
-    },
-    isNew() {
-      return this.value && !this.value[idKey]
-    },
-    isValid() {
-      if (this.group) {
-        if (!this.group.name || !this.group.name.trim()) return false
-        if (!this.group.color || !/^#[a-f0-9]{6}$/i.test(this.group.color.trim())) return false
-      }
-      return true
-    },
-  },
-  watch: {
-    value: {
-      handler(value) {
-        this.group = { ...value }
-      },
-      immediate: true,
-    },
-    isOpen(isOpen) {
-      if (!isOpen) {
-        this.group = {}
-        this.isPickingColor = false
-        this.showFields = {}
-      }
-    },
-  },
-  methods: {
-    async autoFillCountry() {
-      if (this.group && this.group.country === undefined) {
-        this.$set(this.group, 'country', null)
-        const country = await fetchCountryCode()
-        if (!this.group.country) {
-          this.$set(this.group, 'country', country)
-        }
-      }
-    },
-    showField(field, set = undefined) {
-      if (set !== undefined) {
-        this.$set(this.showFields, field, set)
-
-        if (set) {
-          this.autoFillCountry()
-        }
-      }
-      return get(this.showFields, field, false)
-    },
-
-    handleColorPick(color) {
-      if (color && typeof color === 'string') {
-        this.group.color = color
-      }
-    },
-    handleSubmit() {
-      this.$emit('add', this.group)
-    },
-  },
-})
-</script>
-
-<style lang="scss">
-.EditGroup {
-  .v-text-field {
-    .v-avatar {
-      margin-top: -5px;
-      margin-right: -11px;
-    }
-  }
-}
-</style>

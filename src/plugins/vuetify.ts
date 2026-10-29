@@ -1,14 +1,17 @@
-import Vue from 'vue'
-import Vuetify from 'vuetify/lib'
-import colors from 'vuetify/lib/util/colors'
+import '@mdi/font/css/materialdesignicons.css'
+import 'vuetify/styles'
 
-Vue.use(Vuetify)
+import { createVuetify } from 'vuetify'
+import colors from 'vuetify/util/colors'
 
-export default new Vuetify({
+export default createVuetify({
   theme: {
+    defaultTheme: 'light',
     themes: {
       light: {
-        primary: colors.deepPurple.base,
+        colors: {
+          primary: colors.deepPurple.base,
+        },
       },
     },
   },

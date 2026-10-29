@@ -1,81 +1,52 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import store from '@/store'
-import Home from '@/views/Home.vue'
-import Activity from '@/views/Activity.vue'
-import NewEntry from '@/views/NewEntry.vue'
-import Statistics from '@/views/Statistics.vue'
-
-Vue.use(VueRouter)
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAppStore } from '@/stores/app'
+import ActivityView from '@/views/ActivityView.vue'
+import HomeView from '@/views/HomeView.vue'
+import NewEntryView from '@/views/NewEntryView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
+import StatisticsView from '@/views/StatisticsView.vue'
 
 const title = 'challenge'
-const router = new VueRouter({
-  mode: 'history',
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: Home,
-      meta: {
-        title,
-      },
-    },
+    { path: '/', name: 'home', component: HomeView, meta: { title } },
     {
       path: '/activity',
       name: 'activity',
-      component: Activity,
-      meta: {
-        title: `Activity • ${title}`,
-      },
+      component: ActivityView,
+      meta: { title: `Activity • ${title}` },
     },
-    {
-      path: '/new',
-      name: 'new',
-      component: NewEntry,
-      meta: {
-        title: `New • ${title}`,
-      },
-    },
+    { path: '/new', name: 'new', component: NewEntryView, meta: { title: `New • ${title}` } },
     {
       path: '/statistics',
       name: 'statistics',
-      component: Statistics,
-      meta: {
-        title: `Stats • ${title}`,
-      },
+      component: StatisticsView,
+      meta: { title: `Stats • ${title}` },
     },
     {
       path: '/private/:challengeId',
       name: 'private',
-      beforeEnter({ params: { challengeId } }, from, next) {
-        store.dispatch('addPrivateId', challengeId)
-        store.state.challengeId = challengeId // @HACK: is this allowed/dependable?
-        return next({ name: 'new' })
+      redirect: ({ params }) => {
+        useAppStore().openChallengeLink(String(params.challengeId), true)
+        return { name: 'new' }
       },
     },
     {
       path: '/public/:challengeId',
       name: 'public',
-      beforeEnter({ params: { challengeId } }, from, next) {
-        store.state.challengeId = challengeId // @HACK: is this allowed/dependable?
-        return next({ name: 'new' })
+      redirect: ({ params }) => {
+        useAppStore().openChallengeLink(String(params.challengeId), false)
+        return { name: 'new' }
       },
     },
-    {
-      path: '*',
-      name: '404',
-      component: {
-        render: (h) => h('h1', { class: 'ma-auto' }, 'Not Found'),
-      },
-    },
+    { path: '/:pathMatch(.*)*', name: '404', component: NotFoundView },
   ],
 })
 
-router.beforeEach(async (to, from, next) => {
-  if (to?.meta?.title) {
-    document.title = to.meta.title
-  }
-  return next()
+router.afterEach((to) => {
+  if (typeof to.meta.title === 'string') document.title = to.meta.title
 })
 
 export default router

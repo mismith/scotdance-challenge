@@ -1,18 +1,79 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { useAppStore } from '@/stores/app'
+import compliments from '@/lib/compliments'
+import { crisp } from '@/lib/utils'
+
+const emit = defineEmits<{ message: [message: string | null] }>()
+const store = useAppStore()
+
+const isOpen = ref(false)
+const newCompliment = ref<string | null>(null)
+const isSubmitting = ref(false)
+
+const sanitized = computed(() => (newCompliment.value || '').trim().toLowerCase().replace(/!$/, ''))
+const rules = [
+  () => Boolean(sanitized.value) || 'Required',
+  () => !compliments.includes(sanitized.value) || 'Already added — try another one!',
+]
+const isValid = computed(() => rules.every((rule) => rule() === true))
+
+let debounceTimeout: ReturnType<typeof setTimeout> | undefined
+function toast(message: string, delay = 0) {
+  clearTimeout(debounceTimeout)
+  debounceTimeout = setTimeout(() => emit('message', message), delay)
+}
+
+// preview the compliment as it would appear after someone's entry
+watch(sanitized, (text) => {
+  if (text) {
+    emit('message', null)
+    toast(text, 1000)
+  }
+})
+watch(isOpen, (open) => {
+  if (!open) newCompliment.value = null
+})
+
+async function handleAddCompliment() {
+  try {
+    isSubmitting.value = true
+    const text = sanitized.value
+    await store.addCompliment(text)
+    newCompliment.value = null
+    isOpen.value = false
+
+    crisp('do', 'message:send', ['text', `Compliment Submitted: ${text}`])
+    crisp('do', 'chat:hide')
+  } finally {
+    isSubmitting.value = false
+    toast('submitted 🙇 thank you', 300)
+  }
+}
+</script>
+
 <template>
   <div class="AddCompliment">
-    <v-btn icon large color="primary" @click="isOpen = true">
+    <v-btn
+      icon
+      variant="text"
+      size="large"
+      color="primary"
+      aria-label="Spread the Love"
+      @click="isOpen = true"
+    >
       <v-icon>mdi-heart-outline</v-icon>
     </v-btn>
 
     <v-dialog v-model="isOpen" max-width="300">
       <v-card>
         <v-form @submit.prevent="handleAddCompliment()">
-          <v-card-title>
-            <div class="flex">
+          <v-card-title class="d-flex align-center">
+            <div class="flex-grow-1">
               Spread the Love
               <v-icon color="primary" class="ml-1 mt-n1">mdi-heart</v-icon>
             </div>
-            <v-btn icon class="mr-n2" @click="isOpen = false">
+            <v-btn icon variant="text" density="comfortable" class="mr-n2" @click="isOpen = false">
               <v-icon>mdi-close</v-icon>
             </v-btn>
           </v-card-title>
@@ -26,22 +87,23 @@
               v-model="newCompliment"
               label="Your Compliment"
               placeholder="e.g. well done"
+              variant="outlined"
               rounded
-              outlined
               :rules="rules"
               autocomplete="off"
               class="mt-6"
             />
           </v-card-text>
-          <v-card-actions class="justify-center pt-0 pa-4">
+          <v-card-actions class="pt-0 pa-4">
             <v-btn
               type="submit"
               rounded
               block
-              x-large
+              size="x-large"
+              variant="flat"
               color="primary"
-              :disabled="!rules.every(rule => rule(newCompliment) === true)"
-              :loading="submitting"
+              :disabled="!isValid"
+              :loading="isSubmitting"
             >
               Submit
             </v-btn>
@@ -51,87 +113,3 @@
     </v-dialog>
   </div>
 </template>
-
-<script>
-import Vue from 'vue'
-import { mapState } from 'vuex'
-import { firestore, db, idKey } from '@/plugins/firebase'
-import compliments from '@/store/compliments'
-
-export default Vue.extend({
-  name: 'AddCompliment',
-  data() {
-    return {
-      idKey,
-
-      isOpen: false,
-      newCompliment: undefined,
-      rules: [
-        () => Boolean(this.sanitizedCompliment) || 'Required',
-        () => !compliments.includes(this.sanitizedCompliment) || 'Already added — try another one!',
-      ],
-      submitting: false,
-      debounceTimeout: undefined,
-    }
-  },
-  computed: {
-    ...mapState([
-      'me',
-    ]),
-
-    sanitizedCompliment() {
-      return (this.newCompliment || '').trim().toLowerCase().replace(/!$/, '')
-    },
-  },
-  watch: {
-    async newCompliment() {
-      await this.handleInput(this.sanitizedCompliment)
-    },
-    isOpen(isOpen) {
-      if (!isOpen) {
-        this.newCompliment = null
-      }
-    },
-  },
-  methods: {
-    toast(message, delay = 0) {
-      if (this.debounceTimeout) {
-        clearTimeout(this.debounceTimeout)
-      }
-      this.debounceTimeout = setTimeout(async () => {
-        this.$emit('input', message)
-      }, delay)
-    },
-    handleInput(value) {
-      if (value) {
-        this.$emit('input', null)
-        this.toast(value, 1000)
-      }
-    },
-    async handleAddCompliment() {
-      try {
-        this.submitting = true
-        const text = this.sanitizedCompliment.toString()
-        await db.collection('complimentsSubmitted').add({
-          text,
-          createdAt: firestore.FieldValue.serverTimestamp(),
-          createdBy: this.me && this.me.uid,
-        })
-        this.newCompliment = null
-        this.isOpen = false
-
-        if (window.$crisp) {
-          window.$crisp.push(['do', 'message:send', [
-            'text',
-            `Compliment Submitted: ${text}`,
-          ]])
-          window.$crisp.push(['do', 'chat:hide'])
-        }
-      } finally {
-        this.submitting = false
-        this.toast('submitted 🙇 thank you', 300)
-      }
-    },
-  },
-})
-</script>

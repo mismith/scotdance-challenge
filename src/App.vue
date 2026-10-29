@@ -1,441 +1,302 @@
-<template>
-  <v-app class="App" :class="{ isDebugging }">
-    <v-app-bar v-if="$route.name !== 'home'" app color="primary" height="56">
-      <!-- <v-btn icon dark @click.prevent="handleNewChallenge()">
-        <v-icon>mdi-plus-circle-outline</v-icon>
-      </v-btn> -->
+<script setup lang="ts">
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { type ChallengeItem, useAppStore } from '@/stores/app'
+import AddNewTip from '@/components/AddNewTip.vue'
+import AppLoader from '@/components/AppLoader.vue'
+import AppPicker, { ADD_NEW_KEY } from '@/components/AppPicker.vue'
+import ChallengeInfo from '@/components/ChallengeInfo.vue'
+import EditChallenge, { type EditableChallenge } from '@/components/EditChallenge.vue'
+import { version } from '../package.json'
+import { type Challenge, isUsingEmulators } from '@/lib/firebase'
+import { capitalize, pluralize } from '@/lib/strings'
+import { crisp } from '@/lib/utils'
 
-      <Picker
-        ref="challengePicker"
-        v-model="challengeId"
-        :label="$root.getLabel('Challenge')"
-        :placeholder="`Select ${$root.getLabel('Challenge')}`"
-        dense
-        solo
-        outlined
+const store = useAppStore()
+const route = useRoute()
+const router = useRouter()
+
+const loading = ref(true)
+const challengeToEdit = ref<Partial<Challenge> | null>()
+const isShowingAllChallenges = ref(false)
+const hasCopied = ref(false)
+const canCopy = typeof window.navigator.clipboard?.writeText === 'function'
+
+const relevantChallenges = computed(() =>
+  store.challenges.filter(
+    (challenge) =>
+      challenge.$isActive ||
+      challenge.$isUpcoming ||
+      challenge.$isRecentlyEnded ||
+      challenge.id === store.currentChallenge?.id,
+  ),
+)
+const challengesForPicker = computed(() =>
+  isShowingAllChallenges.value ? store.challenges : relevantChallenges.value,
+)
+const hiddenChallengeCount = computed(
+  () => store.challenges.length - relevantChallenges.value.length,
+)
+const isMyChallenge = computed(() =>
+  Boolean(store.me && store.me.uid === store.currentChallenge?.createdBy),
+)
+
+function getStatus(challenge: ChallengeItem) {
+  if (challenge.$isUpcoming) return 'Upcoming'
+  if (challenge.$isRecentlyEnded) return 'Recently Ended'
+  return 'Inactive'
+}
+
+watch(
+  () => store.challengeId,
+  async (challengeId) => {
+    loading.value = true
+    await Promise.all([
+      store.bindGroups(challengeId || undefined),
+      store.bindParticipants(challengeId || undefined),
+    ])
+    loading.value = false
+  },
+  { immediate: true },
+)
+
+crisp('set', 'session:data', [[['AppVersion', version]]])
+store.bindChallenges().then(() => {
+  // auto-pick the challenge if it's the only one
+  if (!store.challengeId && store.challenges.length === 1) {
+    store.challengeId = store.challenges[0]!.id
+  }
+})
+
+async function handleAddChallenge(challenge: EditableChallenge) {
+  const id = await store.addChallenge(challenge)
+  store.challengeId = id
+  challengeToEdit.value = undefined
+}
+async function handleSaveChallenge(challenge: EditableChallenge) {
+  const id = challengeToEdit.value?.id
+  if (id) await store.saveChallenge(id, challenge)
+  challengeToEdit.value = undefined
+}
+
+function getChallengeUrl(challenge: Challenge) {
+  const { href } = router.resolve({
+    name: challenge.private ? 'private' : 'public',
+    params: { challengeId: challenge.id },
+  })
+  return `${window.location.origin}${href}`
+}
+function handleCopy(text: string) {
+  window.navigator.clipboard.writeText(text)
+  hasCopied.value = true
+}
+
+// select the link so it's ready to copy
+const urlField = useTemplateRef<{ $el: HTMLElement }>('urlField')
+watch([() => store.isPrivateDialogOpen, () => store.isPublicDialogOpen], async (open) => {
+  if (open.some(Boolean)) {
+    await nextTick()
+    urlField.value?.$el.querySelector('input')?.select()
+  }
+})
+</script>
+
+<template>
+  <v-app class="App" :class="{ isDebugging: isUsingEmulators }">
+    <v-app-bar v-if="route.name !== 'home'" color="primary" height="56" flat>
+      <AppPicker
+        v-model="store.challengeId"
+        :label="store.label('Challenge')"
+        :placeholder="`Select ${store.label('Challenge')}`"
+        variant="solo"
+        density="compact"
         rounded
         clearable
         hide-details
+        single-line
         :items="challengesForPicker"
-        item-text="name"
-        :item-value="idKey"
-        :add-new="name => challengeToEdit = {
-          name: capitalize(name),
-        }"
+        item-title="name"
+        :add-new="(name: string) => (challengeToEdit = { name: capitalize(name) })"
         auto-select-first
+        class="App__challenge-picker mx-2"
       >
         <template #prepend-item>
-          <AddNewTip :label="$root.getLabel('Challenge').toLowerCase()" />
+          <AddNewTip :label="store.label('Challenge').toLowerCase()" />
         </template>
-        <template #item="{ item, parent }">
-          <v-list-item-content :style="{ opacity: !item.$isActive && item[idKey] !== ADD_NEW_KEY ? 0.5 : undefined }">
-            <v-list-item-title>
-              <span>{{ parent.getText(item) }}</span>
-              <v-icon v-if="item.private" class="ml-2">mdi-shield-lock</v-icon>
-              <em v-if="!item.$isActive && item[idKey] !== ADD_NEW_KEY" class="caption ml-2">
-                {{
-                  item.$isUpcoming ? 'Upcoming' : (
-                    item.$isRecentlyEnded ? 'Recently Ended' : 'Inactive'
-                  )
-                }}
+        <template #item="{ item, props: itemProps }">
+          <v-list-item
+            v-bind="itemProps"
+            :style="{
+              opacity: !item.raw.$isActive && item.raw.id !== ADD_NEW_KEY ? 0.5 : undefined,
+            }"
+          >
+            <template #title>
+              <span>{{ item.title }}</span>
+              <v-icon v-if="item.raw.private" class="ml-2" size="small">mdi-shield-lock</v-icon>
+              <em
+                v-if="!item.raw.$isActive && item.raw.id !== ADD_NEW_KEY"
+                class="text-caption ml-2"
+              >
+                {{ getStatus(item.raw) }}
               </em>
-            </v-list-item-title>
-          </v-list-item-content>
+            </template>
+          </v-list-item>
         </template>
         <template #append-item>
           <div
-            v-if="!isShowingAllChallenges && relevantChallenges.length < challenges.length"
-            class="caption text-center px-4 my-2"
+            v-if="!isShowingAllChallenges && hiddenChallengeCount > 0"
+            class="text-caption text-center px-4 my-2"
           >
-            <v-chip small @click="isShowingAllChallenges = true">
-              Show {{ challenges.length - relevantChallenges.length }} more inactive
-              {{
-                pluralize(
-                  challenges.length - relevantChallenges.length,
-                  $root.getLabel('Challenge').toLowerCase(),
-                )
-              }}
+            <v-chip size="small" @click="isShowingAllChallenges = true">
+              Show {{ hiddenChallengeCount }} more inactive
+              {{ pluralize(hiddenChallengeCount, store.label('Challenge').toLowerCase()) }}
             </v-chip>
           </div>
         </template>
-      </Picker>
+      </AppPicker>
       <EditChallenge
         v-model="challengeToEdit"
-        @add="challenge => handleAddChallenge(challenge)"
-        @save="challenge => handleSaveChallenge(challenge)"
+        @add="handleAddChallenge"
+        @save="handleSaveChallenge"
       />
 
-      <template v-if="currentChallenge && currentChallenge.private">
-        <v-btn icon dark @click="isPrivateDialogOpen = true">
+      <template v-if="store.currentChallenge">
+        <v-btn
+          v-if="store.currentChallenge.private"
+          icon
+          aria-label="Private"
+          @click="store.isPrivateDialogOpen = true"
+        >
           <v-icon>mdi-shield-lock</v-icon>
         </v-btn>
-        <v-dialog v-model="isPrivateDialogOpen" max-width="320">
-          <v-form>
-            <v-card>
-              <v-card-title>
-                <div class="flex">
-                  Private {{ $root.getLabel('Challenge') }}
-                  <v-icon color="primary" class="ml-1 mt-n1">mdi-shield-lock</v-icon>
-                </div>
-                <v-btn icon class="mr-n1" @click="isPrivateDialogOpen = false">
-                  <v-icon>mdi-close</v-icon>
-                </v-btn>
-              </v-card-title>
-              <v-card-text class="pb-0">
-                <p class="mb-6">
-                  This {{ $root.getLabel('Challenge').toLowerCase() }}
-                  can only be 'unlocked' when accessed from the link below:
-                </p>
-
-                <div class="d-flex align-center mb-4">
-                  <v-text-field
-                    ref="privateUrl"
-                    :value="getChallengeUrl(currentChallenge)"
-                    label="Access Link"
-                    rounded
-                    outlined
-                    readonly
-                    hide-details
-                  />
-                  <v-btn
-                    v-if="canCopy"
-                    icon
-                    large
-                    class="ml-1"
-                    @click="handleCopy(getChallengeUrl(currentChallenge))"
-                  >
-                    <v-icon>mdi-content-copy</v-icon>
-                  </v-btn>
-                </div>
-
-                <p>
-                  <strong>Do not share this link publicly</strong> &mdash;<br />
-                  anyone who visits it will gain entry.
-                </p>
-              </v-card-text>
-              <v-card-actions class="justify-end">
-                <v-btn rounded large block color="primary" @click="isPrivateDialogOpen = false">
-                  Got It
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-form>
-        </v-dialog>
-      </template>
-      <template v-else-if="currentChallenge && !currentChallenge.private">
-        <v-btn icon dark @click="isPublicDialogOpen = true">
+        <v-btn v-else icon aria-label="Share" @click="store.isPublicDialogOpen = true">
           <v-icon>mdi-share</v-icon>
         </v-btn>
-        <v-dialog v-model="isPublicDialogOpen" max-width="320">
-          <v-form>
-            <v-card>
-              <v-card-title>
-                <div class="flex">
-                  Share {{ $root.getLabel('Challenge') }}
-                  <v-icon color="primary" class="ml-1 mt-n1">mdi-share</v-icon>
-                </div>
-                <v-btn icon class="mr-n1" @click="isPublicDialogOpen = false">
-                  <v-icon>mdi-close</v-icon>
-                </v-btn>
-              </v-card-title>
-              <v-card-text class="pb-0">
-                <p class="mb-6">
-                  This {{ $root.getLabel('Challenge').toLowerCase() }} can be accessed directly
-                  using the following link:
-                </p>
 
-                <div class="d-flex align-center mb-4">
-                  <v-text-field
-                    ref="publicUrl"
-                    :value="getChallengeUrl(currentChallenge)"
-                    label="Access Link"
-                    rounded
-                    outlined
-                    readonly
-                    hide-details
-                  />
-                  <v-btn
-                    v-if="canCopy"
-                    icon
-                    large
-                    class="ml-1"
-                    @click="handleCopy(getChallengeUrl(currentChallenge))"
-                  >
-                    <v-icon>mdi-content-copy</v-icon>
-                  </v-btn>
-                </div>
-              </v-card-text>
-              <v-card-actions class="justify-end">
-                <v-btn rounded large block color="primary" @click="isPublicDialogOpen = false">
-                  Got It
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-form>
-        </v-dialog>
-      </template>
-      <template v-if="currentChallenge">
         <v-btn
-          v-if="me && (me.uid === currentChallenge.createdBy)"
+          v-if="isMyChallenge"
           icon
-          dark
-          @click="challengeToEdit = currentChallenge"
+          aria-label="Edit"
+          @click="challengeToEdit = store.currentChallenge"
         >
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
         <template v-else>
-          <ChallengeInfo
-            v-model="isInfoDialogOpen"
-            :challenge="currentChallenge"
-          />
-          <v-btn
-            icon
-            dark
-            @click="isInfoDialogOpen = true"
-          >
+          <ChallengeInfo v-model="store.isInfoDialogOpen" :challenge="store.currentChallenge" />
+          <v-btn icon aria-label="Info" @click="store.isInfoDialogOpen = true">
             <v-icon>mdi-information-outline</v-icon>
           </v-btn>
         </template>
       </template>
     </v-app-bar>
+
+    <template v-if="store.currentChallenge">
+      <v-dialog
+        :model-value="store.isPrivateDialogOpen || store.isPublicDialogOpen"
+        max-width="320"
+        @update:model-value="store.isPrivateDialogOpen = store.isPublicDialogOpen = $event"
+      >
+        <v-card>
+          <v-card-title class="d-flex align-center">
+            <div v-if="store.currentChallenge.private" class="flex-grow-1">
+              Private {{ store.label('Challenge') }}
+              <v-icon color="primary" class="ml-1 mt-n1">mdi-shield-lock</v-icon>
+            </div>
+            <div v-else class="flex-grow-1">
+              Share {{ store.label('Challenge') }}
+              <v-icon color="primary" class="ml-1 mt-n1">mdi-share</v-icon>
+            </div>
+            <v-btn
+              icon
+              variant="text"
+              density="comfortable"
+              class="mr-n2"
+              @click="store.isPrivateDialogOpen = store.isPublicDialogOpen = false"
+            >
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-card-title>
+          <v-card-text class="pb-0">
+            <p v-if="store.currentChallenge.private" class="mb-6">
+              This {{ store.label('Challenge').toLowerCase() }} can only be 'unlocked' when accessed
+              from the link below:
+            </p>
+            <p v-else class="mb-6">
+              This {{ store.label('Challenge').toLowerCase() }} can be accessed directly using the
+              following link:
+            </p>
+
+            <div class="d-flex align-center mb-4">
+              <v-text-field
+                ref="urlField"
+                :model-value="getChallengeUrl(store.currentChallenge)"
+                label="Access Link"
+                variant="outlined"
+                rounded
+                readonly
+                hide-details
+              />
+              <v-btn
+                v-if="canCopy"
+                icon
+                variant="text"
+                class="ml-1"
+                aria-label="Copy"
+                @click="handleCopy(getChallengeUrl(store.currentChallenge))"
+              >
+                <v-icon>mdi-content-copy</v-icon>
+              </v-btn>
+            </div>
+
+            <p v-if="store.currentChallenge.private">
+              <strong>Do not share this link publicly</strong> &mdash;<br />
+              anyone who visits it will gain entry.
+            </p>
+          </v-card-text>
+          <v-card-actions class="pa-4">
+            <v-btn
+              rounded
+              size="large"
+              block
+              variant="flat"
+              color="primary"
+              @click="store.isPrivateDialogOpen = store.isPublicDialogOpen = false"
+            >
+              Got It
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </template>
+
     <v-snackbar v-model="hasCopied">
       <v-icon color="success">mdi-check</v-icon>
       Copied to clipboard
     </v-snackbar>
 
-    <v-main>
-      <Loader v-if="$route.name !== 'home' && loading" class="ma-auto" />
-      <router-view v-show="$route.name === 'home' || !loading" />
+    <v-main class="App__main">
+      <AppLoader v-if="route.name !== 'home' && loading" class="ma-auto" />
+      <router-view v-show="route.name === 'home' || !loading" />
     </v-main>
 
-    <v-bottom-navigation app grow shift color="primary">
+    <v-bottom-navigation grow mode="shift" color="primary" class="App__nav">
       <v-btn :to="{ name: 'activity' }">
-        <span>Activity</span>
         <v-icon>mdi-chart-timeline-variant</v-icon>
+        <span>Activity</span>
       </v-btn>
-      <v-btn depressed x-large color="primary" :to="{ name: 'new' }">
+      <v-btn :to="{ name: 'new' }" variant="flat" color="primary" class="App__nav-new">
+        <v-icon size="large">mdi-plus</v-icon>
         <span>New</span>
-        <v-icon large>mdi-plus</v-icon>
       </v-btn>
       <v-btn :to="{ name: 'statistics' }">
-        <span>Stats</span>
         <v-icon>mdi-poll</v-icon>
+        <span>Stats</span>
       </v-btn>
     </v-bottom-navigation>
   </v-app>
 </template>
 
-<script lang="ts">
-import Vue from 'vue'
-import { mapGetters, mapActions, mapState } from 'vuex'
-import { $package, isDebugging } from '@/config'
-import router from '@/router'
-import {
-  firebase,
-  firestore,
-  firestoreRefs,
-  idKey,
-  Challenge,
-} from '@/plugins/firebase'
-import {
-  capitalize,
-  pluralize,
-} from '@/services/strings'
-import Loader from '@/components/Loader.vue'
-import Picker, { ADD_NEW_KEY } from '@/components/Picker.vue'
-import ChallengeInfo from '@/components/ChallengeInfo.vue'
-import EditChallenge from '@/components/EditChallenge.vue'
-import AddNewTip from '@/components/AddNewTip.vue'
-
-export default Vue.extend({
-  name: 'App',
-  components: {
-    Loader,
-    Picker,
-    ChallengeInfo,
-    EditChallenge,
-    AddNewTip,
-  },
-  data: () => ({
-    ADD_NEW_KEY,
-    isDebugging,
-    idKey,
-    loading: true,
-    challengeToEdit: undefined as Challenge | null | undefined,
-    isShowingAllChallenges: false,
-    hasCopied: false,
-  }),
-  computed: {
-    ...mapState([
-      'me',
-    ]),
-    ...mapGetters([
-      'challenges',
-      'currentChallenge',
-    ]),
-
-    relevantChallenges() {
-      return this.challenges.filter(
-        (challenge: Challenge) => challenge.$isActive
-          || challenge.$isUpcoming
-          || challenge.$isRecentlyEnded
-          || (this.currentChallenge && this.currentChallenge[idKey] === challenge[idKey]),
-      )
-    },
-    challengesForPicker() {
-      return this.isShowingAllChallenges
-        ? this.challenges
-        : this.relevantChallenges
-    },
-
-    challengeId: {
-      get() {
-        return this.$store.state.challengeId
-      },
-      set(challengeId) {
-        return this.$store.commit('setChallengeId', challengeId)
-      },
-    },
-
-    isInfoDialogOpen: {
-      get() {
-        return this.$store.state.isInfoDialogOpen
-      },
-      set(to) {
-        this.$store.commit('toggleInfoDialogOpen', to)
-      },
-    },
-    isPublicDialogOpen: {
-      get() {
-        return this.$store.state.isPublicDialogOpen
-      },
-      set(to) {
-        this.$store.commit('togglePublicDialogOpen', to)
-      },
-    },
-    isPrivateDialogOpen: {
-      get() {
-        return this.$store.state.isPrivateDialogOpen
-      },
-      set(to) {
-        this.$store.commit('togglePrivateDialogOpen', to)
-      },
-    },
-
-    canCopy() {
-      return window.navigator.clipboard && typeof window.navigator.clipboard.writeText === 'function'
-    },
-  },
-  watch: {
-    challengeId: {
-      async handler(challengeId) {
-        this.loading = true
-        await Promise.all([
-          (this as any).bindGroups({
-            mutateQuery: challengeId
-              ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
-              : undefined,
-          }),
-          (this as any).bindParticipants({
-            mutateQuery: challengeId
-              ? (query: firebase.firestore.Query) => query.where('challengeId', '==', challengeId)
-              : undefined,
-          }),
-        ])
-        this.loading = false
-      },
-      immediate: true,
-    },
-    async isPrivateDialogOpen(isOpen) {
-      if (isOpen) {
-        await this.$nextTick();
-        (this.$refs.privateUrl as any).$el.querySelector('input').select()
-      }
-    },
-    async isPublicDialogOpen(isOpen) {
-      if (isOpen) {
-        await this.$nextTick();
-        (this.$refs.publicUrl as any).$el.querySelector('input').select()
-      }
-    },
-  },
-  async created() {
-    if (window.$crisp) {
-      window.$crisp.push(['set', 'session:data', [[['AppVersion', $package.version]]]])
-    }
-
-    await (this as any).bindChallenges()
-    if (!this.challengeId && this.challenges.length === 1) {
-      // auto-pick first challenge if it's the only one
-      this.challengeId = this.challenges[0][idKey]
-    }
-  },
-  methods: {
-    capitalize,
-    pluralize,
-    ...mapActions([
-      'bindChallenges',
-      'bindGroups',
-      'bindParticipants',
-    ]),
-
-    // async handleNewChallenge() {
-    //   (this.$refs.challengePicker as any).$el.querySelector('input').click();
-    // },
-    async handleAddChallenge(challenge: Challenge) {
-      const { [idKey]: id } = await firestoreRefs.challenges.add({
-        ...challenge,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-        createdBy: this.me && this.me.uid,
-      })
-      if (challenge.private) {
-        this.$store.dispatch('addPrivateId', id)
-      }
-      this.challengeId = id
-      this.challengeToEdit = undefined
-    },
-    async handleSaveChallenge(challenge: Challenge) {
-      const { [idKey]: id } = this.challengeToEdit || {}
-      if (id) {
-        await firestoreRefs.challenges.doc(id).update({
-          ...challenge,
-          updatedAt: firestore.FieldValue.serverTimestamp(),
-          updatedBy: this.me && this.me.uid,
-        })
-      }
-      this.challengeToEdit = undefined
-    },
-
-    getChallengeUrl(challenge: Challenge) {
-      const { href } = router.resolve({
-        name: challenge.private ? 'private' : 'public',
-        params: {
-          challengeId: challenge[idKey],
-        },
-      })
-      return `${window.location.origin}${href}`
-    },
-
-    handleCopy(textToCopy: string) {
-      window.navigator.clipboard.writeText(textToCopy)
-      this.hasCopied = true
-    },
-  },
-})
-</script>
-
-<style lang="scss">
-@media (max-width: 768px) {
-  #crisp-chatbox {
-    z-index: 200; // less than v-overlay
-
-    a[aria-label='Open chat'],
-    a[aria-label='Close chat']{
-      margin-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
-    }
-  }
-}
-
+<style>
 html,
 body {
   width: 100%;
@@ -444,88 +305,64 @@ body {
   margin: 0;
 }
 
-.App {
-  &.isDebugging {
-    .v-bottom-navigation {
-      background-image: repeating-linear-gradient(
-        -45deg,
-        #0001,
-        #0001 5px,
-        transparent 0,
-        transparent 10px,
-      );
+@media (max-width: 768px) {
+  #crisp-chatbox {
+    z-index: 200; /* below dialogs */
+
+    a[aria-label='Open chat'],
+    a[aria-label='Close chat'] {
+      margin-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
     }
   }
+}
 
-  &,
-  .v-application--wrap {
-    // override Vuetify default (100vh) to solve Safari issue
-    // https://stackoverflow.com/a/55003985/888928
-    min-height: -webkit-fill-available;
-  }
-  .v-main__wrap {
+.App {
+  .App__main {
     display: flex;
     flex-direction: column;
+    min-height: 100dvh;
   }
 
-  .v-app-bar.v-app-bar--fixed {
-    height: auto !important;
+  .v-app-bar {
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
 
-  .v-bottom-navigation.v-bottom-navigation--fixed {
+  .App__nav.v-bottom-navigation {
     height: calc(56px + env(safe-area-inset-bottom)) !important;
     padding-bottom: env(safe-area-inset-bottom);
+    overflow: visible;
 
-    .v-btn {
-      height: 56px !important;
-
-      &.v-size--x-large {
-        height: 110% !important;
-        align-self: flex-end;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-
-        &.primary {
-          color: #fff !important;
-        }
-      }
+    .App__nav-new {
+      height: 110% !important;
+      align-self: flex-end;
+      border-radius: 4px 4px 0 0;
+      color: #fff !important;
+      background: rgb(var(--v-theme-primary)) !important;
     }
+  }
+
+  &.isDebugging .App__nav.v-bottom-navigation {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      #0001,
+      #0001 5px,
+      transparent 0,
+      transparent 10px
+    );
+  }
+
+  /* Vuetify 2's grey disabled buttons */
+  .v-btn--disabled.v-btn--variant-flat {
+    background: rgba(0, 0, 0, 0.12) !important;
+    color: rgba(0, 0, 0, 0.26) !important;
   }
 
   .flex-page {
     display: flex;
     flex-direction: column;
     flex: auto;
-  }
-
-  .scroll-y {
-    overflow: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-// source: https://github.com/vuetifyjs/vuetify/issues/7283#issuecomment-572276385
-.v-input--reverse {
-  .v-input__slot {
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-
-    .v-application--is-ltr & {
-      .v-input--selection-controls__input {
-        margin-right: 0;
-        margin-left: 8px;
-      }
-    }
-    .v-application--is-rtl & {
-      .v-input--selection-controls__input {
-        margin-left: 0;
-        margin-right: 8px;
-      }
-    }
   }
 }
 </style>

@@ -1,118 +1,76 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useAppStore } from '@/stores/app'
+import { type Entry, findById } from '@/lib/firebase'
+
+const props = defineProps<{ entry: Entry }>()
+defineEmits<{ delete: [entry: Entry]; flag: [entry: Entry] }>()
+const store = useAppStore()
+
+const challenge = computed(() => findById(store.challenges, props.entry.challengeId))
+const group = computed(() => findById(store.groups, props.entry.groupId))
+const participant = computed(() => findById(store.participants, props.entry.participantId))
+const isMine = computed(() => Boolean(store.me && store.me.uid === props.entry.createdBy))
+</script>
+
 <template>
-  <v-timeline-item
-    :id="`entry-${entry[idKey]}`"
-    small
-    :color="group && group.color"
-  >
-    <v-card>
+  <v-timeline-item :id="`entry-${entry.id}`" size="small" :dot-color="group?.color" fill-dot>
+    <v-card class="ActivityTimelineItem" elevation="2">
       <v-card-title class="d-flex align-center">
-        <big class="flex">+{{ entry.value.toLocaleString() }}</big>
+        <span class="flex-grow-1" style="font-size: larger"
+          >+{{ entry.value.toLocaleString() }}</span
+        >
 
         <template v-if="challenge">
-          <small v-if="!challengeId && challenges.length > 1" class="overline">
+          <small v-if="!store.challengeId && store.challenges.length > 1" class="text-overline">
             {{ challenge.name }}
           </small>
         </template>
-        <v-skeleton-loader
-          v-else
-          type="text"
-          width="48"
-          style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
-        />
+        <v-skeleton-loader v-else type="text" width="48" class="inline-skeleton" />
 
         <v-btn
-          v-if="me && (me.uid === entry.createdBy)"
-          small
+          v-if="isMine"
           icon
+          variant="text"
+          size="small"
           class="ml-2"
+          aria-label="Delete"
           @click="$emit('delete', entry)"
         >
-          <v-icon small>mdi-delete-outline</v-icon>
+          <v-icon size="small">mdi-delete-outline</v-icon>
         </v-btn>
         <v-btn
           v-else
-          small
           icon
+          variant="text"
+          size="small"
           class="ml-2"
+          aria-label="Flag"
           @click="$emit('flag', entry)"
         >
-          <v-icon small>mdi-flag-outline</v-icon>
+          <v-icon size="small">mdi-flag-outline</v-icon>
         </v-btn>
       </v-card-title>
       <v-card-text>
-        by <strong v-if="participant">{{ participant.name }}</strong>
-        <v-skeleton-loader
-          v-else
-          type="text"
-          width="48"
-          style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
-        />
-        of <strong v-if="group">
-          {{ group.name }}
-          <span v-if="group.country">{{ getEmojiFlag(group.country) }}</span>
-        </strong>
-        <v-skeleton-loader
-          v-else
-          type="text"
-          width="48"
-          style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
-        />
-        at <strong v-if="entry.createdAt">
-          {{ entry.createdAt.toDate().toLocaleString() }}
-        </strong>
-        <v-skeleton-loader
-          v-else
-          type="text"
-          width="48"
-          style="display: inline-flex; vertical-align: middle; margin-bottom: -6px;"
-        />
+        by
+        <strong v-if="participant">{{ participant.name }}</strong>
+        <v-skeleton-loader v-else type="text" width="48" class="inline-skeleton" />
+        of
+        <strong v-if="group">{{ group.$name }}</strong>
+        <v-skeleton-loader v-else type="text" width="48" class="inline-skeleton" />
+        at
+        <strong v-if="entry.createdAt">{{ entry.createdAt.toDate().toLocaleString() }}</strong>
+        <v-skeleton-loader v-else type="text" width="48" class="inline-skeleton" />
       </v-card-text>
     </v-card>
   </v-timeline-item>
 </template>
 
-<script>
-import Vue from 'vue'
-import { mapGetters, mapState } from 'vuex'
-import { getEmojiFlag } from '@/services/country'
-import { idKey, findByIdKey } from '@/plugins/firebase'
-
-export default Vue.extend({
-  name: 'ActivityTimelineItem',
-  props: {
-    entry: {
-      type: Object,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      idKey,
-    }
-  },
-  computed: {
-    ...mapState([
-      'me',
-      'challengeId',
-    ]),
-    ...mapGetters([
-      'challenges',
-      'groups',
-      'participants',
-    ]),
-
-    challenge() {
-      return this.entry && findByIdKey(this.challenges, this.entry.challengeId)
-    },
-    group() {
-      return this.entry && findByIdKey(this.groups, this.entry.groupId)
-    },
-    participant() {
-      return this.entry && findByIdKey(this.participants, this.entry.participantId)
-    },
-  },
-  methods: {
-    getEmojiFlag,
-  },
-})
-</script>
+<style>
+.ActivityTimelineItem .inline-skeleton {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-bottom: -6px;
+  background: transparent;
+}
+</style>
