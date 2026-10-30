@@ -10,6 +10,7 @@ import EditChallenge, { type EditableChallenge } from '@/components/EditChalleng
 import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import { version } from '../package.json'
 import { type Challenge, isUsingEmulators } from '@/lib/firebase'
+import { isSignInEnabled } from '@/lib/scotdance'
 import { capitalize, pluralize } from '@/lib/strings'
 import { crisp } from '@/lib/utils'
 
@@ -189,7 +190,7 @@ watch([() => store.isPrivateDialogOpen, () => store.isPublicDialogOpen], async (
           </v-btn>
         </template>
       </template>
-      <ScotDanceAccount />
+      <ScotDanceAccount v-if="isSignInEnabled" />
     </v-app-bar>
 
     <template v-if="store.currentChallenge">
