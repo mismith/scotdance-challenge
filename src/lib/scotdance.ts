@@ -1,9 +1,10 @@
 // ScotDance.app's embed draws its own sign-in sheet; Challenge only asks for a pass
 import { isUsingEmulators } from '@/lib/firebase'
 
+// the embed lives on next.scotdance.app until v4 launches on scotdance.app (ScotDance ADR 0015)
 export const scotdanceUrl =
   import.meta.env.VITE_SCOTDANCE_URL ||
-  (isUsingEmulators ? 'http://localhost:5279' : 'https://scotdance.app')
+  (isUsingEmulators ? 'http://localhost:5279' : 'https://next.scotdance.app')
 
 export type SignInResult =
   | { signedIn: false }

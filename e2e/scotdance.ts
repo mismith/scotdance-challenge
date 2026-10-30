@@ -16,7 +16,7 @@ export interface Account {
   name: string | null
 }
 
-export function newAccount(name = 'Test Dancer'): Account {
+export function newAccount(name: string | null = 'Test Dancer'): Account {
   const sub = randomUUID().replaceAll('-', '').slice(0, 20)
   return { sub, email: `${sub}@example.com`, name }
 }

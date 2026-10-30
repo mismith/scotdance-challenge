@@ -110,7 +110,8 @@ async function upsertUser(uid: string, email: string, displayName: string | null
       await auth.updateUser(uid, props)
     } catch (error: any) {
       if (error?.code !== 'auth/user-not-found') throw error
-      await auth.createUser({ uid, ...props })
+      // createUser rejects a null name (updateUser takes it to clear one)
+      await auth.createUser({ uid, ...props, displayName: displayName ?? undefined })
     }
   }
   try {

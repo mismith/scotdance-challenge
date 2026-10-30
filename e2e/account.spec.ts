@@ -57,6 +57,15 @@ test('keeps your entries across devices', async ({ page, browser }) => {
   await other.close()
 })
 
+test('signs in an account with no name', async ({ page }) => {
+  // most ScotDance.app accounts are just an email and password
+  const account = newAccount(null)
+  await addChallenge(page, unique('Nameless'))
+  await stubEmbed(page, account)
+  await signIn(page)
+  await expect(page.getByText(`Signed in as ${account.email}`)).toBeVisible()
+})
+
 test('stays anonymous when the sheet is closed', async ({ page }) => {
   await addChallenge(page, unique('Closed'))
   await stubEmbed(page, null)
