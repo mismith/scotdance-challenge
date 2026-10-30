@@ -2,7 +2,9 @@
 
 Motivate your progress — [challenge.scotdance.app](https://challenge.scotdance.app)
 
-Vue 3 + Vite + TypeScript + Pinia + Vuetify 3, on Firebase (Firestore, anonymous auth, Cloud Functions). The web app is on Firebase Hosting.
+Vue 3 + Vite + TypeScript + Pinia + Tailwind 4 + Reka UI, on Firebase (Firestore, anonymous auth, Cloud Functions). The web app is on Firebase Hosting.
+
+The app icon's source is `assets/Challenge.icon` (Icon Composer); `public/icon.svg` and `public/touchicon.png` (180×180, rendered with Playwright) are made from its `steps.svg`.
 
 ## Setup
 
@@ -39,4 +41,5 @@ npm run deploy                       # web app to Firebase Hosting (also runs on
 firebase deploy --only firestore     # rules + indexes
 firebase functions:secrets:set TOOL_PASS_SECRET   # once; same value as ScotDance.app's
 firebase deploy --only functions
+curl https://us-central1-scotdance-challenge.cloudfunctions.net/syncAggregateStatistics  # rebuild all stats, e.g. after adding one
 ```

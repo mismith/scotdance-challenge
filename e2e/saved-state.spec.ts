@@ -1,4 +1,4 @@
-import { addChallenge, addEntry, expect, picker, test, unique } from './helpers'
+import { addChallenge, addEntry, expect, test, unique } from './helpers'
 
 // what the Vue 2 app left in people's browsers: vuex-persist state, then vue-localstorage prefs
 test('picks up where the old app left off', async ({ page, browser, baseURL }) => {
@@ -39,14 +39,14 @@ test('picks up where the old app left off', async ({ page, browser, baseURL }) =
 
   // the private challenge is still unlocked, with the same selections
   await other.goto('/new')
-  await expect(picker(other, 'Challenge')).toContainText(name)
-  await expect(picker(other, 'Group')).toContainText('Blue Team')
-  await expect(picker(other, 'Participant')).toContainText('Ben')
+  await expect(other.getByRole('heading', { level: 1 })).toHaveText(name)
+  await expect(other.getByRole('combobox', { name: 'Group' })).toHaveValue('Blue Team')
+  await expect(other.getByRole('combobox', { name: 'Dancer' })).toHaveValue('Ben')
 
-  // stats open on the same slide, filtered the same way
-  await other.getByRole('link', { name: /Stats/ }).click()
-  const rows = other.locator('.v-window-item--active tbody tr')
-  await expect(rows).toHaveCount(1, { timeout: 15_000 })
-  await expect(rows.nth(0)).toContainText('Ben')
+  // stats are filtered the same way
+  await other.getByRole('link', { name: 'Stats' }).click()
+  await expect(other.getByRole('searchbox', { name: 'Search dancers' })).toHaveValue('ben')
+  await expect(other.locator('.StatsDancer')).toHaveCount(1, { timeout: 15_000 })
+  await expect(other.locator('.StatsDancer')).toContainText('Ben')
   await context.close()
 })
