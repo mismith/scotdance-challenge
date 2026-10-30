@@ -1,25 +1,25 @@
-.DS_Store
-node_modules
-dist/
-.firebase
-firebase-debug.log
-firestore-debug.log
-/stats.html
-
-# local env files
-.env.local
-.env.*.local
-
-# Log files
+# Logs
+logs
+*.log
 npm-debug.log*
-gui-debug.log
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+.firebase
+
+/test-results/
+/playwright-report/
 
 # Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 .idea
-.vscode
 *.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
-*.log
+
+*.tsbuildinfo
+/stats.html

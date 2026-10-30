@@ -1,19 +1,22 @@
-<script>
-import Vue from 'vue'
-import { HorizontalBar, mixins } from 'vue-chartjs'
+<script setup lang="ts">
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  type ChartData,
+  type ChartOptions,
+  LinearScale,
+  Tooltip,
+} from 'chart.js'
+import { Bar } from 'vue-chartjs'
 
-export default Vue.extend({
-  name: 'HorizontalBarChart',
-  extends: HorizontalBar,
-  mixins: [mixins.reactiveProp],
-  props: {
-    chartOptions: {
-      type: Object,
-      default: () => ({}),
-    },
-  },
-  mounted() {
-    this.renderChart(this.chartData, this.chartOptions)
-  },
-})
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip)
+
+defineProps<{ data: ChartData<'bar'>; options: ChartOptions<'bar'>; height: number }>()
 </script>
+
+<template>
+  <div class="flex-shrink-0" :style="{ position: 'relative', height: `${height}px` }">
+    <Bar :data="data" :options="options" />
+  </div>
+</template>

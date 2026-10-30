@@ -1,17 +1,49 @@
+<script setup lang="ts">
+import { differenceInMilliseconds, formatDistanceStrict, isAfter } from 'date-fns'
+import { computed } from 'vue'
+import { useAppStore } from '@/stores/app'
+import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
+import type { Challenge } from '@/lib/firebase'
+
+const props = defineProps<{ challenge: Challenge }>()
+const store = useAppStore()
+
+const startDate = computed(() => getChallengeStartDate(props.challenge))
+const endDate = computed(() => getChallengeEndDate(props.challenge))
+
+const status = computed(() => {
+  const now = new Date()
+  if (startDate.value) {
+    const distance = formatDistanceStrict(startDate.value, now, { addSuffix: true })
+    if (isAfter(startDate.value, now)) return ['starts', distance]
+    if (!endDate.value) return ['started', distance]
+  }
+  if (endDate.value) {
+    const distance = formatDistanceStrict(endDate.value, now, { addSuffix: true })
+    return [isAfter(endDate.value, now) ? 'ends' : 'ended', distance]
+  }
+  return null
+})
+
+const percentComplete = computed(() => {
+  if (!startDate.value || !endDate.value) return 0
+  const elapsed = differenceInMilliseconds(new Date(), startDate.value)
+  const total = differenceInMilliseconds(endDate.value, startDate.value)
+  return Math.round((elapsed / total) * 100)
+})
+</script>
+
 <template>
   <div v-if="status" class="ChallengeProgress">
     <v-progress-linear
-      :value="percentComplete < 0 ? 100 : percentComplete"
+      :model-value="percentComplete < 0 ? 100 : percentComplete"
       height="40"
+      color="primary"
       :striped="percentComplete < 0 || percentComplete > 100"
     >
-      <v-chip
-        color="rgba(0, 0, 0, 0.5)"
-        dark
-        style="height: 24px;"
-      >
+      <v-chip color="rgba(0, 0, 0, 0.5)" variant="flat" class="text-white" size="small">
         <div>
-          This {{ $root.getLabel('Challenge').toLowerCase() }}
+          This {{ store.label('Challenge').toLowerCase() }}
           {{ status[0] }}
           <strong>{{ status[1] }}</strong>
         </div>
@@ -19,55 +51,3 @@
     </v-progress-linear>
   </div>
 </template>
-
-<script lang="ts">
-import Vue from 'vue'
-import { differenceInMilliseconds, formatDistanceStrict, isAfter } from 'date-fns'
-import { getChallengeStartDate, getChallengeEndDate } from '@/services/date'
-
-export default Vue.extend({
-  name: 'ChallengeProgress',
-  props: {
-    challenge: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    startDate() {
-      return getChallengeStartDate(this.challenge)
-    },
-    endDate() {
-      return getChallengeEndDate(this.challenge)
-    },
-    status() {
-      const { startDate, endDate } = (this as any)
-      if (startDate) {
-        const distance = formatDistanceStrict(startDate, new Date(), { addSuffix: true })
-        if (isAfter(startDate, new Date())) {
-          return ['starts', distance]
-        }
-        if (!endDate) {
-          return ['started', distance]
-        }
-      }
-      if (endDate) {
-        const distance = formatDistanceStrict(endDate, new Date(), { addSuffix: true })
-        if (isAfter(endDate, new Date())) {
-          return ['ends', distance]
-        }
-        return ['ended', distance]
-      }
-      return null
-    },
-    percentComplete() {
-      if (this.startDate && this.endDate) {
-        const elapsed = differenceInMilliseconds(new Date(), (this as any).startDate)
-        const total = differenceInMilliseconds((this as any).endDate, (this as any).startDate)
-        return Math.round((elapsed / total) * 100)
-      }
-      return null
-    },
-  },
-})
-</script>

@@ -47,9 +47,6 @@
     "firestore": {
       "port": 5002
     },
-    "hosting": {
-      "port": 5050
-    },
     "singleProjectMode": true
   }
 }
