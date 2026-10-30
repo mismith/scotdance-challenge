@@ -1,16 +1,7 @@
 <script setup lang="ts">
 import { useElementVisibility } from '@vueuse/core'
 import { format, isToday, isYesterday, subDays } from 'date-fns'
-import {
-  EllipsisVertical,
-  Flag,
-  Flame,
-  LoaderCircle,
-  Moon,
-  Pencil,
-  Sun,
-  Trash2,
-} from 'lucide-vue-next'
+import { Flag, Flame, LoaderCircle, Moon, Pencil, Sun, Trash2 } from 'lucide-vue-next'
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -285,85 +276,86 @@ async function deleteEntry() {
           v-for="entry in day.entries"
           :id="`entry-${entry.id}`"
           :key="entry.id"
-          class="ActivityItem relative grid grid-cols-[38px_minmax(0,1fr)_auto_auto] items-center gap-2.5 py-2.5 pr-2 pl-4 after:absolute after:right-3 after:bottom-0 after:left-4 after:h-px after:bg-line last:after:hidden"
+          class="ActivityItem relative after:pointer-events-none after:absolute after:right-3 after:bottom-0 after:left-4 after:h-px after:bg-line last:after:hidden"
           :class="{ 'bg-lime-soft': isMine(entry) }"
           :style="rowStyle(entry)"
         >
-          <span class="avatar" :style="avatarStyle(entry)" aria-hidden="true">
-            {{ initialOf(entry) }}
-          </span>
-
-          <div class="min-w-0">
-            <p class="text-base leading-tight font-extrabold break-words">
-              {{ participantOf(entry)?.name ?? '…' }}<span class="sr-only">{{ ' · ' }}</span>
-            </p>
-            <p class="mt-0.5 text-[13px] font-semibold text-muted">
-              {{ groupOf(entry)?.$name ?? '…' }}{{ isMine(entry) ? ' · you' : '' }}{{ ' · '
-              }}<time class="num" :datetime="entry.createdAt?.toDate().toISOString()">
-                {{ formatTime(entry) }}
-              </time>
-            </p>
-            <p v-if="hasTags(entry)" class="mt-[5px] flex flex-wrap gap-1">
-              <span v-if="isNightOwl(entry)" class="tag anim-pop bg-ink text-white">
-                <Moon :size="12" :stroke-width="0" fill="currentColor" class="text-lime" />
-                night owl
-              </span>
-              <span v-if="isEarlyBird(entry)" class="tag anim-pop bg-butter-soft text-butter-ink">
-                <Sun :size="12" :stroke-width="3" class="text-orange" />
-                early bird
-              </span>
-              <span
-                v-if="streaks.has(entry.id)"
-                class="tag anim-pop bg-orange-soft text-orange-ink"
-              >
-                <Flame :size="12" :stroke-width="0" fill="currentColor" class="text-orange" />
-                {{ streaks.get(entry.id) }} days
-              </span>
-            </p>
-          </div>
-
-          <Transition name="pop" mode="out-in">
-            <span
-              :key="entry.value"
-              class="hd num text-[30px] whitespace-nowrap"
-              :class="isMine(entry) ? 'text-violet' : 'text-ink'"
+          <!-- the whole row opens its menu: edit or delete your own, flag anyone else's -->
+          <DropdownMenuRoot>
+            <DropdownMenuTrigger
+              class="ActivityItem-row grid w-full grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-2.5 py-2.5 pr-4 pl-4 text-left"
             >
-              +{{ entry.value.toLocaleString() }}
-            </span>
-          </Transition>
+              <span class="avatar" :style="avatarStyle(entry)" aria-hidden="true">
+                {{ initialOf(entry) }}
+              </span>
 
-          <DropdownMenuRoot v-if="isMine(entry)">
-            <DropdownMenuTrigger class="action" aria-label="Edit or delete">
-              <EllipsisVertical :size="18" :stroke-width="2.6" />
+              <span class="block min-w-0">
+                <span class="block text-base leading-tight font-extrabold break-words">
+                  {{ participantOf(entry)?.name ?? '…' }}<span class="sr-only">{{ ' · ' }}</span>
+                </span>
+                <span class="mt-0.5 block text-[13px] font-semibold text-muted">
+                  {{ groupOf(entry)?.$name ?? '…' }}{{ isMine(entry) ? ' · you' : '' }}{{ ' · '
+                  }}<time class="num" :datetime="entry.createdAt?.toDate().toISOString()">
+                    {{ formatTime(entry) }}
+                  </time>
+                </span>
+                <span v-if="hasTags(entry)" class="mt-[5px] flex flex-wrap gap-1">
+                  <span v-if="isNightOwl(entry)" class="tag anim-pop bg-ink text-white">
+                    <Moon :size="12" :stroke-width="0" fill="currentColor" class="text-lime" />
+                    night owl
+                  </span>
+                  <span
+                    v-if="isEarlyBird(entry)"
+                    class="tag anim-pop bg-butter-soft text-butter-ink"
+                  >
+                    <Sun :size="12" :stroke-width="3" class="text-orange" />
+                    early bird
+                  </span>
+                  <span
+                    v-if="streaks.has(entry.id)"
+                    class="tag anim-pop bg-orange-soft text-orange-ink"
+                  >
+                    <Flame :size="12" :stroke-width="0" fill="currentColor" class="text-orange" />
+                    {{ streaks.get(entry.id) }} days
+                  </span>
+                </span>
+              </span>
+
+              <Transition name="pop" mode="out-in">
+                <span
+                  :key="entry.value"
+                  class="hd num text-[30px] whitespace-nowrap"
+                  :class="isMine(entry) ? 'text-violet' : 'text-ink'"
+                >
+                  +{{ entry.value.toLocaleString() }}
+                </span>
+              </Transition>
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
               <DropdownMenuContent
                 align="end"
-                :side-offset="4"
+                :side-offset="-8"
                 :collision-padding="12"
                 class="popover z-[60] flex min-w-[168px] flex-col rounded-[20px] bg-white p-1.5 text-ink shadow-float"
                 @close-auto-focus="keepFocusInSheet"
               >
-                <DropdownMenuItem class="menu-item" @select="startEditing(entry)">
-                  <Pencil :size="17" :stroke-width="2.4" class="text-violet" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem class="menu-item" @select="deletedEntry = entry">
-                  <Trash2 :size="17" :stroke-width="2.4" class="text-pink" />
-                  Delete
+                <template v-if="isMine(entry)">
+                  <DropdownMenuItem class="menu-item" @select="startEditing(entry)">
+                    <Pencil :size="17" :stroke-width="2.4" class="text-violet" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem class="menu-item" @select="deletedEntry = entry">
+                    <Trash2 :size="17" :stroke-width="2.4" class="text-pink" />
+                    Delete
+                  </DropdownMenuItem>
+                </template>
+                <DropdownMenuItem v-else class="menu-item" @select="flaggedEntry = entry">
+                  <Flag :size="17" :stroke-width="2.4" class="text-violet" />
+                  Flag
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
-          <button
-            v-else
-            type="button"
-            class="action"
-            aria-label="Flag"
-            @click="flaggedEntry = entry"
-          >
-            <Flag :size="16" :stroke-width="2.4" />
-          </button>
         </li>
       </TransitionGroup>
     </section>
@@ -437,24 +429,25 @@ async function deleteEntry() {
 @reference '../style.css';
 
 /* quiet icon buttons at the end of a row */
-.action {
-  @apply inline-flex size-11 items-center justify-center rounded-full text-faint;
+/* each row is a button that opens its menu: it tints and squishes a touch when pressed */
+.ActivityItem-row {
   transition:
-    color 0.2s,
     background-color 0.2s,
     scale 0.3s var(--ease-spring);
 }
-.action:hover {
-  @apply bg-ink/5 text-ink;
+.ActivityItem-row:hover,
+.ActivityItem-row[data-state='open'] {
+  @apply bg-ink/[0.03];
 }
-.action:active {
-  scale: 0.88;
+.ActivityItem-row:active {
+  scale: 0.985;
 }
-.action[data-state='open'] {
-  @apply bg-ink/5 text-ink;
+.ActivityItem-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--color-violet);
 }
 
-/* the edit / delete menu on your own rows */
+/* the edit / delete / flag menu on each row */
 .menu-item {
   @apply flex min-h-11 cursor-pointer items-center gap-2.5 rounded-[14px] px-3 text-[15px] font-bold outline-none select-none;
   transition: background-color 0.15s;

@@ -10,8 +10,8 @@ test('adds and deletes an entry', async ({ page }) => {
   // the total is aggregated by the Cloud Function
   await expect(total(page)).toHaveText('42', { timeout: 15_000 })
 
-  // your own rows keep Edit and Delete in a menu
-  await entry.getByRole('button', { name: 'Edit or delete' }).click()
+  // tapping your own row opens Edit and Delete
+  await entry.getByRole('button').click()
   await page.getByRole('menuitem', { name: 'Delete' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('Delete entry')).toBeVisible()
@@ -55,7 +55,9 @@ test("can't delete someone else's entry", async ({ page, browser }) => {
   await other.goto(link)
   await other.getByRole('link', { name: 'Activity' }).click()
   const entry = other.locator('.ActivityItem').filter({ hasText: '+7' })
-  await expect(entry.getByRole('button', { name: 'Flag' })).toBeVisible()
-  await expect(entry.getByRole('button', { name: 'Edit or delete' })).toHaveCount(0)
+  // tapping someone else's row only offers Flag
+  await entry.getByRole('button').click()
+  await expect(other.getByRole('menuitem', { name: 'Flag' })).toBeVisible()
+  await expect(other.getByRole('menuitem', { name: 'Delete' })).toHaveCount(0)
   await other.close()
 })
