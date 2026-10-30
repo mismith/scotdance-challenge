@@ -2,7 +2,7 @@
 
 Motivate your progress — [challenge.scotdance.app](https://challenge.scotdance.app)
 
-Vue 3 + Vite + TypeScript + Pinia + Vuetify 3, on Firebase (Firestore, anonymous auth, Cloud Functions). The web app is hosted on Cloudflare (static assets via Wrangler).
+Vue 3 + Vite + TypeScript + Pinia + Vuetify 3, on Firebase (Firestore, anonymous auth, Cloud Functions). The web app is on Firebase Hosting.
 
 ## Setup
 
@@ -35,7 +35,7 @@ npm run test:e2e  # Playwright against fresh emulators
 ## Deploy
 
 ```sh
-npm run deploy                       # web app to Cloudflare
+npm run deploy                       # web app to Firebase Hosting (also runs on push to main)
 firebase deploy --only firestore     # rules + indexes
 firebase functions:secrets:set TOOL_PASS_SECRET   # once; same value as ScotDance.app's
 firebase deploy --only functions

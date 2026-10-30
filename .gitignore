@@ -10,7 +10,6 @@ dist-ssr
 coverage
 *.local
 .firebase
-.wrangler
 
 /test-results/
 /playwright-report/
