@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
-import { getFirestore } from 'firebase-admin/firestore'
+import { Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https'
@@ -31,6 +31,8 @@ exports.aggregateStatistics = onDocumentWritten('entries/{entryId}', (event) => 
       return [totalDiff, countDiff]
     })()
     if (!totalDiff && !countDiff) return
+    // when the challenge last saw a new entry, so Explore can hide dormant ones
+    const createdAt: Timestamp | undefined = !before.exists ? after.data()?.createdAt : undefined
 
     return db.runTransaction(async (transaction) => {
       const challengeRef = db.collection('challenges').doc(challengeId)
@@ -41,12 +43,24 @@ exports.aggregateStatistics = onDocumentWritten('entries/{entryId}', (event) => 
       // all reads must come before writes within a transaction
       const docs = await Promise.all(refs.map((ref) => transaction.get(ref)))
 
+      // a participant's first entry (or last deleted one) changes the challenge's dancer count
+      const participantCount = docs[2].data()?.$count ?? 0
+      const dancersDiff =
+        participantCount <= 0 && participantCount + countDiff > 0 ? 1
+          : participantCount > 0 && participantCount + countDiff <= 0 ? -1
+            : 0
+
       return Promise.all(docs.map((doc, i) => {
-        const { $total = 0, $count = 0 } = doc.data() || {}
-        return transaction.set(refs[i], {
+        const { $total = 0, $count = 0, $dancers = 0, $lastEntryAt } = doc.data() || {}
+        const stats: Record<string, unknown> = {
           $total: $total + totalDiff,
           $count: $count + countDiff,
-        }, { merge: true })
+        }
+        if (i === 0) {
+          if (dancersDiff) stats.$dancers = $dancers + dancersDiff
+          if (createdAt && (!$lastEntryAt || createdAt > $lastEntryAt)) stats.$lastEntryAt = createdAt
+        }
+        return transaction.set(refs[i], stats, { merge: true })
       }))
     })
   })
@@ -54,6 +68,8 @@ exports.aggregateStatistics = onDocumentWritten('entries/{entryId}', (event) => 
 interface Tally {
   $total: number;
   $count: number;
+  $dancers?: number;
+  $lastEntryAt?: Timestamp;
 }
 interface CollectionTally {
   [id: string]: Tally;
@@ -76,11 +92,18 @@ exports.syncAggregateStatistics = onRequest((req, res) => {
       ...acc,
       [key]: {},
     }), {})
-    entries.map(({ challengeId, groupId, participantId, value }) => {
+    const dancers: { [challengeId: string]: Set<string> } = {}
+    entries.map(({ challengeId, groupId, participantId, value, createdAt }) => {
       tally(stats.challenges, challengeId, value)
       tally(stats.groups, groupId, value)
       tally(stats.participants, participantId, value)
+      ;(dancers[challengeId] ||= new Set()).add(participantId)
+      const challenge = stats.challenges[challengeId]
+      if (createdAt && (!challenge.$lastEntryAt || createdAt > challenge.$lastEntryAt)) {
+        challenge.$lastEntryAt = createdAt
+      }
     })
+    Object.entries(dancers).forEach(([id, ids]) => (stats.challenges[id].$dancers = ids.size))
 
     const { challengeId, groupId, participantId } = req.query
     await Promise.all(toAggregate.reduce(
