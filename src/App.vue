@@ -7,6 +7,7 @@ import AppLoader from '@/components/AppLoader.vue'
 import AppPicker, { ADD_NEW_KEY } from '@/components/AppPicker.vue'
 import ChallengeInfo from '@/components/ChallengeInfo.vue'
 import EditChallenge, { type EditableChallenge } from '@/components/EditChallenge.vue'
+import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import { version } from '../package.json'
 import { type Challenge, isUsingEmulators } from '@/lib/firebase'
 import { capitalize, pluralize } from '@/lib/strings'
@@ -188,6 +189,7 @@ watch([() => store.isPrivateDialogOpen, () => store.isPublicDialogOpen], async (
           </v-btn>
         </template>
       </template>
+      <ScotDanceAccount />
     </v-app-bar>
 
     <template v-if="store.currentChallenge">

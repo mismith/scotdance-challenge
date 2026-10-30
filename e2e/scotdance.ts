@@ -65,3 +65,14 @@ export async function stubEmbed(
     })
   })
 }
+
+/** Open the account menu in the top bar */
+export async function openAccount(page: Page) {
+  await page.getByRole('button', { name: 'Account' }).click()
+  return page.locator('.ScotDanceAccount')
+}
+
+export async function signIn(page: Page) {
+  const menu = await openAccount(page)
+  await menu.getByRole('button', { name: 'Sign in with ScotDance.app' }).click()
+}
