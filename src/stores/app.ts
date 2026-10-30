@@ -179,24 +179,25 @@ export const useAppStore = defineStore('app', () => {
   const challengeId = computed({
     get: () => persisted.value.challengeId,
     set(id: string | null | undefined) {
+      // trust the id: one just added may not be back from Firestore yet
+      persisted.value.challengeId = id || ''
       const challenge = findById(challenges.value, id)
-      persisted.value.challengeId = challenge?.id || ''
       if (challenge) crisp('set', 'session:data', [[['Challenge', challenge.name]]])
     },
   })
   const groupId = computed({
     get: () => persisted.value.groupId,
     set(id: string | null | undefined) {
+      persisted.value.groupId = id || ''
       const group = findById(groups.value, id)
-      persisted.value.groupId = group?.id || ''
       if (group) crisp('set', 'session:data', [[['Group', group.name]]])
     },
   })
   const participantId = computed({
     get: () => persisted.value.participantId,
     set(id: string | null | undefined) {
+      persisted.value.participantId = id || ''
       const participant = findById(participants.value, id)
-      persisted.value.participantId = participant?.id || ''
       if (participant) crisp('set', 'session:data', [[['Participant', participant.name]]])
     },
   })

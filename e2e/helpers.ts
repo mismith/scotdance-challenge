@@ -26,13 +26,16 @@ async function addViaPicker(page: Page, label: string, name: string) {
   await page.getByRole('option', { name: `Add "${name}"` }).click()
 }
 
-export async function addChallenge(page: Page, name: string) {
+export async function addChallenge(page: Page, name: string, { isPrivate = false } = {}) {
   await page.goto('/new')
   await addViaPicker(page, 'Challenge', name)
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('Add Challenge')).toBeVisible()
   await expect(dialog.getByLabel('Name *')).toHaveValue(name)
+  if (isPrivate) await dialog.getByLabel('Private').check()
   await dialog.getByRole('button', { name: 'Add' }).click()
+  // a new private challenge shows its Access Link straight away
+  if (isPrivate) await page.getByRole('button', { name: 'Got It' }).click()
   await expect(page.getByRole('combobox', { name: 'Group' })).toBeEnabled()
 }
 
