@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { differenceInCalendarDays } from 'date-fns'
 import { getDocs, limit, orderBy as byField, query, where } from 'firebase/firestore'
-import { Lock, Plus, Trophy } from 'lucide-vue-next'
+import { Lock, Plus, TrendingUp, Trophy } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { type ChallengeItem, useAppStore } from '@/stores/app'
@@ -24,6 +24,12 @@ const MORE_SHOWN = 5
 const CARDS_SHOWN = 3
 // year colours in the hall of fame (all at least 3:1 on white at 22px italic 900)
 const yearColors = ['#6A3CFF', '#E0338A', '#0B5C99', '#A33A00']
+
+const tagline = [
+  { text: 'log your practice', color: 'bg-lime', turn: '-3deg', end: ',' },
+  { text: 'cheer each other on', color: 'bg-pink-soft', turn: '2deg', end: ',' },
+  { text: 'watch the totals climb', color: 'bg-sky-soft', turn: '-1.5deg', end: '!', icon: true },
+]
 
 const store = useAppStore()
 const router = useRouter()
@@ -290,11 +296,25 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
       <ScotDanceAccount v-if="isSignInEnabled" class="bg-chip" />
     </header>
 
-    <p class="anim-fade px-[18px] pt-2 text-[15px] font-semibold text-muted">
-      Log your dancing, cheer each other on and see who's leading!
+    <!-- what this is, in three stickers slapped on one after another (the Toolkit's line) -->
+    <p class="flex flex-wrap items-center gap-x-1 gap-y-1.5 px-[14px] pt-3">
+      <span
+        v-for="(bit, index) in tagline"
+        :key="bit.text"
+        class="Explore-bit sticker tilt anim-sticker hd inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[17px] text-ink"
+        :class="bit.color"
+        :style="{ '--rx': '0deg', '--rz': bit.turn, '--i': index, '--delay': '200ms' }"
+      >
+        {{ bit.text }}<TrendingUp
+          v-if="bit.icon"
+          :size="18"
+          :stroke-width="3"
+          aria-hidden="true"
+        /><span class="sr-only">{{ bit.end }}</span>
+      </span>
     </p>
 
-    <main class="flex flex-col gap-5 px-4 pt-5">
+    <main class="flex flex-col gap-5 px-4 pt-8">
       <div
         v-if="!store.hasLoadedChallenges"
         class="h-[290px] animate-pulse rounded-[30px] bg-violet-soft"
