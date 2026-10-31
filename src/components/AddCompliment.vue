@@ -184,6 +184,13 @@ async function handleAddCompliment() {
 .AddCompliment:hover svg {
   stroke: #b3a9c0;
 }
+/* on the dark page, barely there */
+:root[data-theme='dark'] .AddCompliment:not(.AddCompliment--found) svg {
+  stroke: #3a3444;
+}
+:root[data-theme='dark'] .AddCompliment:not(.AddCompliment--found):hover svg {
+  stroke: #4d4658;
+}
 /* once tapped it's all pink, outline too, even while still hovered (a tap leaves :hover on) */
 .AddCompliment.AddCompliment--found svg {
   fill: var(--color-pink);
