@@ -8,10 +8,32 @@ import NotFoundView from '@/views/NotFoundView.vue'
 import StatisticsView from '@/views/StatisticsView.vue'
 
 const title = 'challenge'
+const tabNames = ['new', 'activity', 'statistics']
+
+/**
+ * Back and forward land where you were, like a native app. Waits for the page to be tall enough
+ * (lists render after the old page fades out), but never longer than a moment
+ */
+function settledAt(top: number) {
+  return new Promise<{ top: number }>((resolve) => {
+    const startedAt = performance.now()
+    const check = () => {
+      const isTallEnough = document.documentElement.scrollHeight - window.innerHeight >= top
+      if (isTallEnough || performance.now() - startedAt > 1500) resolve({ top })
+      else requestAnimationFrame(check)
+    }
+    setTimeout(check, 150)
+  })
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  scrollBehavior: () => ({ top: 0 }),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return settledAt(savedPosition.top)
+    // switching tabs keeps the tabs where they are, under your finger
+    if (tabNames.includes(String(to.name)) && tabNames.includes(String(from.name))) return false
+    return { top: 0 }
+  },
   routes: [
     { path: '/', name: 'home', component: ExploreView, meta: { title } },
     // one shell (header and tabs) around all three tabs, so it stays put while they switch:

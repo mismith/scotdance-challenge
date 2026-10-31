@@ -83,7 +83,7 @@ async function share() {
       class="mt-2 flex h-[52px] items-center gap-2 rounded-full bg-ink-soft pr-1.5 pl-4 transition-shadow has-[input:focus-visible]:shadow-[inset_0_0_0_3px_var(--color-violet)]"
     >
       <input
-        class="h-full min-w-0 flex-1 truncate bg-transparent text-sm font-semibold text-white outline-none"
+        class="h-full min-w-0 flex-1 truncate bg-transparent text-base font-semibold text-white outline-none"
         readonly
         aria-label="Access Link"
         :value="url"

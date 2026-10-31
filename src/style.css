@@ -67,6 +67,17 @@
     @apply bg-paper font-sans text-ink antialiased;
     font-variant-numeric: tabular-nums;
     -webkit-tap-highlight-color: transparent;
+    /* quick taps (e.g. +1 +1 +1) never double-tap zoom */
+    touch-action: manipulation;
+  }
+  /* like a native app: pressing and holding a control doesn't select it or pop up a link preview */
+  button,
+  a,
+  [role='button'],
+  [role='option'],
+  [role='menuitem'] {
+    -webkit-touch-callout: none;
+    user-select: none;
   }
   :focus-visible {
     outline: 3px solid var(--focus, var(--color-violet));

@@ -4,17 +4,19 @@
 import { formatDistanceStrict, isAfter } from 'date-fns'
 import { ChevronLeft, Info, Lock, Pencil, Share } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
 import Ribbons from '@/components/Ribbons.vue'
 import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
+import { prefersReducedMotion } from '@/lib/motion'
 import { isSignInEnabled } from '@/lib/scotdance'
 import { pluralize } from '@/lib/strings'
 
 const store = useAppStore()
 const route = useRoute()
+const router = useRouter()
 const challenge = computed(() => store.currentChallenge)
 
 const isMine = computed(() =>
@@ -53,6 +55,18 @@ const tabIndex = computed(() =>
 // each tab's content slides in from the side its tab is on
 const slideFrom = ref(0)
 watch(tabIndex, (index, previous) => (slideFrom.value = Math.sign(index - previous)))
+
+// back goes back (so Explore is where you left it) when Explore is where you came from
+function goBack() {
+  const back = (window.history.state as { back?: unknown } | null)?.back
+  if (typeof back === 'string' && back.split(/[?#]/)[0] === '/') router.back()
+  else router.push({ name: 'home' })
+}
+// tapping the tab you're on takes you back to its top, as native tab bars do
+function handleTabClick(index: number) {
+  if (index !== tabIndex.value) return
+  window.scrollTo({ top: 0, behavior: prefersReducedMotion.value ? 'auto' : 'smooth' })
+}
 </script>
 
 <template>
@@ -63,12 +77,15 @@ watch(tabIndex, (index, previous) => (slideFrom.value = Math.sign(index - previo
         class="anim-rise on-color relative mx-3 mt-3 overflow-hidden rounded-[28px] bg-violet text-white"
       >
         <div class="relative flex items-start gap-0.5 pt-2 pr-2 pl-1.5">
-          <router-link
-            :to="{ name: 'home' }"
-            class="btn btn-icon btn-ghost shrink-0"
-            aria-label="All challenges"
-          >
-            <ChevronLeft :size="26" :stroke-width="2.8" />
+          <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
+            <a
+              :href="href"
+              class="btn btn-icon btn-ghost shrink-0"
+              aria-label="All challenges"
+              @click.prevent="goBack()"
+            >
+              <ChevronLeft :size="26" :stroke-width="2.8" />
+            </a>
           </router-link>
           <h1 class="hd min-w-0 flex-1 self-center py-1.5 text-[22px] [overflow-wrap:anywhere]">
             {{ challenge.name }}
@@ -160,14 +177,19 @@ watch(tabIndex, (index, previous) => (slideFrom.value = Math.sign(index - previo
           v-for="(tab, i) in tabs"
           :key="tab.name"
           :to="{ name: tab.name }"
+          replace
           class="hd relative flex h-11 items-center justify-center rounded-full text-[17px] transition-colors duration-300"
           :class="i === tabIndex ? 'text-white' : 'text-muted hover:text-ink'"
+          @click="handleTabClick(i)"
         >
           {{ tab.label }}
         </router-link>
       </nav>
 
-      <main class="flex flex-1 flex-col" :style="{ '--slide-from': slideFrom }">
+      <main
+        class="flex flex-1 flex-col pb-[env(safe-area-inset-bottom)]"
+        :style="{ '--slide-from': slideFrom }"
+      >
         <router-view v-slot="{ Component, route: shown }">
           <Transition name="shell-tab" mode="out-in">
             <div :key="String(shown.name)" class="flex flex-1 flex-col">
