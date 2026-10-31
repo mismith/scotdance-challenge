@@ -18,11 +18,14 @@ watch(
   (challengeId) => {
     store.bindGroups(challengeId || undefined)
     store.bindParticipants(challengeId || undefined)
+    store.bindClimb(challengeId || undefined)
   },
   { immediate: true },
 )
 
 crisp('set', 'session:data', [[['AppVersion', version]]])
+// a striped background says "not the live app": on the page itself, so it covers every screen
+if (isUsingEmulators) document.documentElement.classList.add('debug-stripes')
 store.bindChallenges()
 
 async function handleAddChallenge(challenge: EditableChallenge) {
@@ -55,7 +58,7 @@ const isLinkDialogOpen = computed({
 </script>
 
 <template>
-  <div class="min-h-dvh bg-paper text-ink" :class="{ 'debug-stripes': isUsingEmulators }">
+  <div class="min-h-dvh text-ink">
     <router-view />
 
     <EditChallenge
@@ -75,7 +78,10 @@ const isLinkDialogOpen = computed({
 </template>
 
 <style>
-.debug-stripes {
+html.debug-stripes body {
+  background-color: transparent;
+}
+html.debug-stripes {
   background-image: repeating-linear-gradient(
     -45deg,
     #0001,
