@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { differenceInCalendarDays } from 'date-fns'
 import { getDocs, limit, orderBy as byField, query, where } from 'firebase/firestore'
-import { Lock, Trophy } from 'lucide-vue-next'
+import { Lock, Plus, Trophy } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { type ChallengeItem, useAppStore } from '@/stores/app'
@@ -268,15 +268,6 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
       </span>
       <h1 class="hd anim-fade min-w-0 flex-1 text-[32px] whitespace-nowrap">challenge</h1>
       <ScotDanceAccount v-if="isSignInEnabled" class="bg-chip" />
-      <button
-        type="button"
-        class="btn btn-sm btn-lime anim-pop whitespace-nowrap"
-        style="--delay: 120ms"
-        aria-label="New challenge"
-        @click="startNew()"
-      >
-        + new
-      </button>
     </header>
 
     <main class="flex flex-col gap-5 px-4 pt-[26px]">
@@ -430,8 +421,27 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         <p class="text-[15px] font-semibold text-muted">
           Start one and get everyone dancing together!
         </p>
-        <button type="button" class="btn btn-primary btn-sm" @click="startNew()">start one</button>
       </div>
+
+      <!-- quieter than the challenges above: most people come here to dance, not to set one up -->
+      <button
+        v-if="store.hasLoadedChallenges"
+        type="button"
+        class="Explore-card anim-rise flex items-center gap-3.5 rounded-[26px] bg-violet-soft px-[18px] py-4 text-left"
+        :style="stagger(live.length + upcoming.length)"
+        @click="startNew()"
+      >
+        <span
+          class="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-violet text-white"
+          aria-hidden="true"
+        >
+          <Plus :size="24" :stroke-width="3" />
+        </span>
+        <span class="flex min-w-0 flex-col gap-0.5">
+          <span class="hd text-[22px] text-violet">start your own challenge</span>
+          <span class="text-sm font-semibold text-muted">for your class, studio or friends</span>
+        </span>
+      </button>
 
       <section
         v-if="yours.length"

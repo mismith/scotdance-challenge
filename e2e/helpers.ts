@@ -29,7 +29,7 @@ export function total(page: Page) {
 /** Start a challenge from Explore; listed ones (`isPrivate: false`) need an end date */
 export async function addChallenge(page: Page, name: string, { isPrivate = false } = {}) {
   await page.goto('/')
-  await page.getByRole('button', { name: 'New challenge' }).click()
+  await page.getByRole('button', { name: /start your own challenge/ }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('New challenge')).toBeVisible()
   await dialog.getByLabel('Name').fill(name)

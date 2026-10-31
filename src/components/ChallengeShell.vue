@@ -70,7 +70,10 @@ function handleTabClick(index: number) {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-dvh w-full max-w-xl flex-col pt-[env(safe-area-inset-top)]">
+  <!-- overflow-x-clip: tabs slide in from the side and must never widen the page (iOS zooms out) -->
+  <div
+    class="mx-auto flex min-h-dvh w-full max-w-xl flex-col overflow-x-clip pt-[env(safe-area-inset-top)]"
+  >
     <template v-if="challenge">
       <!-- the same on every tab, so switching tabs never moves the layout -->
       <header
