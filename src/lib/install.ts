@@ -9,7 +9,7 @@ interface InstallPromptEvent extends Event {
 }
 
 // already opened from the Home Screen (iOS says so with `navigator.standalone`)
-const isStandalone =
+export const isStandalone =
   matchMedia('(display-mode: standalone)').matches ||
   (navigator as { standalone?: boolean }).standalone === true
 // iPadOS says it's a Mac, but one with a touch screen

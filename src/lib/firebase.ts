@@ -1,4 +1,4 @@
-import { type Analytics, getAnalytics, isSupported, logEvent } from 'firebase/analytics'
+import { type Analytics, initializeAnalytics, isSupported, logEvent } from 'firebase/analytics'
 import { initializeApp } from 'firebase/app'
 import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import {
@@ -10,6 +10,7 @@ import {
   getFirestore,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
+import { isStandalone } from '@/lib/install'
 
 // local dev talks to the emulators unless VITE_FIREBASE_EMULATORS=false (see `npm run dev:prod`)
 export const isUsingEmulators =
@@ -32,7 +33,13 @@ if (isUsingEmulators) {
   connectFirestoreEmulator(db, window.location.hostname, 5002)
   connectFunctionsEmulator(functions, window.location.hostname, 5001)
 } else {
-  isSupported().then((supported) => supported && (analytics = getAnalytics(app)))
+  isSupported().then((supported) => {
+    if (!supported) return
+    // how many open it from the Home Screen rather than the browser (from the very first page view)
+    analytics = initializeAnalytics(app, {
+      config: { user_properties: { display_mode: isStandalone ? 'home_screen' : 'browser' } },
+    })
+  })
 }
 
 // iOS freezes a Home Screen app's connection while it's in the background, and Firestore can go
