@@ -5,9 +5,8 @@ import { Lock, Plus, TrendingUp, Trophy, X } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { type ChallengeItem, useAppStore } from '@/stores/app'
-import HelpButton from '@/components/HelpButton.vue'
+import AppBar from '@/components/AppBar.vue'
 import ChallengeRibbons from '@/components/Ribbons.vue'
-import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import StepsMark from '@/components/StepsMark.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
 import { type Entry, type Group, type Participant, refs } from '@/lib/firebase'
@@ -308,13 +307,13 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
   <div
     class="mx-auto flex min-h-dvh max-w-xl flex-col overflow-x-clip pt-[env(safe-area-inset-top)] pb-14"
   >
-    <header class="flex items-center gap-2.5 px-[18px] pt-[22px]">
-      <span ref="logo" class="Explore-logo shrink-0" @click="tapLogo()">
-        <StepsMark :size="42" draw />
-      </span>
-      <h1 class="hd anim-fade min-w-0 flex-1 text-[32px] whitespace-nowrap">challenge</h1>
-      <HelpButton class="-mr-1.5" />
-      <ScotDanceAccount class="bg-chip" />
+    <header>
+      <AppBar>
+        <span ref="logo" class="Explore-logo ml-1.5 shrink-0" @click="tapLogo()">
+          <StepsMark :size="42" draw />
+        </span>
+        <h1 class="hd anim-fade ml-1.5 min-w-0 text-[32px] whitespace-nowrap">challenge</h1>
+      </AppBar>
     </header>
 
     <!-- what this is, in three stickers slapped on one after another (the Toolkit's line) -->

@@ -7,9 +7,8 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
-import HelpButton from '@/components/HelpButton.vue'
+import AppBar from '@/components/AppBar.vue'
 import Ribbons from '@/components/Ribbons.vue'
-import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
 import { prefersReducedMotion } from '@/lib/motion'
 import { pluralize } from '@/lib/strings'
@@ -72,9 +71,8 @@ function handleTabClick(index: number) {
     class="mx-auto flex min-h-dvh w-full max-w-xl flex-col overflow-x-clip pt-[env(safe-area-inset-top)]"
   >
     <template v-if="challenge">
-      <!-- the app's own bar, as on Explore: back, help and you; the card is all this challenge.
-           As far down as Explore's, clear of the soft edge iOS draws under the status bar -->
-      <div class="flex items-center gap-1 px-3 pt-5">
+      <!-- the app's own bar, as on Explore, with back; the card is all this challenge -->
+      <AppBar>
         <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
           <a
             :href="href"
@@ -85,10 +83,7 @@ function handleTabClick(index: number) {
             <ChevronLeft :size="26" :stroke-width="2.8" />
           </a>
         </router-link>
-        <span class="flex-1" />
-        <HelpButton />
-        <ScotDanceAccount class="bg-chip" />
-      </div>
+      </AppBar>
 
       <!-- the same on every tab, so switching tabs never moves the layout -->
       <header
