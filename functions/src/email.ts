@@ -5,9 +5,9 @@ export const APP_URL = 'https://challenge.scotdance.app'
 /** Comma-separated emails of ScotDance.app accounts that are admins here, and get every alert */
 export const adminEmailsSecret = defineSecret('ADMIN_EMAILS')
 export const postmarkTokenSecret = defineSecret('POSTMARK_SERVER_TOKEN')
-// a sender signature verified in Postmark
+// sent through Postmark, where the scotdance.app domain is verified
 const emailFrom = defineString('EMAIL_FROM', {
-  default: 'ScotDance Challenge <noreply@scotdance.app>',
+  default: 'ScotDance Challenge <challenge@scotdance.app>',
 })
 
 export function getAdminEmails() {
