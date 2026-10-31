@@ -3,11 +3,21 @@ import { URL, fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { defineConfig } from 'vite'
+import { type Plugin, defineConfig } from 'vite'
+
+// each build's version: the app checks `/version.json` against its own to know when there's a newer one
+const version = process.env.GITHUB_SHA?.slice(0, 7) ?? Date.now().toString(36)
+const versionFile: Plugin = {
+  name: 'version-file',
+  apply: 'build',
+  generateBundle() {
+    this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version }) })
+  },
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcss(), process.env.ANALYZE ? visualizer({ open: true }) : null],
+  plugins: [vue(), tailwindcss(), versionFile, process.env.ANALYZE ? visualizer({ open: true }) : null],
   build: {
     chunkSizeWarningLimit: 600, // firebase alone is ~580 kB
     rolldownOptions: {
@@ -21,6 +31,9 @@ export default defineConfig({
         },
       },
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
   },
   resolve: {
     alias: {
