@@ -190,6 +190,12 @@ const fallbackColors = ['#D4FF3A', '#4CD964', '#3DA9FF']
 const stepColor = (index: number, color?: string | null) =>
   index === 0 ? '#D4FF3A' : color || fallbackColors[index]!
 const avatarColor = (index: number, color?: string | null) => color || fallbackColors[index]!
+// a group colour too dark to see on the dark stage gets a soft light edge
+const isTooDark = (color: string) => luminance(color) < 0.03
+const edgeOn = (color: string) => (isTooDark(color) ? 'rgb(255 255 255 / 0.35)' : color)
+// the group (and its flag) under each name, when there's more than one or it has a country
+const showsGroup = (group?: GroupItem) =>
+  Boolean(group && (store.groups.length > 1 || group.country))
 
 // ink or white, whichever has more contrast on a `#rrggbb` colour (WCAG luminance)
 const luminance = (hex: string) => {
@@ -335,7 +341,7 @@ const readableOn = (color: string) => {
         <template v-else>
           <ol
             v-if="podium.length"
-            class="on-color mx-4 mt-3 grid h-[250px] grid-cols-3 items-end gap-2 overflow-hidden rounded-[28px] bg-ink px-3.5 pt-[18px]"
+            class="on-color mx-4 mt-3 grid h-[268px] grid-cols-3 items-end gap-2 overflow-hidden rounded-[28px] bg-ink px-3.5 pt-[18px]"
             aria-label="Top three"
           >
             <li
@@ -367,7 +373,7 @@ const readableOn = (color: string) => {
                   boxShadow:
                     index === 0
                       ? '0 0 0 3px var(--color-ink), 0 0 0 6px #D4FF3A, 0 0 26px #D4FF3A88'
-                      : `0 0 0 3px var(--color-ink), 0 0 0 5px ${avatarColor(index, dancer.$group?.color)}`,
+                      : `0 0 0 3px var(--color-ink), 0 0 0 5px ${edgeOn(avatarColor(index, dancer.$group?.color))}`,
                   '--delay': `${places[index]!.delay + 380}ms`,
                 }"
                 aria-hidden="true"
@@ -381,16 +387,26 @@ const readableOn = (color: string) => {
                 {{ dancer.name }}
               </span>
               <span
+                v-if="showsGroup(dancer.$group)"
+                class="-mt-1 w-full truncate text-center text-xs leading-tight font-semibold text-white/60"
+              >
+                {{ dancer.$group?.$name }}
+              </span>
+              <span
                 class="stats-step stats-block flex w-full flex-col items-center rounded-t-[20px] pt-2.5"
                 :style="{
                   height: `${places[index]!.step}px`,
+                  boxShadow: isTooDark(stepColor(index, dancer.$group?.color))
+                    ? 'inset 0 0 0 2px rgb(255 255 255 / 0.18)'
+                    : undefined,
                   background: stepColor(index, dancer.$group?.color),
                   color: readableOn(stepColor(index, dancer.$group?.color)),
                   '--delay': `${places[index]!.delay}ms`,
                 }"
               >
+                <!-- room under the number, so its commas never touch the place -->
                 <span
-                  class="hd max-w-full whitespace-nowrap"
+                  class="hd max-w-full pb-1 whitespace-nowrap"
                   :style="{ fontSize: numSize(index, dancer.$total) }"
                 >
                   <AnimatedNumber :value="dancer.$total ?? 0" :duration="1400" />
