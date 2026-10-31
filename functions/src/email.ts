@@ -1,4 +1,4 @@
-import { defineSecret, defineString } from 'firebase-functions/params'
+import { defineSecret } from 'firebase-functions/params'
 
 export const APP_URL = 'https://challenge.scotdance.app'
 
@@ -6,9 +6,7 @@ export const APP_URL = 'https://challenge.scotdance.app'
 export const adminEmailsSecret = defineSecret('ADMIN_EMAILS')
 export const postmarkTokenSecret = defineSecret('POSTMARK_SERVER_TOKEN')
 // sent through Postmark, where the scotdance.app domain is verified
-const emailFrom = defineString('EMAIL_FROM', {
-  default: 'ScotDance Challenge <challenge@scotdance.app>',
-})
+const EMAIL_FROM = 'ScotDance Challenge <challenge@scotdance.app>'
 
 export function getAdminEmails() {
   return adminEmailsSecret
@@ -37,7 +35,7 @@ export async function sendEmail(to: string[], subject: string, html: string) {
       'X-Postmark-Server-Token': postmarkTokenSecret.value(),
     },
     body: JSON.stringify({
-      From: emailFrom.value(),
+      From: EMAIL_FROM,
       To: recipients.join(','),
       Subject: subject,
       HtmlBody: html,

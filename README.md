@@ -47,7 +47,7 @@ Function secrets, set once each with `firebase functions:secrets:set <NAME>`:
 
 - `TOOL_PASS_SECRET`: same value as ScotDance.app's
 - `ADMIN_EMAILS`: comma-separated ScotDance.app account emails that are admins here and get every alert
-- `POSTMARK_SERVER_TOKEN`: for flag and compliment emails, sent from `EMAIL_FROM` (`challenge@scotdance.app` by default; scotdance.app is a verified Postmark domain)
+- `POSTMARK_SERVER_TOKEN`: for flag and compliment emails, sent from `challenge@scotdance.app` (scotdance.app is a verified Postmark domain)
 
 ### Rolling out private-challenge rules
 
