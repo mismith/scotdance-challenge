@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { differenceInCalendarDays } from 'date-fns'
 import { getDocs, limit, orderBy as byField, query, where } from 'firebase/firestore'
-import { Lock, Plus, TrendingUp, Trophy } from 'lucide-vue-next'
+import { Lock, Plus, TrendingUp, Trophy, X } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { type ChallengeItem, useAppStore } from '@/stores/app'
@@ -11,6 +11,7 @@ import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import StepsMark from '@/components/StepsMark.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
 import { type Entry, type Group, type Participant, refs } from '@/lib/firebase'
+import { canInstall, install, isInstallCardHidden } from '@/lib/install'
 import { animate, burst, easing, stagger } from '@/lib/motion'
 import { pluralize } from '@/lib/strings'
 import { orderBy } from '@/lib/utils'
@@ -507,6 +508,33 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
           <span class="text-sm font-semibold text-muted">for your studio or community</span>
         </span>
       </button>
+
+      <!-- quieter still, and it can be put away (the account menu keeps the option) -->
+      <div
+        v-if="store.hasLoadedChallenges && canInstall && !isInstallCardHidden"
+        class="Explore-install anim-rise flex items-center rounded-[26px] bg-card py-2 pr-2 pl-[18px]"
+        :style="stagger(live.length + upcoming.length)"
+      >
+        <button
+          type="button"
+          class="flex min-w-0 grow items-center gap-3.5 py-2 text-left"
+          @click="install()"
+        >
+          <StepsMark :size="44" />
+          <span class="flex min-w-0 flex-col gap-0.5">
+            <span class="hd text-[22px]">add to home screen</span>
+            <span class="text-sm font-semibold text-muted">open challenge in one tap</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          class="btn btn-icon btn-ghost shrink-0 text-hint"
+          aria-label="Hide"
+          @click="isInstallCardHidden = true"
+        >
+          <X :size="20" :stroke-width="2.8" />
+        </button>
+      </div>
 
       <section
         v-if="yours.length"

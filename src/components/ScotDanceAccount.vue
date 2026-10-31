@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { CircleUserRound, LoaderCircle, Moon, Sun, SunMoon, UserRound } from 'lucide-vue-next'
+import {
+  CircleUserRound,
+  LoaderCircle,
+  Moon,
+  SquarePlus,
+  Sun,
+  SunMoon,
+  UserRound,
+} from 'lucide-vue-next'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import ScotDanceMark from '@/components/ScotDanceMark.vue'
 import { gravatarUrl } from '@/lib/gravatar'
+import { canInstall, install } from '@/lib/install'
 import { isSignInEnabled } from '@/lib/scotdance'
 import { themeChoice } from '@/lib/theme'
 
@@ -125,6 +134,15 @@ async function handleSignOut() {
         </template>
 
         <div :class="{ 'mt-4 border-t-2 border-line pt-4': isSignInEnabled }">
+          <button
+            v-if="canInstall"
+            type="button"
+            class="btn btn-soft btn-sm mb-3 w-full lowercase"
+            @click="((isOpen = false), install())"
+          >
+            <SquarePlus :size="18" :stroke-width="2.6" aria-hidden="true" />
+            Add to Home Screen
+          </button>
           <!-- one segmented control, like the challenge tabs -->
           <div
             role="radiogroup"

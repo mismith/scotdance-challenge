@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/app'
 import AppToast from '@/components/AppToast.vue'
 import ChallengeInfo from '@/components/ChallengeInfo.vue'
 import EditChallenge, { type EditableChallenge } from '@/components/EditChallenge.vue'
+import InstallSheet from '@/components/InstallSheet.vue'
 import ShareChallenge from '@/components/ShareChallenge.vue'
 import { version } from '../package.json'
 import { isUsingEmulators } from '@/lib/firebase'
@@ -71,6 +72,8 @@ const isLinkDialogOpen = computed({
 
       <ShareChallenge v-model="isLinkDialogOpen" :challenge="store.currentChallenge" />
     </template>
+
+    <InstallSheet />
 
     <AppToast />
   </div>
