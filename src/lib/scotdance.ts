@@ -6,8 +6,8 @@ export const scotdanceUrl =
   import.meta.env.VITE_SCOTDANCE_URL ||
   (isUsingEmulators ? 'http://localhost:5279' : 'https://next.scotdance.app')
 
-// sign-in waits for v4 to go live: until then only dev and e2e show it (or VITE_SCOTDANCE_SIGN_IN=true)
-export const isSignInEnabled = isUsingEmulators || import.meta.env.VITE_SCOTDANCE_SIGN_IN === 'true'
+// VITE_SCOTDANCE_SIGN_IN=false hides sign-in, should ScotDance.app's sheet need switching off
+export const isSignInEnabled = import.meta.env.VITE_SCOTDANCE_SIGN_IN !== 'false'
 
 export type SignInResult =
   | { signedIn: false }
