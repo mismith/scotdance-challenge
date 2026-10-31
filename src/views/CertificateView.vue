@@ -89,8 +89,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="CertificateView mx-auto flex min-h-dvh max-w-2xl flex-col items-center gap-6 p-4">
-    <div class="CertificateView__bar flex w-full items-center justify-between gap-3">
+  <main
+    class="CertificateView mx-auto flex min-h-dvh max-w-2xl flex-col items-center gap-6 px-4 pt-[env(safe-area-inset-top)] pb-4"
+  >
+    <!-- clear of the status bar, with back where it is on every other page (AppBar) -->
+    <div
+      class="CertificateView__bar -mx-1 flex items-center justify-between gap-3 self-stretch pt-5"
+    >
       <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
         <a
           :href="href"
@@ -104,7 +109,7 @@ onBeforeUnmount(() => {
       <button
         v-if="!isLoading && challenge && participants.length"
         type="button"
-        class="btn btn-primary"
+        class="btn btn-primary btn-sm"
         @click="print()"
       >
         <Printer :size="20" :stroke-width="2.6" aria-hidden="true" />
