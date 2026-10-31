@@ -73,7 +73,7 @@ function handleClosed() {
       <DialogOverlay class="sheet-overlay fixed inset-0 z-50 bg-ink/50" />
       <DialogContent
         v-bind="description ? {} : { 'aria-describedby': undefined }"
-        class="sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[32px] px-[18px] pt-2.5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_-20px_rgb(21_19_26/0.5)] sm:inset-0 sm:m-auto sm:h-fit sm:w-[440px] sm:rounded-[32px] sm:pt-5"
+        class="sheet fixed inset-x-0 bottom-[var(--visible-bottom,0px)] z-50 flex max-h-[calc(var(--visible-height,100dvh)*0.92)] flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[32px] px-[18px] pt-2.5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_-20px_rgb(21_19_26/0.5)] sm:inset-0 sm:m-auto sm:h-fit sm:w-[440px] sm:rounded-[32px] sm:pt-5"
         :class="[
           tone === 'ink' ? 'on-color bg-ink text-white' : 'bg-paper text-ink',
           { 'is-dragging': isDragging },
