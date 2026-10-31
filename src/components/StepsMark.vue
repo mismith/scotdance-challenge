@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// the Challenge logo: soft white steps, centred on a violet tile
+// the Challenge logo: three even, round-shouldered steps in white, centred on a violet tile
 // (same geometry as assets/Challenge.icon/Assets/steps.svg and public/icon.svg)
 withDefaults(
   defineProps<{
@@ -24,11 +24,11 @@ withDefaults(
     <path
       fill="none"
       stroke="#fff"
-      stroke-width="80"
+      stroke-width="72"
       stroke-linecap="round"
-      stroke-linejoin="round"
+      stroke-linejoin="miter"
       pathLength="1"
-      d="M278 707 L388 707 Q408 707 408 687 L408 597 Q408 577 428 577 L518 577 Q538 577 538 557 L538 467 Q538 447 558 447 L648 447 Q668 447 668 427 L668 337 Q668 317 688 317 L746 317"
+      d="M232 792 V717.3 A112 112 0 0 1 344 605.3 H418.7 V530.7 A112 112 0 0 1 530.7 418.7 H605.3 V344 A112 112 0 0 1 717.3 232 H792"
     />
   </svg>
 </template>
