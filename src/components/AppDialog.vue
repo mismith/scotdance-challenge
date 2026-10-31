@@ -23,8 +23,14 @@ withDefaults(
 )
 const open = defineModel<boolean>({ required: true })
 
-// start in the first field to type in, rather than on the close button
+// start in the first field to type in, rather than on the close button. Not on touch screens:
+// iOS draws the caret where the field was mid-rise and leaves it floating there, and the
+// keyboard would cover half the sheet before it's even read
 function focusFirstField(event: Event) {
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    event.preventDefault()
+    return
+  }
   const field = (event.target as HTMLElement | null)?.querySelector<HTMLElement>(
     'input:not([type=radio]):not([type=color]):not([readonly]), textarea',
   )
