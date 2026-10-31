@@ -200,7 +200,7 @@
     @apply bg-card;
   }
   .chip-lime {
-    @apply bg-lime;
+    @apply bg-lime text-ink;
   }
   .chip[aria-pressed='true'],
   .chip[aria-selected='true'],

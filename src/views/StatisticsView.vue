@@ -387,7 +387,7 @@ const readableOn = (color: string) => {
                 <span v-if="participant.$group" class="font-medium text-muted"
                   >· {{ participant.$group.$name }}</span
                 >
-                <span v-if="participant.id === me?.id" class="tag ml-1 bg-lime align-[2px]"
+                <span v-if="participant.id === me?.id" class="tag ml-1 bg-lime align-[2px] text-ink"
                   >you</span
                 >
               </span>
