@@ -4,6 +4,9 @@ import { Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https'
+import { moderateCompliment, onComplimentSubmitted } from './compliments'
+import { adminEmailsSecret, getAdminEmails } from './email'
+import { onFlagCreated } from './flags'
 import { verifyPass } from './pass'
 
 const app = initializeApp()
@@ -161,7 +164,7 @@ async function moveCreatedBy(fromUid: string, toUid: string) {
   return moved
 }
 
-exports.signInWithScotDance = onCall({ secrets: [toolPassSecret] }, async (request) => {
+exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecret] }, async (request) => {
   let pass
   try {
     pass = verifyPass(request.data?.pass, toolPassSecret.value())
@@ -171,6 +174,9 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret] }, async (reque
 
   const uid = `sd_${pass.sub}`
   await upsertUser(uid, pass.email, pass.name ?? null)
+  // admins can see and fix everything (see firestore.rules)
+  const isAdmin = Boolean(pass.email) && getAdminEmails().includes(pass.email.toLowerCase())
+  await getAuth(app).setCustomUserClaims(uid, isAdmin ? { admin: true } : null)
 
   const caller = request.auth
   const isAnonymous = caller?.token.firebase?.sign_in_provider === 'anonymous'
@@ -181,3 +187,22 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret] }, async (reque
   const token = await getAuth(app).createCustomToken(uid)
   return { token, movedEntries }
 })
+
+/** Who made what, for admins: names and emails stay on Auth users, never in Firestore */
+exports.describeUsers = onCall(async (request) => {
+  if (request.auth?.token.admin !== true) throw new HttpsError('permission-denied', 'Admins only')
+  const uids = (Array.isArray(request.data?.uids) ? request.data.uids : [])
+    .filter((uid: unknown): uid is string => typeof uid === 'string')
+    .slice(0, 100)
+  const { users } = await getAuth(app).getUsers(uids.map((uid: string) => ({ uid })))
+  const names: Record<string, string> = {}
+  for (const uid of uids) {
+    const user = users.find((user) => user.uid === uid)
+    names[uid] = user?.displayName || user?.email || `Anonymous ${uid.slice(0, 6)}`
+  }
+  return names
+})
+
+exports.onFlagCreated = onFlagCreated
+exports.onComplimentSubmitted = onComplimentSubmitted
+exports.moderateCompliment = moderateCompliment

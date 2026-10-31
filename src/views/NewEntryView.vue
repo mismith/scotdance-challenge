@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { format, formatDistanceStrict } from 'date-fns'
 import { ArrowRight, RotateCcw } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import AddCompliment from '@/components/AddCompliment.vue'
 import AppCombobox from '@/components/AppCombobox.vue'
+import AppDialog from '@/components/AppDialog.vue'
 import EditGroup, { type NewGroup, groupColors } from '@/components/EditGroup.vue'
 import LoggedMoment from '@/components/LoggedMoment.vue'
-import compliments from '@/lib/compliments'
+import ParticipantGoal from '@/components/ParticipantGoal.vue'
 import { getChallengeStartDate } from '@/lib/date'
 import { type Moment, buildMoment } from '@/lib/eggs'
 import { animate, burst, easing, stagger } from '@/lib/motion'
+import { isUnusual } from '@/lib/progress'
 import { capitalize, pluralize } from '@/lib/strings'
 
 const MAX_AMOUNT = 9999
@@ -91,7 +93,7 @@ watch(
   (id) => {
     history.value = []
     historyLoad = store
-      .getParticipantEntries(id)
+      .getParticipantEntries(participant.value)
       .then((entries) => {
         if (participantId.value !== id) return
         history.value = entries.map((entry) => ({
@@ -104,6 +106,27 @@ watch(
   { immediate: true },
 )
 const lastValue = computed(() => history.value[0]?.value)
+
+// a big slip of the finger (40 for 4) gets a quick "are you sure?"
+const usualValue = computed(() => {
+  const { $total, $count } = participant.value ?? {}
+  if ($total && $count && $count >= 3) return $total / $count
+  const challengeTotal = challenge.value?.$total
+  const challengeCount = challenge.value?.$count
+  return challengeTotal && challengeCount ? challengeTotal / challengeCount : null
+})
+const isCheckingAmount = ref(false)
+let checkedAmount: number | null = null
+function confirmAmount() {
+  checkedAmount = amount.value
+  isCheckingAmount.value = false
+  handleAddEntry()
+}
+function fixAmount() {
+  isCheckingAmount.value = false
+  amountEl.value?.focus()
+  amountEl.value?.select()
+}
 
 function nudgeAmount() {
   animate(amountEl.value, [{ transform: 'scale(1.12)' }, { transform: 'scale(1)' }], {
@@ -154,9 +177,18 @@ async function addParticipant(name: string) {
   }
 }
 
+// undo only makes sense here, so its toast goes when you leave
+let undoAction: { label: string; run: () => unknown } | null = null
+onBeforeUnmount(() => {
+  if (undoAction && store.toastAction === undoAction) store.notify(null)
+})
 async function handleAddEntry() {
   if (isAddEntryLoading.value) return // don't allow dupes
   if (!isValid.value || !isActive.value) return // don't allow submissions to inactive challenges
+  if (isUnusual(amount.value, usualValue.value) && checkedAmount !== amount.value) {
+    isCheckingAmount.value = true
+    return
+  }
 
   try {
     isAddEntryLoading.value = true
@@ -165,7 +197,7 @@ async function handleAddEntry() {
     const countBefore = challenge.value?.$count
     await historyLoad
     const earlier = [...history.value]
-    await store.add('entries', {
+    const { id } = await store.add('entries', {
       challengeId: store.challengeId,
       groupId: groupId.value,
       participantId: participantId.value,
@@ -174,17 +206,35 @@ async function handleAddEntry() {
     logged.value = buildMoment({
       value: entryValue,
       name,
-      compliments,
+      compliments: store.compliments,
       earlier,
       countBefore,
+      totalBefore: participant.value?.$total ?? 0,
+      goal: participant.value?.goal,
     })
     history.value = [{ value: entryValue, date: new Date() }, ...history.value]
     value.value = null
+    checkedAmount = null
+    undoAction = { label: 'undo', run: () => undoEntry(id, entryValue) }
+    store.notify(`logged ${entryValue.toLocaleString()} for ${name}`, undoAction)
   } catch (error) {
     // the amount and picks stay put, so another tap tries again
     store.notifyFailed(error)
   } finally {
     setTimeout(() => (isAddEntryLoading.value = false), 500)
+  }
+}
+
+/** Take back the entry just logged, and put its amount back to fix */
+async function undoEntry(id: string, entryValue: number) {
+  try {
+    logged.value = null
+    await store.deleteEntry(id)
+    history.value = history.value.slice(1)
+    value.value = entryValue
+    amountEl.value?.focus()
+  } catch (error) {
+    store.notifyFailed(error)
   }
 }
 </script>
@@ -285,6 +335,7 @@ async function handleAddEntry() {
       :add-new="addParticipant"
       :add-to="group?.$name"
     />
+    <ParticipantGoal v-if="participant" :participant="participant" class="anim-rise -mt-1" />
 
     <div class="anim-rise flex flex-col gap-1.5" :style="stagger(2)">
       <label for="amount" class="lbl transition-opacity" :class="{ 'opacity-45': !participantId }"
@@ -369,6 +420,19 @@ async function handleAddEntry() {
 
   <AddCompliment class="mt-auto flex justify-center pt-8 pb-[26px]" />
   <LoggedMoment v-model="logged" />
+
+  <AppDialog
+    v-model="isCheckingAmount"
+    :title="`${amount.toLocaleString()}? that's loads!`"
+    description="Just checking it's not a typo."
+  >
+    <div class="flex flex-col gap-2.5">
+      <button type="button" class="btn btn-primary btn-lg" @click="confirmAmount()">
+        yes, {{ amount.toLocaleString() }}!
+      </button>
+      <button type="button" class="btn btn-soft btn-lg" @click="fixAmount()">oops, fix it</button>
+    </div>
+  </AppDialog>
 </template>
 
 <style>

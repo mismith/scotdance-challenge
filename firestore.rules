@@ -1,9 +1,104 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, create: if true;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    // set on ScotDance.app accounts listed in the functions' ADMIN_EMAILS
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+    function isCreator(data) {
+      return isSignedIn() && request.auth.uid == data.createdBy;
+    }
+    function challengePath(challengeId) {
+      return /databases/$(database)/documents/challenges/$(challengeId);
+    }
+    function ownsChallenge(challengeId) {
+      return isSignedIn() && get(challengePath(challengeId)).data.createdBy == request.auth.uid;
+    }
+    // the item's creator, its challenge's owner, or an admin
+    function canModerate(data) {
+      return isAdmin() || isCreator(data) || ownsChallenge(data.challengeId);
+    }
+    // a list must name its challenge (it can only be evaluated then), so private items
+    // are only listed by those with the challenge's link
+    function canListIn(challengeId) {
+      return isAdmin() || exists(challengePath(challengeId));
+    }
+    // stats are only written by the aggregateStatistics function
+    function stats() {
+      return ['$total', '$count', '$dancers', '$lastEntryAt'];
+    }
+    function hasNoStats() {
+      return !request.resource.data.keys().hasAny(stats());
+    }
+    function keepsStats() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(stats());
+    }
+    function isCreatedByMe() {
+      return isSignedIn() && request.resource.data.createdBy == request.auth.uid;
+    }
+
+    match /challenges/{challengeId} {
+      // a private challenge is opened by its id, from its link
+      allow get: if true;
+      allow list: if isAdmin() || resource.data.private == false;
+      allow create: if isCreatedByMe() && hasNoStats() && request.resource.data.private is bool;
+      allow update: if (isAdmin() || isCreator(resource.data)) && keepsStats();
+      allow delete: if isAdmin() || isCreator(resource.data);
+    }
+
+    match /groups/{groupId} {
+      allow get: if true;
+      allow list: if canListIn(resource.data.challengeId);
+      allow create: if isCreatedByMe() && hasNoStats();
+      allow update: if canModerate(resource.data) && keepsStats();
+      allow delete: if canModerate(resource.data);
+    }
+
+    match /participants/{participantId} {
+      allow get: if true;
+      allow list: if canListIn(resource.data.challengeId);
+      allow create: if isCreatedByMe() && hasNoStats();
+      allow update: if canModerate(resource.data) && keepsStats();
+      allow delete: if canModerate(resource.data);
+    }
+
+    match /entries/{entryId} {
+      function isValidValue() {
+        let value = request.resource.data.value;
+        return value is number && value > 0 && value <= 9999;
+      }
+      allow get: if true;
+      // or your own, across challenges (for the ones you've entered)
+      allow list: if isCreator(resource.data) || canListIn(resource.data.challengeId);
+      allow create: if isCreatedByMe() && isValidValue();
+      allow update: if canModerate(resource.data) && isValidValue();
+      allow delete: if canModerate(resource.data);
+    }
+
+    // reported problems: only admins see them (see functions)
+    match /flags/{flagId} {
+      allow read: if isAdmin();
+      allow create: if isCreatedByMe()
+        && request.resource.data.status == 'open'
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 500;
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'updatedAt', 'updatedBy']);
+    }
+
+    // submitted compliments are moderated by the functions, then added to compliments/approved
+    match /complimentsSubmitted/{complimentId} {
+      allow read: if isAdmin();
+      allow create: if isCreatedByMe()
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 100;
+    }
+    match /compliments/{doc} {
+      allow read: if true;
     }
   }
 }

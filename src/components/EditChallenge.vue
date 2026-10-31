@@ -38,7 +38,7 @@ const audiences = [
     private: false,
     icon: Globe,
     title: 'Everyone',
-    hint: 'listed in Explore while it runs · needs an end date',
+    hint: 'anyone can find it · needs an end date',
   },
 ]
 
@@ -265,7 +265,7 @@ function handleSubmit() {
         </span>
         <span v-else>
           <strong class="font-extrabold text-fg">Everyone:</strong>
-          listed in Explore while it runs.
+          anyone can find it.
         </span>
       </p>
 

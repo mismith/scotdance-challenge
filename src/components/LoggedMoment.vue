@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // the payoff after logging: a giant amount, confetti and a compliment sticker, gone after a beat
 import { useEventListener } from '@vueuse/core'
-import { Flame, Moon, Sunrise, Trophy } from 'lucide-vue-next'
+import { Flame, Medal, Moon, Sunrise, Target, Trophy } from 'lucide-vue-next'
 import { type Component, computed, nextTick, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import Ribbons from '@/components/Ribbons.vue'
@@ -27,6 +27,8 @@ const bigText = computed(() => milestone.value || amount.value)
 const bigStyle = computed(() => ({ '--chars': Math.max(3, bigText.value.length) }))
 
 const tagStyles: Record<MomentTag['kind'], { class: string; icon?: Component }> = {
+  goal: { class: 'bg-pink text-white', icon: Target },
+  total: { class: 'bg-sky-soft text-sky-ink', icon: Medal },
   streak: { class: 'bg-orange-soft text-orange-ink', icon: Flame },
   best: { class: 'bg-lime text-ink', icon: Trophy },
   night: { class: 'bg-sky-soft text-sky-ink', icon: Moon },

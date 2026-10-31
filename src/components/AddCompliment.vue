@@ -3,9 +3,7 @@
 import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
-import compliments from '@/lib/compliments'
 import { animate, burst, partyColors, prefersReducedMotion, ripple } from '@/lib/motion'
-import { crisp } from '@/lib/utils'
 
 const heartPath =
   'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z'
@@ -22,14 +20,17 @@ const sendEl = ref<HTMLButtonElement>()
 
 const sanitized = computed(() => newCompliment.value.trim().toLowerCase().replace(/!$/, ''))
 const error = computed(() =>
-  compliments.includes(sanitized.value) ? "That one's already in there. Try another!" : null,
+  store.compliments.includes(sanitized.value) ? "That one's already in there. Try another!" : null,
 )
 const isValid = computed(() => Boolean(sanitized.value) && !error.value)
 
 // a different example each time, from the compliments dancers already see: short ones that
 // read well with a "!" after them
-const examples = compliments.filter((c) => c.length <= 24 && !/[!?.]$/.test(c))
-const pickExample = () => examples[Math.floor(Math.random() * examples.length)] ?? 'well done'
+const examples = computed(() =>
+  store.compliments.filter((c) => c.length <= 24 && !/[!?.]$/.test(c)),
+)
+const pickExample = () =>
+  examples.value[Math.floor(Math.random() * examples.value.length)] ?? 'well done'
 const example = ref(pickExample())
 
 watch(isOpen, (open) => {
@@ -81,8 +82,6 @@ async function handleAddCompliment() {
       burst(sendEl.value, { shape: 'hearts', colors: partyColors, count: 12, spread: 90 })
     }
     isOpen.value = false
-    crisp('do', 'message:send', ['text', `Compliment Submitted: ${text}`])
-    crisp('do', 'chat:hide')
     setTimeout(() => store.notify('sent! thank you for spreading the love 💖'), 300)
   } catch (error) {
     store.notifyFailed(error)

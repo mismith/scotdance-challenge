@@ -119,6 +119,22 @@ const shownOthers = computed(() =>
   isShowingAllOthers.value ? others.value : others.value.slice(0, MORE_SHOWN),
 )
 
+// admins can open anyone's private challenge, to help sort things out
+const privateSearch = ref('')
+const privateOthers = computed(() => {
+  if (!store.isAdmin) return []
+  const yourIds = new Set(yours.value.map(({ id }) => id))
+  const query = privateSearch.value.trim().toLowerCase()
+  return orderBy(
+    store.challenges.filter(
+      ({ id, name, private: isPrivate }) =>
+        isPrivate && !yourIds.has(id) && (!query || name.toLowerCase().includes(query)),
+    ),
+    ['$year', 'name'],
+    ['desc', 'asc'],
+  ).slice(0, MORE_SHOWN)
+})
+
 // the hero's own climb and group colours (for its ribbons) and who's in front: the store only
 // loads these for the open challenge, so read the hero's once here
 interface HeroInfo {
@@ -598,6 +614,34 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
             @click="isShowingAllOthers = true"
           >
             + {{ others.length - MORE_SHOWN }} more
+          </button>
+        </div>
+      </section>
+
+      <section v-if="store.isAdmin" class="flex flex-col gap-2" aria-label="Private challenges">
+        <h2 class="hd px-1 text-[26px]">private challenges</h2>
+        <div class="card px-[18px] py-1">
+          <input
+            v-model="privateSearch"
+            type="search"
+            aria-label="Search private challenges"
+            placeholder="search by name"
+            class="Explore-row min-h-11 w-full py-2.5 text-base font-bold outline-none placeholder:font-semibold placeholder:text-hint"
+          />
+          <button
+            v-for="challenge in privateOthers"
+            :key="challenge.id"
+            type="button"
+            class="Explore-row flex min-h-11 w-full items-center gap-2.5 py-[11px] text-left"
+            @click="open(challenge)"
+          >
+            <Lock :size="14" :stroke-width="2.6" class="shrink-0" aria-hidden="true" />
+            <span class="min-w-0 flex-1 text-base font-extrabold break-words">
+              {{ challenge.name }}
+            </span>
+            <span v-if="challenge.$year" class="num text-sm font-bold text-muted">
+              {{ challenge.$year }}
+            </span>
           </button>
         </div>
       </section>

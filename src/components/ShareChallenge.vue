@@ -30,7 +30,7 @@ async function share() {
   try {
     await navigator.share({
       title: props.challenge.name,
-      text: `Come dance with us in ${props.challenge.name}!`,
+      text: `Join us in ${props.challenge.name}!`,
       url: url.value,
     })
   } catch (error) {

@@ -9,21 +9,24 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
 import { timeTag } from '@/lib/eggs'
 import { type Entry, findById } from '@/lib/firebase'
 import { animate, easing, stagger } from '@/lib/motion'
-import { openChat } from '@/lib/utils'
 
 const INCREMENT = 20
 
 const store = useAppStore()
+const route = useRoute()
 
 const limit = ref(0)
 const isLoadingMore = ref(false)
 const flaggedEntry = ref<Entry | null>(null)
+const flagReason = ref('')
+const isSendingFlag = ref(false)
 const deletedEntry = ref<Entry | null>(null)
 const editedEntry = ref<Entry | null>(null)
 const editedValue = ref<string | number | null>(null)
@@ -81,6 +84,8 @@ const formatTime = (entry: Entry) =>
 const groupOf = (entry: Entry) => findById(store.groups, entry.groupId)
 const participantOf = (entry: Entry) => findById(store.participants, entry.participantId)
 const isMine = (entry: Entry) => Boolean(store.me && store.me.uid === entry.createdBy)
+// open flags on an entry: only admins ever get them (see the store)
+const flagsOf = (entry: Entry) => store.flags.filter(({ entryId }) => entryId === entry.id)
 const initialOf = (entry: Entry) =>
   Array.from(participantOf(entry)?.name.trim() ?? '')[0]?.toUpperCase() ?? ''
 
@@ -215,9 +220,41 @@ watch([isMoreButtonVisible, isLoadingMore], ([visible, loading]) => {
   if (visible && !loading) loadMore()
 })
 
-function openLiveChat() {
-  openChat(flaggedEntry.value ? `Flagged Entry ID: ${flaggedEntry.value.id}` : undefined)
-  flaggedEntry.value = null
+// an emailed flag links straight to its entry
+watch(
+  () => store.entries.length,
+  async () => {
+    const el = route.hash ? document.getElementById(route.hash.slice(1)) : null
+    if (!el) return
+    await nextTick()
+    el.scrollIntoView({ block: 'center' })
+  },
+)
+
+function startFlagging(entry: Entry) {
+  flaggedEntry.value = entry
+  flagReason.value = ''
+}
+async function sendFlag() {
+  const reason = flagReason.value.trim()
+  if (!flaggedEntry.value || !reason || isSendingFlag.value) return
+  try {
+    isSendingFlag.value = true
+    await store.addFlag(flaggedEntry.value, reason)
+    flaggedEntry.value = null
+    store.notify("Thanks! We'll take a look.")
+  } catch (error) {
+    store.notifyFailed(error)
+  } finally {
+    isSendingFlag.value = false
+  }
+}
+async function resolveFlag(id: string) {
+  try {
+    await store.resolveFlag(id)
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
 function startEditing(entry: Entry) {
   editedEntry.value = entry
@@ -235,7 +272,7 @@ async function saveEntry() {
 }
 // the menu hands focus to the sheet it opens, rather than back to its own button
 function keepFocusInSheet(event: Event) {
-  if (isEditing.value || isDeleting.value) event.preventDefault()
+  if (isEditing.value || isDeleting.value || isFlagging.value) event.preventDefault()
 }
 async function deleteEntry() {
   try {
@@ -303,6 +340,9 @@ async function deleteEntry() {
                   }}<time class="num" :datetime="entry.createdAt?.toDate().toISOString()">
                     {{ formatTime(entry) }}
                   </time>
+                  <span v-if="store.isAdmin && !isMine(entry)" class="block">
+                    logged by {{ store.getUserName(entry.createdBy) ?? '…' }}
+                  </span>
                 </span>
                 <span v-if="hasTags(entry)" class="mt-[5px] flex flex-wrap gap-1">
                   <span v-if="isNightOwl(entry)" class="tag anim-pop bg-ink text-white">
@@ -344,7 +384,7 @@ async function deleteEntry() {
                 class="popover z-[60] flex min-w-[168px] flex-col rounded-[20px] bg-card p-1.5 text-fg shadow-float"
                 @close-auto-focus="keepFocusInSheet"
               >
-                <template v-if="isMine(entry)">
+                <template v-if="store.canModerate(entry)">
                   <DropdownMenuItem class="menu-item" @select="startEditing(entry)">
                     <Pencil :size="17" :stroke-width="2.4" class="text-violet" />
                     Edit
@@ -354,13 +394,28 @@ async function deleteEntry() {
                     Delete
                   </DropdownMenuItem>
                 </template>
-                <DropdownMenuItem v-else class="menu-item" @select="flaggedEntry = entry">
+                <DropdownMenuItem v-else class="menu-item" @select="startFlagging(entry)">
                   <Flag :size="17" :stroke-width="2.4" class="text-violet" />
                   Flag
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
+          <div
+            v-for="flag in flagsOf(entry)"
+            :key="flag.id"
+            class="mx-4 mb-3 flex items-center gap-2.5 rounded-[16px] bg-orange-soft py-2 pr-2 pl-3 text-orange-ink"
+          >
+            <Flag :size="17" :stroke-width="2.6" class="shrink-0" aria-hidden="true" />
+            <p class="min-w-0 flex-1 text-[14px] font-bold break-words">{{ flag.reason }}</p>
+            <button
+              type="button"
+              class="chip shrink-0 bg-white text-ink"
+              @click="resolveFlag(flag.id)"
+            >
+              dismiss
+            </button>
+          </div>
         </li>
       </TransitionGroup>
     </section>
@@ -389,7 +444,26 @@ async function deleteEntry() {
     description="Did you make a mistake, or does something seem off? Help sort it out with a super quick explanation of what you think is wrong."
   >
     <template #title-icon><Flag :size="24" :stroke-width="2.6" class="text-violet" /></template>
-    <button type="button" class="btn btn-primary btn-lg mt-2" @click="openLiveChat()">flag</button>
+    <form autocomplete="off" class="flex flex-col gap-4" @submit.prevent="sendFlag()">
+      <div class="flex flex-col gap-1.5">
+        <label for="flag-reason" class="lbl lowercase">What's wrong?</label>
+        <textarea
+          id="flag-reason"
+          v-model="flagReason"
+          rows="3"
+          maxlength="500"
+          placeholder="e.g. it should be 4, not 40"
+          class="pill h-auto min-h-[96px] resize-none py-3 text-base font-semibold"
+        />
+      </div>
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg"
+        :disabled="!flagReason.trim() || isSendingFlag"
+      >
+        flag
+      </button>
+    </form>
   </AppDialog>
 
   <AppDialog v-model="isEditing" title="edit entry" :description="editedWho || undefined">

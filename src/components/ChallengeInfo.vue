@@ -46,9 +46,7 @@ const facts = computed(() => {
       <p class="flex items-center gap-1.5 text-[13px] font-bold text-muted">
         <Lock v-if="challenge.private" :size="15" :stroke-width="2.6" aria-hidden="true" />
         <Globe v-else :size="15" :stroke-width="2.6" aria-hidden="true" />
-        {{
-          challenge.private ? 'Just for people with the link' : 'Listed in Explore while it runs'
-        }}
+        {{ challenge.private ? 'Just for people with the link' : 'Anyone can find it' }}
       </p>
     </section>
 

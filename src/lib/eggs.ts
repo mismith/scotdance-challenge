@@ -1,5 +1,6 @@
 // little surprises for the moment after logging; pure helpers, so they're easy to test
 import { differenceInCalendarDays, startOfDay } from 'date-fns'
+import { getMilestone } from '@/lib/progress'
 
 /** a once-in-a-while compliment for the "super rare" sticker */
 export const superRareCompliments = [
@@ -19,7 +20,7 @@ export const SUPER_RARE_CHANCE = 1 / 50
 export type TimeTag = 'night owl' | 'early bird'
 
 export interface MomentTag {
-  kind: 'streak' | 'best' | 'night' | 'early' | 'rare'
+  kind: 'goal' | 'total' | 'streak' | 'best' | 'night' | 'early' | 'rare'
   text: string
 }
 
@@ -89,6 +90,8 @@ export function buildMoment({
   compliments,
   earlier,
   countBefore,
+  totalBefore = 0,
+  goal,
   now = new Date(),
   random = Math.random,
 }: {
@@ -99,12 +102,22 @@ export function buildMoment({
   earlier: { value: number; date: Date | null | undefined }[]
   /** the challenge's entry count before this one */
   countBefore?: number | null
+  /** the dancer's total before this one, and their goal, if they have one */
+  totalBefore?: number
+  goal?: number | null
   now?: Date
   random?: () => number
 }): Moment {
   const { text, superRare } = pickCompliment(compliments, random)
   const tags: MomentTag[] = []
   if (superRare) tags.push({ kind: 'rare', text: '✦ super rare' })
+  const total = totalBefore + value
+  if (goal && totalBefore < goal && total >= goal) {
+    tags.push({ kind: 'goal', text: 'goal reached!' })
+  } else {
+    const milestone = getMilestone(totalBefore, total)
+    if (milestone) tags.push({ kind: 'total', text: `${milestone.toLocaleString()} total!` })
+  }
   const streak = streakDays(
     earlier.map((entry) => entry.date),
     now,

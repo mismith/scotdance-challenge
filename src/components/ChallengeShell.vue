@@ -2,7 +2,7 @@
 // a challenge's header and log / activity / stats tabs, around whichever tab is open: the
 // layout route for all three, so it stays mounted (and focus stays on its tabs) as they switch
 import { formatDistanceStrict, isAfter } from 'date-fns'
-import { ChevronLeft, Info, Lock, Pencil, Share } from 'lucide-vue-next'
+import { ChevronLeft, Info, Link, Lock, Pencil } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -19,9 +19,6 @@ const route = useRoute()
 const router = useRouter()
 const challenge = computed(() => store.currentChallenge)
 
-const isMine = computed(() =>
-  Boolean(store.me && challenge.value && store.me.uid === challenge.value.createdBy),
-)
 const startDate = computed(() => getChallengeStartDate(challenge.value))
 const endDate = computed(() => getChallengeEndDate(challenge.value))
 
@@ -122,10 +119,10 @@ function handleTabClick(index: number) {
               aria-label="Share"
               @click="store.isPublicDialogOpen = true"
             >
-              <Share :size="21" :stroke-width="2.6" />
+              <Link :size="21" :stroke-width="2.6" />
             </button>
             <button
-              v-if="isMine"
+              v-if="store.canModerateChallenge"
               type="button"
               class="btn btn-icon btn-ghost"
               aria-label="Edit"

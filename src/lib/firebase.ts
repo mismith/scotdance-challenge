@@ -38,6 +38,8 @@ export const refs = {
   participants: collection(db, 'participants'),
   entries: collection(db, 'entries'),
   complimentsSubmitted: collection(db, 'complimentsSubmitted'),
+  compliments: collection(db, 'compliments'),
+  flags: collection(db, 'flags'),
 }
 
 export interface FirebaseObject {
@@ -82,6 +84,7 @@ export interface Participant extends FirebaseObject, Createable, WithStats {
   challengeId: string
   groupId: string
   name: string
+  goal?: number | null
   private?: boolean
 }
 export interface Entry extends FirebaseObject, Createable, Updateable {
@@ -90,6 +93,13 @@ export interface Entry extends FirebaseObject, Createable, Updateable {
   participantId: string
   value: number
   private?: boolean
+}
+
+export interface Flag extends FirebaseObject, Createable, Updateable {
+  entryId: string
+  challengeId: string
+  reason: string
+  status: 'open' | 'resolved'
 }
 
 export function findById<T extends FirebaseObject>(items: T[], id?: string | null) {

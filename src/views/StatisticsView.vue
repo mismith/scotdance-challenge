@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { StorageSerializers, useLocalStorage } from '@vueuse/core'
-import { ChevronDown, ListFilter, Search } from 'lucide-vue-next'
+import { Award, ChevronDown, Download, ListFilter, Search } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { type GroupItem, type ParticipantItem, useAppStore } from '@/stores/app'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
-import { availableCountries } from '@/lib/country'
+import { availableCountries, getName } from '@/lib/country'
+import { downloadCsv } from '@/lib/csv'
 import { getChallengeEndDate, isChallengeInFinalCountdown } from '@/lib/date'
+import { findById } from '@/lib/firebase'
 import { stagger } from '@/lib/motion'
 import { orderBy } from '@/lib/utils'
 
@@ -119,6 +121,40 @@ const groups = computed<GroupStats[]>(() => {
 const groupValue = (group: GroupStats) =>
   groupMetric.value === 'total' ? (group.$total ?? 0) : group.$average
 const topGroupValue = computed(() => (groups.value[0] ? groupValue(groups.value[0]) : 1) || 1)
+
+// exports, for the challenge's owner and admins
+const fileName = (what: string) => `${store.currentChallenge?.name ?? 'challenge'} ${what}.csv`
+function exportTotals() {
+  const { label } = store
+  downloadCsv(fileName('totals'), [
+    [label('Participant'), label('Group'), label('Country'), 'Total', 'Entries', 'Goal'],
+    ...orderBy(store.participants, ['$total'], ['desc']).map((participant) => [
+      participant.name,
+      participant.$group?.name,
+      getName(participant.$group?.country),
+      participant.$total ?? 0,
+      participant.$count ?? 0,
+      participant.goal,
+    ]),
+  ])
+}
+async function exportEntries() {
+  try {
+    const { label } = store
+    const entries = await store.getAllEntries()
+    downloadCsv(fileName('entries'), [
+      ['Date', label('Participant'), label('Group'), label('Amount')],
+      ...entries.map((entry) => [
+        entry.createdAt?.toDate().toISOString(),
+        findById(store.participants, entry.participantId)?.name,
+        findById(store.groups, entry.groupId)?.name,
+        entry.value,
+      ]),
+    ])
+  } catch (error) {
+    store.notifyFailed(error)
+  }
+}
 
 const isInFinalCountdown = computed(() => isChallengeInFinalCountdown(store.currentChallenge))
 const endDate = computed(() => getChallengeEndDate(store.currentChallenge))
@@ -420,6 +456,41 @@ const readableOn = (color: string) => {
             </li>
           </TransitionGroup>
         </template>
+
+        <router-link
+          v-if="me && !isInFinalCountdown"
+          :to="{ name: 'certificate', params: { participantId: me.id } }"
+          class="chip chip-white -mt-6 mb-10 self-center"
+        >
+          <Award :size="15" :stroke-width="2.8" aria-hidden="true" />
+          {{ me.name }}'s certificate
+        </router-link>
+
+        <!-- for the challenge's owner (and admins): take the results away -->
+        <section
+          v-if="store.canModerateChallenge"
+          class="card mx-4 mb-10 -mt-4 flex flex-col gap-3 p-5"
+          aria-label="Organiser tools"
+        >
+          <h2 class="hd text-[22px]">for organisers</h2>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="chip" @click="exportTotals()">
+              <Download :size="15" :stroke-width="2.8" aria-hidden="true" />
+              totals (csv)
+            </button>
+            <button type="button" class="chip" @click="exportEntries()">
+              <Download :size="15" :stroke-width="2.8" aria-hidden="true" />
+              all entries (csv)
+            </button>
+            <router-link
+              :to="{ name: 'certificates', params: { challengeId: store.challengeId } }"
+              class="chip"
+            >
+              <Award :size="15" :stroke-width="2.8" aria-hidden="true" />
+              certificates
+            </router-link>
+          </div>
+        </section>
       </div>
 
       <div v-else key="groups" class="flex flex-col">

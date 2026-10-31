@@ -9,6 +9,8 @@ import StatisticsView from '@/views/StatisticsView.vue'
 
 const title = 'challenge'
 const tabNames = ['new', 'activity', 'statistics']
+// challenge links open the entry form, unless they say otherwise (e.g. emailed flags)
+const linkTarget = (to: unknown) => (to === 'activity' ? 'activity' : 'new')
 
 /**
  * Back and forward land where you were, like a native app. Waits for the page to be tall enough
@@ -60,18 +62,30 @@ const router = createRouter({
     {
       path: '/private/:challengeId',
       name: 'private',
-      redirect: ({ params }) => {
+      redirect: ({ params, query, hash }) => {
         useAppStore().openChallengeLink(String(params.challengeId), true)
-        return { name: 'new', params: {} }
+        return { name: linkTarget(query.to), params: {}, hash }
       },
     },
     {
       path: '/public/:challengeId',
       name: 'public',
-      redirect: ({ params }) => {
+      redirect: ({ params, query, hash }) => {
         useAppStore().openChallengeLink(String(params.challengeId), false)
-        return { name: 'new', params: {} }
+        return { name: linkTarget(query.to), params: {}, hash }
       },
+    },
+    {
+      path: '/certificate/:participantId',
+      name: 'certificate',
+      component: () => import('@/views/CertificateView.vue'),
+      meta: { title: `Certificate • ${title}` },
+    },
+    {
+      path: '/certificates/:challengeId',
+      name: 'certificates',
+      component: () => import('@/views/CertificateView.vue'),
+      meta: { title: `Certificates • ${title}` },
     },
     { path: '/:pathMatch(.*)*', name: '404', component: NotFoundView },
   ],
