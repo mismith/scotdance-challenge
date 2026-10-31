@@ -9,10 +9,12 @@ import {
 import {
   type DocumentData,
   type Query,
+  type QueryConstraint,
   type Unsubscribe,
   addDoc,
   deleteDoc,
   doc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy as order,
@@ -23,9 +25,15 @@ import {
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { defineStore } from 'pinia'
-import { computed, ref, shallowRef, triggerRef } from 'vue'
+import { computed, ref, shallowRef, triggerRef, watch } from 'vue'
 import { getFlag } from '@/lib/country'
-import { isChallengeActive, isChallengeRecentlyEnded, isChallengeUpcoming } from '@/lib/date'
+import {
+  getChallengeYear,
+  isChallengeActive,
+  isChallengeLive,
+  isChallengeRecentlyEnded,
+  isChallengeUpcoming,
+} from '@/lib/date'
 import {
   type Challenge,
   type Entry,
@@ -39,11 +47,14 @@ import {
 } from '@/lib/firebase'
 import { requestPass } from '@/lib/scotdance'
 import { crisp, orderBy } from '@/lib/utils'
+import { dailyTotals } from '@/lib/waves'
 
 export interface ChallengeItem extends Challenge {
   $isActive: boolean
+  $isLive: boolean
   $isUpcoming: boolean
   $isRecentlyEnded: boolean
+  $year: number | null
 }
 export interface GroupItem extends Group {
   $name: string
@@ -53,12 +64,19 @@ export interface ParticipantItem extends Participant {
   $group?: GroupItem
 }
 
-const defaultLabels: Record<LabelKey, string> = {
+// what each label reads as until a challenge renames it (the app is for dancers, so say so)
+export const defaultLabels: Record<LabelKey, string> = {
   Challenge: 'Challenge',
   Group: 'Group',
-  Participant: 'Participant',
+  Participant: 'Dancer',
   Amount: 'Amount',
   Country: 'Country',
+}
+
+class OfflineError extends Error {
+  constructor() {
+    super('Offline')
+  }
 }
 
 export const useAppStore = defineStore('app', () => {
@@ -122,18 +140,30 @@ export const useAppStore = defineStore('app', () => {
       )
     })
   }
-  const byChallenge = (challengeId?: string) =>
-    challengeId ? [where('challengeId', '==', challengeId)] : []
-  const bindChallenges = () => bind('challenges', query(refs.challenges, order('name')))
+  /** Bind a challenge's items, or let them go when there's no challenge */
+  function bindForChallenge<K extends Exclude<keyof typeof raw, 'challenges'>>(
+    key: K,
+    challengeId: string | undefined,
+    ...constraints: QueryConstraint[]
+  ) {
+    if (!challengeId) {
+      unsubscribes[key]?.()
+      raw[key].value = []
+      return Promise.resolve()
+    }
+    return bind(key, query(refs[key], where('challengeId', '==', challengeId), ...constraints))
+  }
+  const hasLoadedChallenges = ref(false)
+  const bindChallenges = () =>
+    bind('challenges', query(refs.challenges, order('name'))).then(() => {
+      hasLoadedChallenges.value = true
+    })
   const bindGroups = (challengeId?: string) =>
-    bind('groups', query(refs.groups, ...byChallenge(challengeId), order('name')))
+    bindForChallenge('groups', challengeId, order('name'))
   const bindParticipants = (challengeId?: string) =>
-    bind('participants', query(refs.participants, ...byChallenge(challengeId), order('name')))
+    bindForChallenge('participants', challengeId, order('name'))
   const bindEntries = (challengeId: string | undefined, max: number) =>
-    bind(
-      'entries',
-      query(refs.entries, ...byChallenge(challengeId), order('createdAt', 'desc'), limit(max)),
-    )
+    bindForChallenge('entries', challengeId, order('createdAt', 'desc'), limit(max))
 
   // private items only show once their challenge has been unlocked via its link
   const isVisible = ({
@@ -151,8 +181,10 @@ export const useAppStore = defineStore('app', () => {
         .map((item) => ({
           ...item,
           $isActive: isChallengeActive(item),
+          $isLive: isChallengeLive(item),
           $isUpcoming: isChallengeUpcoming(item),
           $isRecentlyEnded: isChallengeRecentlyEnded(item),
+          $year: getChallengeYear(item),
         })),
       ['$isActive', '$isRecentlyEnded', '$isUpcoming', 'name'],
       ['desc', 'desc', 'desc', 'asc'],
@@ -175,6 +207,28 @@ export const useAppStore = defineStore('app', () => {
     }),
   )
   const entries = computed(() => raw.entries.value.filter(isVisible))
+
+  // the newest few hundred entries, for the ribbons' climb (Activity pages through its own)
+  const CLIMB_ENTRIES = 300
+  const climbQuery = (challengeId: string) =>
+    query(
+      refs.entries,
+      where('challengeId', '==', challengeId),
+      order('createdAt', 'desc'),
+      limit(CLIMB_ENTRIES),
+    )
+  const climbEntries = ref<Entry[]>([])
+  let unsubscribeClimb: Unsubscribe | undefined
+  function bindClimb(challengeId?: string) {
+    unsubscribeClimb?.()
+    unsubscribeClimb = undefined
+    climbEntries.value = []
+    if (!challengeId) return
+    unsubscribeClimb = onSnapshot(climbQuery(challengeId), (snapshot) => {
+      climbEntries.value = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Entry[]
+    })
+  }
+  const climbDays = computed(() => dailyTotals(climbEntries.value.filter(isVisible)))
 
   const challengeId = computed({
     get: () => persisted.value.challengeId,
@@ -203,10 +257,49 @@ export const useAppStore = defineStore('app', () => {
   })
   const currentChallenge = computed(() => findById(challenges.value, challengeId.value))
 
+  // challenges this device (or account) has entered, to list under "Yours"
+  const enteredChallengeIds = ref<string[]>([])
+  watch(
+    () => me.value?.uid,
+    async (uid) => {
+      enteredChallengeIds.value = []
+      if (!uid) return
+      const snapshot = await getDocs(query(refs.entries, where('createdBy', '==', uid)))
+      enteredChallengeIds.value = [...new Set(snapshot.docs.map((d) => d.data().challengeId))]
+    },
+    { immediate: true },
+  )
+  const myChallenges = computed(() =>
+    challenges.value.filter(
+      ({ id, createdBy, private: isPrivate }) =>
+        id === challengeId.value ||
+        enteredChallengeIds.value.includes(id) ||
+        (isPrivate && persisted.value.privateIds.includes(id)) ||
+        Boolean(me.value && createdBy === me.value.uid),
+    ),
+  )
+
+  // one short message at a time, e.g. after signing in
+  const toast = ref<string | null>(null)
+  function notify(message: string | null) {
+    toast.value = message
+  }
+  /** Tell the person a write didn't go through, kindly, so they can try again */
+  function notifyFailed(error: unknown) {
+    console.warn(error)
+    notify(
+      error instanceof OfflineError
+        ? "You're offline right now. Try again once you're connected!"
+        : "That didn't save. Check your connection and try again!",
+    )
+  }
+
   function label(key: LabelKey) {
     return currentChallenge.value?.labels?.[key] || defaultLabels[key]
   }
 
+  // a challenge being added (no id yet) or edited, in the EditChallenge sheet
+  const challengeToEdit = ref<Partial<Challenge> | null>(null)
   const isPrivateDialogOpen = ref(false)
   const isPublicDialogOpen = ref(false)
   const isInfoDialogOpen = ref(false)
@@ -223,14 +316,22 @@ export const useAppStore = defineStore('app', () => {
     persisted.value.challengeId = id
   }
 
+  // offline, Firestore holds writes until it reconnects, so they'd hang with no word: stop early
+  function ensureOnline() {
+    if (!navigator.onLine) throw new OfflineError()
+  }
+
   const created = () => ({ createdAt: serverTimestamp(), createdBy: me.value?.uid ?? null })
 
   async function addChallenge(challenge: Partial<Challenge>) {
+    ensureOnline()
     const { id } = await addDoc(refs.challenges, { ...challenge, ...created() })
     if (challenge.private) addPrivateId(id)
+    else isPublicDialogOpen.value = true
     return id
   }
   async function saveChallenge(id: string, challenge: Partial<Challenge>) {
+    ensureOnline()
     await updateDoc(doc(refs.challenges, id), {
       ...challenge,
       updatedAt: serverTimestamp(),
@@ -239,11 +340,17 @@ export const useAppStore = defineStore('app', () => {
   }
   /** Add a group, participant or entry to the current challenge */
   async function add(key: 'groups' | 'participants' | 'entries', item: DocumentData) {
+    ensureOnline()
     const newItem: DocumentData = { ...created(), ...item }
     if (currentChallenge.value?.private) newItem.private = true
-    return addDoc(refs[key], newItem)
+    const added = await addDoc(refs[key], newItem)
+    if (key === 'entries' && !enteredChallengeIds.value.includes(item.challengeId)) {
+      enteredChallengeIds.value.push(item.challengeId)
+    }
+    return added
   }
   async function updateEntry(id: string, value: number) {
+    ensureOnline()
     await updateDoc(doc(refs.entries, id), {
       value,
       updatedAt: serverTimestamp(),
@@ -251,9 +358,24 @@ export const useAppStore = defineStore('app', () => {
     })
   }
   async function deleteEntry(id: string) {
+    ensureOnline()
     await deleteDoc(doc(refs.entries, id))
   }
+  /**
+   * All of a participant's entries, newest first (e.g. for "same as last time", streaks and
+   * personal bests). Sorted here rather than in the query, so it needs no composite index.
+   */
+  async function getParticipantEntries(participantId: string) {
+    if (!participantId) return []
+    const snapshot = await getDocs(query(refs.entries, where('participantId', '==', participantId)))
+    const time = (entry: Entry) => entry.createdAt?.toMillis() ?? Date.now()
+    return snapshot.docs
+      .map((d) => ({ ...d.data(), id: d.id }) as Entry)
+      .filter(isVisible)
+      .sort((a, b) => time(b) - time(a))
+  }
   async function addCompliment(text: string) {
+    ensureOnline()
     await addDoc(refs.complimentsSubmitted, { text, ...created() })
   }
 
@@ -270,20 +392,30 @@ export const useAppStore = defineStore('app', () => {
     groupId,
     participantId,
     currentChallenge,
+    myChallenges,
+    toast,
+    notify,
+    notifyFailed,
     label,
+    challengeToEdit,
     isPrivateDialogOpen,
     isPublicDialogOpen,
     isInfoDialogOpen,
+    hasLoadedChallenges,
     bindChallenges,
     bindGroups,
     bindParticipants,
     bindEntries,
+    bindClimb,
+    climbQuery,
+    climbDays,
     openChallengeLink,
     addChallenge,
     saveChallenge,
     add,
     updateEntry,
     deleteEntry,
+    getParticipantEntries,
     addCompliment,
   }
 })

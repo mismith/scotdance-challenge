@@ -13,29 +13,35 @@ export { expect }
 // names are Title Case, as the app capitalizes new names
 export const unique = (name: string) => `${name} ${Math.floor(Math.random() * 1e6)}`
 
-/** The whole picker field, which shows the selection apart from its (search) input */
-export function picker(page: Page, label: string) {
-  return page.locator('.v-autocomplete', { has: page.getByRole('combobox', { name: label }) })
+/** `yyyy-MM-dd`, as date inputs take it, some days from today */
+export function dateFromToday(days: number) {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-/** Type a new name into a picker and pick its `Add "…"` option */
-async function addViaPicker(page: Page, label: string, name: string) {
-  const picker = page.getByRole('combobox', { name: label })
-  await picker.click()
-  await picker.fill(name)
-  await page.getByRole('option', { name: `Add "${name}"` }).click()
+/** The open challenge's total, as the Cloud Function aggregates it */
+export function total(page: Page) {
+  return page.getByTestId('challenge-total')
 }
 
+/** Start a challenge from Explore; listed ones (`isPrivate: false`) need an end date */
 export async function addChallenge(page: Page, name: string, { isPrivate = false } = {}) {
-  await page.goto('/new')
-  await addViaPicker(page, 'Challenge', name)
+  await page.goto('/')
+  await page.getByRole('button', { name: /start your own challenge/ }).click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog.getByText('Add Challenge')).toBeVisible()
-  await expect(dialog.getByLabel('Name *')).toHaveValue(name)
-  if (isPrivate) await dialog.getByLabel('Private').check()
-  await dialog.getByRole('button', { name: 'Add' }).click()
-  // a new private challenge shows its Access Link straight away
-  if (isPrivate) await page.getByRole('button', { name: 'Got It' }).click()
+  await expect(dialog.getByText('New challenge')).toBeVisible()
+  await dialog.getByLabel('Name').fill(name)
+  if (!isPrivate) {
+    await dialog.getByRole('radio', { name: /^Everyone/ }).check()
+    await dialog.getByLabel(/^Ends/).fill(dateFromToday(30))
+  }
+  await dialog.getByRole('button', { name: 'Create + get the link' }).click()
+  // a new challenge shows its Access Link straight away
+  await page.getByRole('button', { name: 'Got It' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
   await expect(page.getByRole('combobox', { name: 'Group' })).toBeEnabled()
 }
 
@@ -44,9 +50,11 @@ async function pick(page: Page, label: string, name: string) {
   const field = page.getByRole('combobox', { name: label })
   await field.click()
   await field.fill(name)
-  const option = page.getByRole('option', { name: new RegExp(`^(Add "${name}"|${name})$`) })
+  const option = page.getByRole('option', {
+    name: new RegExp(`^(add “${name}”( to .+)?|${name})$`),
+  })
   await expect(option).toBeVisible()
-  const isNew = (await option.innerText()).startsWith('Add "')
+  const isNew = (await option.innerText()).startsWith('add “')
   await option.click()
   return isNew
 }
@@ -56,17 +64,22 @@ export async function addEntry(page: Page, group: string, participant: string, a
 
   if (await pick(page, 'Group', group)) {
     const dialog = page.getByRole('dialog')
-    await expect(dialog.getByText('Add Group')).toBeVisible()
-    await dialog.getByRole('button', { name: 'Add' }).click()
+    await expect(dialog.getByText('Add group')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
   }
-  await expect(picker(page, 'Group')).toContainText(group)
+  await expect(page.getByRole('combobox', { name: 'Group' })).toHaveValue(group)
 
-  await pick(page, 'Participant', participant)
-  await expect(picker(page, 'Participant')).toContainText(participant)
+  await pick(page, 'Dancer', participant)
+  await expect(page.getByRole('combobox', { name: 'Dancer' })).toHaveValue(participant)
 
   await page.getByLabel('Amount').fill(String(amount))
-  await page.getByRole('button', { name: 'Submit' }).click()
-  // a compliment pops up once the entry is saved
-  await expect(page.locator('.v-snackbar')).toContainText('!')
+  await page
+    .getByRole('button', { name: `Log ${amount.toLocaleString()} for ${participant}` })
+    .click()
+  // the amount and a compliment take over the screen once the entry is saved
+  const moment = page.locator('.LoggedMoment')
+  await expect(moment).toContainText(`+${amount.toLocaleString()}`)
+  await expect(moment).toContainText(`${participant} just logged`)
+  await moment.click()
   await expect(page.getByLabel('Amount')).toHaveValue('')
 }

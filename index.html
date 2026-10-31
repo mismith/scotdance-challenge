@@ -3,14 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="challenge" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>challenge</title>
-    <link rel="icon" href="/touchicon.png" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/touchicon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#6A3CFF" />
+    <script>
+      // light or dark before first paint: the saved choice, or the device's (src/lib/theme.ts)
+      ;(function () {
+        var choice = localStorage.getItem('challenge-theme')
+        var isDark =
+          choice === 'dark' ||
+          (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+      })()
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400..800;1,700..900&family=Caveat:wght@700&display=swap"
     />
   </head>
   <body>
@@ -24,6 +40,9 @@
     <script type="module" src="/src/main.ts"></script>
     <script type="text/javascript">
       window.$crisp = []
+      // no floating bubble: the chat opens from our own Help and feedback buttons, and hides again
+      window.$crisp.push(['do', 'chat:hide'])
+      window.$crisp.push(['on', 'chat:closed', () => window.$crisp.push(['do', 'chat:hide'])])
       window.CRISP_WEBSITE_ID = 'fbfd0f29-79a1-4bd8-aa1c-ad1d8180aa75'
       ;(function () {
         d = document

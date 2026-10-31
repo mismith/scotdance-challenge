@@ -1,4 +1,4 @@
-import { addChallenge, addEntry, expect, test, unique } from './helpers'
+import { addChallenge, addEntry, expect, test, total, unique } from './helpers'
 import { newAccount, openAccount, signIn, stubEmbed } from './scotdance'
 
 test('moves anonymous entries to the account, then signs out', async ({ page }) => {
@@ -16,22 +16,24 @@ test('moves anonymous entries to the account, then signs out', async ({ page }) 
 
   // still yours: the challenge and the entry can be edited
   await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
-  await page.getByRole('link', { name: /Activity/ }).click()
-  const entry = page.locator('.ActivityTimelineItem').filter({ hasText: 'by Ada' })
-  await entry.getByRole('button', { name: 'Edit' }).click()
+  await page.getByRole('link', { name: 'Activity' }).click()
+  const entry = page.locator('.ActivityItem').filter({ hasText: 'Ada' })
+  await entry.getByRole('button').click()
+  await page.getByRole('menuitem', { name: 'Edit' }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('Amount').fill('15')
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(entry).toContainText('+15')
-  await expect(page.getByText(/^15$/)).toBeVisible({ timeout: 15_000 })
+  await expect(total(page)).toHaveText('15', { timeout: 15_000 })
 
   // signed out, you're a new anonymous user: the entry is the account's now
   await (await openAccount(page)).getByRole('button', { name: 'Sign out' }).click()
   await expect(await openAccount(page)).toContainText('only on this device')
   await page.keyboard.press('Escape')
   await expect(page.getByRole('button', { name: 'Info' })).toBeVisible()
-  await expect(entry.getByRole('button', { name: 'Flag' })).toBeVisible()
-  await expect(entry.getByRole('button', { name: 'Delete' })).toHaveCount(0)
+  await entry.getByRole('button').click()
+  await expect(page.getByRole('menuitem', { name: 'Flag' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Edit' })).toHaveCount(0)
 })
 
 test('keeps your entries across devices', async ({ page, browser }) => {
@@ -39,7 +41,7 @@ test('keeps your entries across devices', async ({ page, browser }) => {
   await addChallenge(page, unique('Devices'))
   await stubEmbed(page, account)
   await signIn(page)
-  await expect(page.locator('.v-snackbar')).toContainText('Signed in as Test Dancer')
+  await expect(page.getByText('Signed in as Test Dancer')).toBeVisible()
   await addEntry(page, 'Blue Team', 'Bea', 8)
 
   await page.getByRole('button', { name: 'Share' }).click()
@@ -50,10 +52,11 @@ test('keeps your entries across devices', async ({ page, browser }) => {
   await stubEmbed(other, account)
   await other.goto(link)
   await signIn(other)
-  await expect(other.locator('.v-snackbar')).toContainText('Signed in as Test Dancer')
-  await other.getByRole('link', { name: /Activity/ }).click()
-  const entry = other.locator('.ActivityTimelineItem').filter({ hasText: '+8' })
-  await expect(entry.getByRole('button', { name: 'Delete' })).toBeVisible()
+  await expect(other.getByText('Signed in as Test Dancer')).toBeVisible()
+  await other.getByRole('link', { name: 'Activity' }).click()
+  const entry = other.locator('.ActivityItem').filter({ hasText: '+8' })
+  await entry.getByRole('button').click()
+  await expect(other.getByRole('menuitem', { name: 'Edit' })).toBeVisible()
   await other.close()
 })
 
@@ -70,7 +73,7 @@ test('stays anonymous when the sheet is closed', async ({ page }) => {
   await addChallenge(page, unique('Closed'))
   await stubEmbed(page, null)
   await signIn(page)
-  await expect(page.getByRole('button', { name: 'Account' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Account', exact: true })).toBeEnabled()
   await expect(await openAccount(page)).toContainText('only on this device')
 })
 
@@ -78,6 +81,6 @@ test('refuses a pass signed with the wrong secret', async ({ page }) => {
   await addChallenge(page, unique('Forged'))
   await stubEmbed(page, newAccount(), { signingSecret: 'not-the-secret' })
   await signIn(page)
-  await expect(page.locator('.v-snackbar')).toContainText("Couldn't sign in")
+  await expect(page.getByText("Couldn't sign in")).toBeVisible()
   await expect(await openAccount(page)).toContainText('only on this device')
 })

@@ -7,8 +7,7 @@ export const scotdanceUrl =
   (isUsingEmulators ? 'http://localhost:5279' : 'https://next.scotdance.app')
 
 // sign-in waits for v4 to go live: until then only dev and e2e show it (or VITE_SCOTDANCE_SIGN_IN=true)
-export const isSignInEnabled =
-  isUsingEmulators || import.meta.env.VITE_SCOTDANCE_SIGN_IN === 'true'
+export const isSignInEnabled = isUsingEmulators || import.meta.env.VITE_SCOTDANCE_SIGN_IN === 'true'
 
 export type SignInResult =
   | { signedIn: false }

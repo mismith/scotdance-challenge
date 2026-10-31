@@ -1,13 +1,13 @@
 import { URL, fileURLToPath } from 'node:url'
 
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
-import vuetify from 'vite-plugin-vuetify'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vuetify(), process.env.ANALYZE ? visualizer({ open: true }) : null],
+  plugins: [vue(), tailwindcss(), process.env.ANALYZE ? visualizer({ open: true }) : null],
   build: {
     chunkSizeWarningLimit: 600, // firebase alone is ~580 kB
     rolldownOptions: {
@@ -16,7 +16,7 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'firebase', test: /node_modules[\\/]@?firebase/ },
-            { name: 'vuetify', test: /node_modules[\\/]vuetify/ },
+            { name: 'ui', test: /node_modules[\\/](reka-ui|@floating-ui|lucide-vue-next)/ },
           ],
         },
       },

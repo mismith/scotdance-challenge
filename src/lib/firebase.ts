@@ -66,6 +66,10 @@ export interface Challenge extends FirebaseObject, Createable, Updateable, WithS
   private?: boolean
   hasFinalCountdown?: boolean
   labels?: Partial<Record<LabelKey, string | null>>
+  /** participants with entries, kept by the aggregateStatistics Cloud Function */
+  $dancers?: number
+  /** when the latest entry was added, kept by the aggregateStatistics Cloud Function */
+  $lastEntryAt?: Timestamp
 }
 export interface Group extends FirebaseObject, Createable, WithStats {
   challengeId: string

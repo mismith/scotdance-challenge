@@ -24,3 +24,19 @@ declare global {
 export function crisp(...command: unknown[]) {
   window.$crisp?.push(command)
 }
+
+/** Open the live chat (its bubble stays hidden, see index.html), optionally with a first message */
+export function openChat(message?: string) {
+  crisp('do', 'chat:show')
+  if (message) crisp('do', 'message:send', ['text', message])
+  crisp('do', 'chat:open')
+}
+
+/** Ink or white, whichever reads better on a `#rrggbb` colour */
+export function textOn(color?: string | null) {
+  const [r, g, b] = (color?.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i)?.slice(1) ?? []).map(
+    (hex) => parseInt(hex, 16),
+  )
+  if (r === undefined || g === undefined || b === undefined) return 'var(--color-ink)'
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? 'var(--color-ink)' : '#fff'
+}

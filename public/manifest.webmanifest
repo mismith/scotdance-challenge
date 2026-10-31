@@ -1,0 +1,13 @@
+{
+  "name": "challenge",
+  "short_name": "challenge",
+  "description": "Log your dancing and cheer each other on",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F2EC",
+  "theme_color": "#6A3CFF",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/touchicon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

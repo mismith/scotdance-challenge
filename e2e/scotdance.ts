@@ -68,7 +68,7 @@ export async function stubEmbed(
 
 /** Open the account menu in the top bar */
 export async function openAccount(page: Page) {
-  await page.getByRole('button', { name: 'Account' }).click()
+  await page.getByRole('button', { name: 'Account', exact: true }).click()
   return page.locator('.ScotDanceAccount')
 }
 

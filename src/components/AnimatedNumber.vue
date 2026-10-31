@@ -1,22 +1,35 @@
 <script setup lang="ts">
+// counts up (or down) to a number; jumps straight there when motion is reduced
 import { TransitionPresets, useTransition } from '@vueuse/core'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { prefersReducedMotion } from '@/lib/motion'
 
-const props = defineProps<{ value: number; duration?: number }>()
+const props = withDefaults(
+  defineProps<{
+    value: number
+    /** ms */
+    duration?: number
+    /** where to count from on arrival; zero, like it always has */
+    from?: number
+  }>(),
+  { duration: 1600, from: 0 },
+)
 
-// start from zero so the total counts up on arrival, like it always has
-const target = ref(0)
+const target = ref(prefersReducedMotion.value ? props.value || 0 : props.from)
 const output = useTransition(target, {
-  duration: props.duration ?? 2000,
-  transition: TransitionPresets.easeOutQuad,
+  duration: computed(() => (prefersReducedMotion.value ? 0 : props.duration)),
+  transition: TransitionPresets.easeOutCubic,
 })
 watch(
   () => props.value,
   (value) => (target.value = value || 0),
   { immediate: true },
 )
+const shown = computed(() => (prefersReducedMotion.value ? target.value : output.value))
 </script>
 
 <template>
-  <span>{{ Math.round(output).toLocaleString(undefined, { maximumFractionDigits: 0 }) }}</span>
+  <span class="num">{{
+    Math.round(shown).toLocaleString(undefined, { maximumFractionDigits: 0 })
+  }}</span>
 </template>
