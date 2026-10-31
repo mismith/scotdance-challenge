@@ -99,7 +99,7 @@ async function handleAddCompliment() {
 
     <AppDialog
       v-model="isOpen"
-      title="you found it!"
+      title="spread some cheer"
       description="Write a compliment. It'll pop up for someone after they log."
     >
       <template #title-icon>

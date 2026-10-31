@@ -2,7 +2,7 @@
 import { parseISO } from 'date-fns'
 import { Calendar, Globe, Lock } from 'lucide-vue-next'
 import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
-import { useAppStore } from '@/stores/app'
+import { defaultLabels, useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
 import type { Challenge, LabelKey } from '@/lib/firebase'
 import { prefersReducedMotion } from '@/lib/motion'
@@ -335,12 +335,13 @@ function handleSubmit() {
           <legend class="lbl mb-1.5 lowercase">Rename labels</legend>
           <label v-for="key in labelKeys" :key="key" class="pill">
             <span class="w-24 shrink-0 text-[15px] font-semibold text-muted lowercase">
-              {{ key }}
+              {{ defaultLabels[key] }}
             </span>
+            <!-- shown as the app shows them: lowercase -->
             <input
               :value="challenge.labels?.[key] || ''"
-              :aria-label="key"
-              :placeholder="key"
+              :aria-label="defaultLabels[key]"
+              :placeholder="defaultLabels[key].toLowerCase()"
               @input="setLabel(key, ($event.target as HTMLInputElement).value)"
             />
           </label>

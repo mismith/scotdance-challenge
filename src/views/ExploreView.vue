@@ -280,7 +280,6 @@ function tapLogo() {
   isDancing.value = true
   clearTimeout(danceTimeout)
   danceTimeout = setTimeout(() => (isDancing.value = false), 2800)
-  store.notify('you found the secret!')
 }
 onBeforeUnmount(() => clearTimeout(danceTimeout))
 </script>
