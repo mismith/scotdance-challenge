@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { CircleUserRound, LoaderCircle, Moon, Sun, SunMoon, UserRound } from 'lucide-vue-next'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import ScotDanceMark from '@/components/ScotDanceMark.vue'
+import { gravatarUrl } from '@/lib/gravatar'
 import { isSignInEnabled } from '@/lib/scotdance'
 import { themeChoice } from '@/lib/theme'
 
@@ -21,6 +22,15 @@ const isOpen = ref(false)
 const isBusy = ref(false)
 const who = computed(() => store.me?.displayName || store.me?.email || 'ScotDance.app')
 const initial = computed(() => who.value.trim().charAt(0).toUpperCase())
+// names can be shared, so the email says which account it is
+const email = computed(() => (store.me?.displayName ? store.me.email : null))
+// your Gravatar picture, as on ScotDance.app, or your initial
+const picture = ref<string | null>(null)
+watch(
+  () => store.me?.email,
+  async (address) => (picture.value = await gravatarUrl(address, 96)),
+  { immediate: true },
+)
 
 async function handleSignIn() {
   isOpen.value = false
@@ -61,6 +71,12 @@ async function handleSignOut() {
       v-bind="$attrs"
     >
       <LoaderCircle v-if="isBusy" :size="24" :stroke-width="2.6" class="animate-spin" />
+      <img
+        v-else-if="store.isSignedIn && picture"
+        :src="picture"
+        alt=""
+        class="size-8 rounded-full object-cover"
+      />
       <CircleUserRound v-else-if="store.isSignedIn" :size="24" :stroke-width="2.6" />
       <UserRound v-else :size="24" :stroke-width="2.6" />
     </PopoverTrigger>
@@ -73,10 +89,12 @@ async function handleSignOut() {
       >
         <template v-if="isSignInEnabled && store.isSignedIn">
           <div class="mb-3 flex items-center gap-3">
-            <span class="avatar anim-pop bg-lime" aria-hidden="true">{{ initial }}</span>
+            <img v-if="picture" :src="picture" alt="" class="avatar anim-pop object-cover" />
+            <span v-else class="avatar anim-pop bg-lime" aria-hidden="true">{{ initial }}</span>
             <p class="min-w-0 text-[15px] leading-snug font-medium text-muted">
               Signed in as
               <strong class="block truncate text-[17px] font-extrabold text-fg">{{ who }}</strong>
+              <span v-if="email" class="block truncate">{{ email }}</span>
             </p>
           </div>
           <p class="mb-4 text-[15px] leading-snug font-medium text-muted">

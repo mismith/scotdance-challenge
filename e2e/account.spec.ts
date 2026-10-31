@@ -11,7 +11,10 @@ test('moves anonymous entries to the account, then signs out', async ({ page }) 
   await expect(
     page.getByText('Signed in as Jane Dancer. 1 entry moved to your account.'),
   ).toBeVisible()
-  await expect(await openAccount(page)).toContainText('Signed in as Jane Dancer')
+  const menu = await openAccount(page)
+  await expect(menu).toContainText('Signed in as Jane Dancer')
+  // names can be shared, so the email shows which account it is
+  await expect(menu).toContainText(account.email)
   await page.keyboard.press('Escape')
 
   // still yours: the challenge and the entry can be edited

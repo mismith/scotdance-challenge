@@ -4,7 +4,7 @@ import { type Page, expect, test as base } from '@playwright/test'
 export const test = base.extend({
   page: async ({ page }, use) => {
     // keep live chat and IP lookups out of test runs
-    await page.route(/client\.crisp\.chat|api\.ipdata\.co/, (route) => route.abort())
+    await page.route(/client\.crisp\.chat|api\.ipdata\.co|gravatar\.com/, (route) => route.abort())
     await use(page)
   },
 })
