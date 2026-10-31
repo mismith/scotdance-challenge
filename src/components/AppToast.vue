@@ -15,10 +15,11 @@ watch(
 </script>
 
 <template>
+  <!-- clear of the status bar and the soft blur iOS draws just below it -->
   <div
     role="status"
     aria-live="polite"
-    class="pointer-events-none fixed inset-x-0 top-[max(1rem,env(safe-area-inset-top))] z-[70] flex justify-center px-4"
+    class="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+2rem)] z-[70] flex justify-center px-4"
   >
     <Transition name="toast">
       <button
