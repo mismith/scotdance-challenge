@@ -5,6 +5,7 @@ import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
 import type { Challenge, LabelKey } from '@/lib/firebase'
+import { prefersReducedMotion } from '@/lib/motion'
 
 export type EditableChallenge = Pick<
   Challenge,
@@ -110,8 +111,25 @@ function showField(field: Field) {
 async function revealField(field: Field) {
   showFields.value[field] = true
   await nextTick()
-  if (field === 'description') descriptionInput.value?.focus()
-  else labelsFieldset.value?.querySelector('input')?.focus()
+  const block = field === 'description' ? descriptionInput.value : labelsFieldset.value
+  const input = field === 'description' ? block : block?.querySelector('input')
+  input?.focus({ preventScroll: true })
+  // bring the new field into view, and again once the iOS keyboard has shrunk the sheet
+  const reveal = () =>
+    block?.scrollIntoView({
+      block: 'nearest',
+      behavior: prefersReducedMotion.value ? 'auto' : 'smooth',
+    })
+  reveal()
+  const viewport = window.visualViewport
+  if (!viewport) return
+  const timeout = setTimeout(() => viewport.removeEventListener('resize', handleResize), 800)
+  function handleResize() {
+    clearTimeout(timeout)
+    viewport?.removeEventListener('resize', handleResize)
+    setTimeout(reveal, 50)
+  }
+  viewport.addEventListener('resize', handleResize)
 }
 function setLabel(key: LabelKey, label: string) {
   challenge.value.labels = { ...challenge.value.labels, [key]: label.trim() || null }

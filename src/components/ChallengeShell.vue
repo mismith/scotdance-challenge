@@ -75,8 +75,9 @@ function handleTabClick(index: number) {
     class="mx-auto flex min-h-dvh w-full max-w-xl flex-col overflow-x-clip pt-[env(safe-area-inset-top)]"
   >
     <template v-if="challenge">
-      <!-- the app's own bar, as on Explore: back, help and you; the card is all this challenge -->
-      <div class="flex items-center gap-1 px-3 pt-2.5">
+      <!-- the app's own bar, as on Explore: back, help and you; the card is all this challenge.
+           As far down as Explore's, clear of the soft edge iOS draws under the status bar -->
+      <div class="flex items-center gap-1 px-3 pt-5">
         <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
           <a
             :href="href"
