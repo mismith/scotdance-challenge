@@ -25,7 +25,7 @@ export const onFlagCreated = onDocumentCreated(
     const participant = await get('participants', entry?.participantId)
     const group = await get('groups', entry?.groupId)
 
-    const link = `${APP_URL}/${challenge.private ? 'private' : 'public'}/${flag.challengeId}?to=activity#entry-${flag.entryId}`
+    const link = `${APP_URL}/c/${flag.challengeId}/activity#entry-${flag.entryId}`
     const what = entry
       ? `+${entry.value} by ${participant?.name ?? '?'} of ${group?.name ?? '?'}`
       : 'an entry that has since been deleted'

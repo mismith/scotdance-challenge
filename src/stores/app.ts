@@ -359,12 +359,25 @@ export const useAppStore = defineStore('app', () => {
       persisted.value.privateIds.push(id)
       isPrivateDialogOpen.value = true
     }
-    bindPrivateChallenge(id)
+    return bindPrivateChallenge(id)
   }
-  /** Select a challenge from a shared link, before the challenge list has loaded */
-  function openChallengeLink(id: string, isPrivate: boolean) {
-    if (isPrivate) addPrivateId(id)
-    persisted.value.challengeId = id
+  /**
+   * Open a challenge from its URL, before the challenge list has loaded. A challenge's link is
+   * its key, so a private one unlocks (and says so) the first time it's opened here
+   */
+  const isOpeningChallenge = ref(false)
+  async function openChallenge(id: string) {
+    challengeId.value = id
+    if (persisted.value.privateIds.includes(id) || findById(raw.challenges.value, id)) return
+    isOpeningChallenge.value = true
+    try {
+      const snapshot = await getDoc(doc(refs.challenges, id))
+      if (snapshot.get('private') === true) await addPrivateId(id)
+    } catch (error) {
+      console.warn(error)
+    } finally {
+      isOpeningChallenge.value = false
+    }
   }
 
   // offline, Firestore holds writes until it reconnects, so they'd hang with no word: stop early
@@ -563,7 +576,8 @@ export const useAppStore = defineStore('app', () => {
     bindClimb,
     climbQuery,
     climbDays,
-    openChallengeLink,
+    isOpeningChallenge,
+    openChallenge,
     addChallenge,
     saveChallenge,
     add,

@@ -209,10 +209,10 @@ function handleTabClick(index: number) {
     </template>
 
     <div
-      v-else-if="store.hasLoadedChallenges"
+      v-else-if="store.hasLoadedChallenges && !store.isOpeningChallenge"
       class="anim-rise m-auto flex flex-col items-center gap-5 p-6 text-center"
     >
-      <p class="hd text-[32px]">pick a {{ store.label('Challenge').toLowerCase() }} first</p>
+      <p class="hd text-[32px]">we can't find that {{ store.label('Challenge').toLowerCase() }}</p>
       <router-link :to="{ name: 'home' }" class="btn btn-primary">see all challenges</router-link>
     </div>
   </div>

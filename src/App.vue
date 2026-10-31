@@ -31,9 +31,8 @@ store.bindChallenges()
 async function handleAddChallenge(challenge: EditableChallenge) {
   try {
     const id = await store.addChallenge(challenge)
-    store.challengeId = id
     store.challengeToEdit = null
-    router.push({ name: 'new' })
+    router.push({ name: 'new', params: { challengeId: id } })
   } catch (error) {
     store.notifyFailed(error)
   }

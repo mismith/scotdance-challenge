@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { type RouteLocation, createRouter, createWebHistory } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import ChallengeShell from '@/components/ChallengeShell.vue'
 import ActivityView from '@/views/ActivityView.vue'
@@ -33,18 +33,26 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return settledAt(savedPosition.top)
     // switching tabs keeps the tabs where they are, under your finger
-    if (tabNames.includes(String(to.name)) && tabNames.includes(String(from.name))) return false
+    const isSameChallenge = to.params.challengeId === from.params.challengeId
+    if (
+      isSameChallenge &&
+      tabNames.includes(String(to.name)) &&
+      tabNames.includes(String(from.name))
+    )
+      return false
     return { top: 0 }
   },
   routes: [
     { path: '/', name: 'home', component: ExploreView, meta: { title } },
     // one shell (header and tabs) around all three tabs, so it stays put while they switch:
-    // keyboard focus stays on the tab just pressed. Listed after home, which wins on '/'
+    // keyboard focus stays on the tab just pressed. The challenge is in the URL, so any tab of
+    // any challenge can be linked to, and its link opens it (see the beforeEach below)
     {
-      path: '/',
+      path: '/c/:challengeId',
       component: ChallengeShell,
       children: [
-        { path: 'new', name: 'new', component: NewEntryView, meta: { title: `Log • ${title}` } },
+        { path: '', redirect: (to) => ({ name: 'new', params: to.params }) },
+        { path: 'log', name: 'new', component: NewEntryView, meta: { title: `Log • ${title}` } },
         {
           path: 'activity',
           name: 'activity',
@@ -52,29 +60,31 @@ const router = createRouter({
           meta: { title: `Activity • ${title}` },
         },
         {
-          path: 'statistics',
+          path: 'stats',
           name: 'statistics',
           component: StatisticsView,
           meta: { title: `Stats • ${title}` },
         },
       ],
     },
-    {
-      path: '/private/:challengeId',
-      name: 'private',
-      redirect: ({ params, query, hash }) => {
-        useAppStore().openChallengeLink(String(params.challengeId), true)
-        return { name: linkTarget(query.to), params: {}, hash }
+    // shared links (and printed QR codes) from before the challenge was in every URL
+    ...(['private', 'public'] as const).map((name) => ({
+      path: `/${name}/:challengeId`,
+      name,
+      redirect: ({ params, query, hash }: RouteLocation) => ({
+        name: linkTarget(query.to),
+        params: { challengeId: params.challengeId },
+        hash,
+      }),
+    })),
+    // old tab URLs (bookmarks, home-screen icons) open the challenge this device last had open
+    ...(['new', 'activity', 'statistics'] as const).map((name) => ({
+      path: `/${name}`,
+      redirect: ({ query, hash }: RouteLocation) => {
+        const { challengeId } = useAppStore()
+        return challengeId ? { name, params: { challengeId }, query, hash } : { name: 'home' }
       },
-    },
-    {
-      path: '/public/:challengeId',
-      name: 'public',
-      redirect: ({ params, query, hash }) => {
-        useAppStore().openChallengeLink(String(params.challengeId), false)
-        return { name: linkTarget(query.to), params: {}, hash }
-      },
-    },
+    })),
     {
       path: '/certificate/:participantId',
       name: 'certificate',
@@ -89,6 +99,16 @@ const router = createRouter({
     },
     { path: '/:pathMatch(.*)*', name: '404', component: NotFoundView },
   ],
+})
+
+// a challenge's URL opens it: this device remembers it as its current one, and a private one
+// unlocks (it's how its link works)
+router.beforeEach((to) => {
+  if (tabNames.includes(String(to.name)) && to.params.challengeId) {
+    const store = useAppStore()
+    const id = String(to.params.challengeId)
+    if (id !== store.challengeId || !store.currentChallenge) store.openChallenge(id)
+  }
 })
 
 router.afterEach((to) => {

@@ -253,8 +253,10 @@ function stamp(challenge: ChallengeItem): Stamp | null {
 }
 
 function open(challenge: ChallengeItem) {
-  store.challengeId = challenge.id
-  router.push({ name: challenge.$isActive || challenge.$isUpcoming ? 'new' : 'statistics' })
+  router.push({
+    name: challenge.$isActive || challenge.$isUpcoming ? 'new' : 'statistics',
+    params: { challengeId: challenge.id },
+  })
 }
 function startNew() {
   store.challengeToEdit = { name: '', private: true }
