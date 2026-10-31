@@ -148,18 +148,36 @@ export const useAppStore = defineStore('app', () => {
       )
     })
   }
+  // which challenge each list holds, and whether it's in yet: until then, "none" means "not yet"
+  type ChallengeKey = Exclude<keyof typeof raw, 'challenges'>
+  const boundFor: Record<ChallengeKey, string> = { groups: '', participants: '', entries: '' }
+  const loadedFor = ref<Record<ChallengeKey, string | null>>({
+    groups: null,
+    participants: null,
+    entries: null,
+  })
   /** Bind a challenge's items, or let them go when there's no challenge */
-  function bindForChallenge<K extends Exclude<keyof typeof raw, 'challenges'>>(
+  async function bindForChallenge<K extends ChallengeKey>(
     key: K,
     challengeId: string | undefined,
     ...constraints: QueryConstraint[]
   ) {
+    // another challenge's items never show under this one, even for a moment
+    if (boundFor[key] !== (challengeId ?? '')) {
+      boundFor[key] = challengeId ?? ''
+      raw[key].value = []
+      loadedFor.value[key] = null
+    }
     if (!challengeId) {
       unsubscribes[key]?.()
-      raw[key].value = []
-      return Promise.resolve()
+      loadedFor.value[key] = ''
+      return
     }
-    return bind(key, query(refs[key], where('challengeId', '==', challengeId), ...constraints))
+    try {
+      await bind(key, query(refs[key], where('challengeId', '==', challengeId), ...constraints))
+    } finally {
+      if (boundFor[key] === challengeId) loadedFor.value[key] = challengeId
+    }
   }
   // public challenges are listed; private ones are opened by id, once unlocked via their link
   const privateChallenges = ref<Record<string, Challenge>>({})
@@ -304,6 +322,11 @@ export const useAppStore = defineStore('app', () => {
     },
   })
   const currentChallenge = computed(() => findById(challenges.value, challengeId.value))
+  /** Whether the current challenge's groups, participants and entries are in */
+  const hasLoaded = computed(() => {
+    const is = (key: ChallengeKey) => loadedFor.value[key] === challengeId.value
+    return { groups: is('groups'), participants: is('participants'), entries: is('entries') }
+  })
 
   // challenges this device (or account) has entered, to list under "Yours"
   const enteredChallengeIds = ref<string[]>([])
@@ -569,6 +592,7 @@ export const useAppStore = defineStore('app', () => {
     isPublicDialogOpen,
     isInfoDialogOpen,
     hasLoadedChallenges,
+    hasLoaded,
     bindChallenges,
     bindGroups,
     bindParticipants,

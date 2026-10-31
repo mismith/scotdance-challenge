@@ -285,9 +285,27 @@ async function deleteEntry() {
 </script>
 
 <template>
+  <!-- held back a moment, so a quick load goes straight to the entries -->
+  <div v-if="!store.hasLoaded.entries" class="anim-fade" style="--delay: 250ms" role="status">
+    <span class="sr-only">Loading…</span>
+    <div class="flex animate-pulse flex-col gap-2 px-4 pt-3.5" aria-hidden="true">
+      <span class="mx-1.5 my-1 h-5 w-24 rounded-full bg-chip" />
+      <div class="flex flex-col gap-5 rounded-[24px] bg-card p-4">
+        <span v-for="width in [58, 44, 66, 50, 38]" :key="width" class="flex items-center gap-2.5">
+          <span class="size-[38px] shrink-0 rounded-full bg-chip" />
+          <span class="flex grow flex-col gap-2">
+            <span class="h-3.5 rounded-full bg-chip" :style="{ width: `${width}%` }" />
+            <span class="h-2.5 w-1/3 rounded-full bg-chip" />
+          </span>
+          <span class="h-5 w-10 rounded-full bg-chip" />
+        </span>
+      </div>
+    </div>
+  </div>
+
   <Transition name="rise">
     <div
-      v-if="!store.entries.length && !isLoadingMore"
+      v-if="store.hasLoaded.entries && !store.entries.length"
       class="m-auto flex flex-col items-center gap-2 px-6 py-10 text-center"
     >
       <p class="hd anim-pop text-[30px]">no entries yet</p>
@@ -422,7 +440,7 @@ async function deleteEntry() {
   </TransitionGroup>
 
   <div
-    v-if="!isShowingAllEntries || isLoadingMore"
+    v-if="store.hasLoaded.entries && (!isShowingAllEntries || isLoadingMore)"
     ref="moreButton"
     class="flex justify-center py-8"
   >

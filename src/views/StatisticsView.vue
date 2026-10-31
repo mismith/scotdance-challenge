@@ -216,8 +216,32 @@ const readableOn = (color: string) => {
 </script>
 
 <template>
+  <!-- held back a moment, so a quick load goes straight to the stats -->
   <div
-    v-if="!participantsWithEntries.length"
+    v-if="!store.hasLoaded.participants || !store.hasLoaded.groups"
+    class="anim-fade"
+    style="--delay: 250ms"
+    role="status"
+  >
+    <span class="sr-only">Loading…</span>
+    <div class="flex animate-pulse flex-col gap-3 px-4 pt-3" aria-hidden="true">
+      <div class="flex gap-2">
+        <span class="h-9 w-[84px] rounded-full bg-card" />
+        <span class="h-9 w-[72px] rounded-full bg-card" />
+        <span class="ml-auto h-9 w-[120px] rounded-full bg-card" />
+      </div>
+      <div class="h-[300px] rounded-[28px] bg-chip" />
+      <div class="flex flex-col gap-4 rounded-[24px] bg-card p-[18px]">
+        <span v-for="width in [62, 48, 55, 40]" :key="width" class="flex items-center gap-3">
+          <span class="size-[34px] shrink-0 rounded-full bg-chip" />
+          <span class="h-3.5 rounded-full bg-chip" :style="{ width: `${width}%` }" />
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div
+    v-else-if="!participantsWithEntries.length"
     class="anim-rise m-auto flex flex-col items-center gap-5 p-6 text-center"
   >
     <div class="flex items-end gap-1.5" aria-hidden="true">
