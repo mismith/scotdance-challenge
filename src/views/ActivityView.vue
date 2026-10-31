@@ -273,7 +273,7 @@ async function deleteEntry() {
       <TransitionGroup
         tag="ul"
         name="feed"
-        class="overflow-hidden rounded-[24px] bg-white"
+        class="overflow-hidden rounded-[24px] bg-card"
         appear
         @leave="collapse"
       >
@@ -330,7 +330,7 @@ async function deleteEntry() {
                 <span
                   :key="entry.value"
                   class="hd num text-[30px] whitespace-nowrap"
-                  :class="isMine(entry) ? 'text-violet' : 'text-ink'"
+                  :class="isMine(entry) ? 'text-violet' : 'text-fg'"
                 >
                   +{{ entry.value.toLocaleString() }}
                 </span>
@@ -341,7 +341,7 @@ async function deleteEntry() {
                 align="end"
                 :side-offset="-8"
                 :collision-padding="12"
-                class="popover z-[60] flex min-w-[168px] flex-col rounded-[20px] bg-white p-1.5 text-ink shadow-float"
+                class="popover z-[60] flex min-w-[168px] flex-col rounded-[20px] bg-card p-1.5 text-fg shadow-float"
                 @close-auto-focus="keepFocusInSheet"
               >
                 <template v-if="isMine(entry)">

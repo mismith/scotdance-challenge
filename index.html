@@ -12,6 +12,16 @@
     <link rel="apple-touch-icon" href="/touchicon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#6A3CFF" />
+    <script>
+      // light or dark before first paint: the saved choice, or the device's (src/lib/theme.ts)
+      ;(function () {
+        var choice = localStorage.getItem('challenge-theme')
+        var isDark =
+          choice === 'dark' ||
+          (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

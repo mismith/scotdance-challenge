@@ -12,7 +12,6 @@ import StepsMark from '@/components/StepsMark.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
 import { type Entry, type Group, type Participant, refs } from '@/lib/firebase'
 import { animate, burst, easing, stagger } from '@/lib/motion'
-import { isSignInEnabled } from '@/lib/scotdance'
 import { pluralize } from '@/lib/strings'
 import { orderBy } from '@/lib/utils'
 import { dailyTotals } from '@/lib/waves'
@@ -297,7 +296,7 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
       </span>
       <h1 class="hd anim-fade min-w-0 flex-1 text-[32px] whitespace-nowrap">challenge</h1>
       <HelpButton class="-mr-1.5" />
-      <ScotDanceAccount v-if="isSignInEnabled" class="bg-chip" />
+      <ScotDanceAccount class="bg-chip" />
     </header>
 
     <!-- what this is, in three stickers slapped on one after another (the Toolkit's line) -->
@@ -325,18 +324,8 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
       />
 
       <section v-if="hero" class="flex flex-col gap-5" aria-label="Featured">
-        <!-- the big one: violet card on a little stack, with stickers -->
-        <div class="Explore-stack anim-rise relative mb-[26px]">
-          <span
-            aria-hidden="true"
-            class="Explore-back absolute inset-[18px_16px_-20px_16px] rounded-[30px] bg-pink"
-            style="--turn: 1.2deg"
-          />
-          <span
-            aria-hidden="true"
-            class="Explore-back absolute inset-[10px_8px_-10px_8px] rounded-[30px] bg-lime"
-            style="--turn: -1deg; animation-delay: 60ms"
-          />
+        <!-- the big one: violet card with stickers -->
+        <div class="anim-rise relative mb-[26px]">
           <button
             ref="heroCard"
             type="button"
@@ -383,7 +372,7 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
           </button>
           <span
             aria-hidden="true"
-            class="tilt sticker anim-sticker absolute -top-3.5 -left-1 flex items-center gap-1.5 rounded-full bg-white px-3.5 py-[7px] text-[15px] font-black whitespace-nowrap italic"
+            class="tilt sticker anim-sticker absolute -top-3.5 -left-1 flex items-center gap-1.5 rounded-full bg-white px-3.5 py-[7px] text-[15px] font-black text-ink whitespace-nowrap italic"
             style="--rx: 16deg; --rz: -6deg"
           >
             <template v-if="hero.$isLive">
@@ -514,7 +503,7 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
             v-for="(challenge, index) in yours"
             :key="challenge.id"
             type="button"
-            class="Explore-chip anim-pop flex min-h-11 items-center gap-1.5 rounded-[18px] bg-white px-3.5 py-2 text-left text-[15px] font-extrabold"
+            class="Explore-chip anim-pop flex min-h-11 items-center gap-1.5 rounded-[18px] bg-card px-3.5 py-2 text-left text-[15px] font-extrabold"
             :style="{ ...stagger(index), '--delay': '120ms' }"
             @click="open(challenge)"
           >
@@ -625,18 +614,6 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
   -webkit-user-select: none;
 }
 
-/* the cards behind the live one fan out as it lands, and a little more on press */
-.Explore-back {
-  rotate: var(--turn);
-  animation: explore-fan 0.7s var(--ease-spring) 0.15s both;
-  transition: rotate 0.4s var(--ease-spring);
-}
-@keyframes explore-fan {
-  from {
-    rotate: 0deg;
-    translate: 0 -10px;
-  }
-}
 .Explore-ribbons {
   mask-image: radial-gradient(130% 62% at 0% 100%, transparent 35%, #000 78%);
 }
@@ -650,15 +627,9 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
   scale: 0.98;
   rotate: -0.8deg;
 }
-.Explore-stack:has(.Explore-hero:active) .Explore-back {
-  rotate: calc(var(--turn) * 1.8);
-}
 @media (hover: hover) {
   .Explore-hero:hover {
     translate: 0 -3px;
-  }
-  .Explore-stack:has(.Explore-hero:hover) .Explore-back {
-    rotate: calc(var(--turn) * 1.4);
   }
 }
 .Explore-days {

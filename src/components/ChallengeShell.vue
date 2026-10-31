@@ -12,7 +12,6 @@ import Ribbons from '@/components/Ribbons.vue'
 import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
 import { prefersReducedMotion } from '@/lib/motion'
-import { isSignInEnabled } from '@/lib/scotdance'
 import { pluralize } from '@/lib/strings'
 
 const store = useAppStore()
@@ -76,25 +75,32 @@ function handleTabClick(index: number) {
     class="mx-auto flex min-h-dvh w-full max-w-xl flex-col overflow-x-clip pt-[env(safe-area-inset-top)]"
   >
     <template v-if="challenge">
+      <!-- the app's own bar, as on Explore: back, help and you; the card is all this challenge -->
+      <div class="flex items-center gap-1 px-3 pt-2.5">
+        <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
+          <a
+            :href="href"
+            class="btn btn-icon btn-ghost shrink-0 bg-chip"
+            aria-label="All challenges"
+            @click.prevent="goBack()"
+          >
+            <ChevronLeft :size="26" :stroke-width="2.8" />
+          </a>
+        </router-link>
+        <span class="flex-1" />
+        <HelpButton />
+        <ScotDanceAccount class="bg-chip" />
+      </div>
+
       <!-- the same on every tab, so switching tabs never moves the layout -->
       <header
-        class="anim-rise on-color relative mx-3 mt-3 overflow-hidden rounded-[28px] bg-violet text-white"
+        class="anim-rise on-color relative mx-3 mt-2 overflow-hidden rounded-[28px] bg-violet text-white"
       >
         <!-- the climb runs up behind the total, fading out under the words -->
         <div class="ChallengeShell-ribbons absolute inset-x-0 bottom-0 h-[92px]">
           <Ribbons variant="shell" :days="store.climbDays" :colors="colors" reveal />
         </div>
-        <div class="relative flex items-start gap-0.5 pt-2 pr-2 pl-1.5">
-          <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
-            <a
-              :href="href"
-              class="btn btn-icon btn-ghost shrink-0"
-              aria-label="All challenges"
-              @click.prevent="goBack()"
-            >
-              <ChevronLeft :size="26" :stroke-width="2.8" />
-            </a>
-          </router-link>
+        <div class="relative flex items-start gap-0.5 pt-2 pr-2 pl-[18px]">
           <h1 class="hd min-w-0 flex-1 self-center py-1.5 text-[22px] [overflow-wrap:anywhere]">
             {{ challenge.name }}
           </h1>
@@ -135,12 +141,10 @@ function handleTabClick(index: number) {
             >
               <Info :size="21" :stroke-width="2.6" />
             </button>
-            <HelpButton />
-            <ScotDanceAccount v-if="isSignInEnabled" />
           </div>
         </div>
 
-        <div class="relative flex items-center gap-3 pr-4 pl-[50px]">
+        <div class="relative flex items-center gap-3 pr-4 pl-[18px]">
           <span class="hd text-[34px] text-lime" data-testid="challenge-total">
             <AnimatedNumber :value="challenge.$total ?? 0" />
           </span>
@@ -185,7 +189,7 @@ function handleTabClick(index: number) {
           :to="{ name: tab.name }"
           replace
           class="hd relative flex h-11 items-center justify-center rounded-full text-[17px] transition-colors duration-300"
-          :class="i === tabIndex ? 'text-white' : 'text-muted hover:text-ink'"
+          :class="i === tabIndex ? 'text-white' : 'text-muted hover:text-fg'"
           @click="handleTabClick(i)"
         >
           {{ tab.label }}

@@ -135,7 +135,7 @@ async function handleAddCompliment() {
         >
 
         <div
-          class="mt-1.5 mb-1 -rotate-[1.5deg] rounded-[20px] bg-white p-3.5 text-center"
+          class="mt-1.5 mb-1 -rotate-[1.5deg] rounded-[20px] bg-card p-3.5 text-center"
           aria-hidden="true"
         >
           <span class="block text-xs font-bold text-hint">how it'll look</span>

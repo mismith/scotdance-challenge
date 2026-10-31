@@ -200,7 +200,7 @@ async function handleAddEntry() {
       <p class="anim-rise text-base font-semibold text-muted" :style="stagger(1)">
         <template v-if="startDate">
           Logging opens on
-          <span class="font-extrabold text-ink">{{ format(startDate, 'EEEE, MMMM d') }}</span
+          <span class="font-extrabold text-fg">{{ format(startDate, 'EEEE, MMMM d') }}</span
           >.
         </template>
         Get those dancing shoes ready, and share the link so everyone's set to go!
@@ -220,7 +220,7 @@ async function handleAddEntry() {
     <section v-else class="mx-[22px] mt-6 flex flex-col gap-3">
       <h2 ref="wrapEl" class="anim-rise hd text-[56px]">that's a<br />wrap!</h2>
       <p class="anim-rise text-base font-semibold text-muted" :style="stagger(1)">
-        <span class="hd num text-[20px] text-ink">{{
+        <span class="hd num text-[20px] text-fg">{{
           (challenge.$total ?? 0).toLocaleString()
         }}</span>
         total<template v-if="dancers">

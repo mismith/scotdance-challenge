@@ -176,7 +176,7 @@ function handleSubmit() {
           :class="
             challenge.private === audience.private
               ? 'bg-violet text-white shadow-lift -translate-y-0.5'
-              : 'bg-white text-ink'
+              : 'bg-card text-fg'
           "
         >
           <input
@@ -196,7 +196,7 @@ function handleSubmit() {
               :size="20"
               :stroke-width="2.5"
               class="transition-colors duration-300"
-              :class="challenge.private === audience.private ? 'text-lime' : 'text-ink'"
+              :class="challenge.private === audience.private ? 'text-lime' : 'text-fg'"
             />
           </span>
           <span class="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -232,21 +232,21 @@ function handleSubmit() {
       </fieldset>
       <p
         v-else
-        class="flex items-center gap-3 rounded-[20px] bg-white px-3.5 py-3 text-[15px] leading-snug font-medium text-muted"
+        class="flex items-center gap-3 rounded-[20px] bg-card px-3.5 py-3 text-[15px] leading-snug font-medium text-muted"
       >
         <span
-          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-paper text-ink"
+          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-paper text-fg"
           aria-hidden="true"
         >
           <Lock v-if="challenge.private" :size="20" :stroke-width="2.5" />
           <Globe v-else :size="20" :stroke-width="2.5" />
         </span>
         <span v-if="challenge.private">
-          <strong class="font-extrabold text-ink">Just your people:</strong>
+          <strong class="font-extrabold text-fg">Just your people:</strong>
           only people with the link can find it.
         </span>
         <span v-else>
-          <strong class="font-extrabold text-ink">Everyone:</strong>
+          <strong class="font-extrabold text-fg">Everyone:</strong>
           listed in Explore while it runs.
         </span>
       </p>

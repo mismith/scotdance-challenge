@@ -113,7 +113,7 @@ async function handleUpdate(value: unknown) {
           position="popper"
           :side-offset="8"
           :collision-padding="12"
-          class="popover z-[60] max-h-[min(20rem,var(--reka-combobox-content-available-height))] w-(--reka-combobox-trigger-width) overflow-hidden rounded-[20px] bg-white shadow-[var(--shadow-float)]"
+          class="popover z-[60] max-h-[min(20rem,var(--reka-combobox-content-available-height))] w-(--reka-combobox-trigger-width) overflow-hidden rounded-[20px] bg-card shadow-[var(--shadow-float)]"
         >
           <ComboboxViewport class="flex flex-col gap-0.5 p-1.5">
             <ComboboxItem

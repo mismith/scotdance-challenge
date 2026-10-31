@@ -92,7 +92,7 @@ function handleSubmit() {
       <fieldset class="group flex flex-col gap-1.5">
         <legend class="lbl mb-1.5 lowercase">Colour</legend>
         <!-- two rows of four, so every swatch is a full 44px tap -->
-        <div class="grid grid-cols-4 gap-1.5 rounded-[20px] bg-white p-2">
+        <div class="grid grid-cols-4 gap-1.5 rounded-[20px] bg-card p-2">
           <span
             v-for="({ value: color, name }, index) in groupColors"
             :key="color"

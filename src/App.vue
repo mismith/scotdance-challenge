@@ -58,7 +58,7 @@ const isLinkDialogOpen = computed({
 </script>
 
 <template>
-  <div class="min-h-dvh text-ink">
+  <div class="min-h-dvh text-fg">
     <router-view />
 
     <EditChallenge

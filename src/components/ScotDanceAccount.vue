@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { CircleUserRound, LoaderCircle, UserRound } from 'lucide-vue-next'
+import { CircleUserRound, LoaderCircle, Moon, Sun, SunMoon, UserRound } from 'lucide-vue-next'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { computed, ref } from 'vue'
 import { useAppStore } from '@/stores/app'
 import ScotDanceMark from '@/components/ScotDanceMark.vue'
+import { isSignInEnabled } from '@/lib/scotdance'
+import { themeChoice } from '@/lib/theme'
 
 defineOptions({ inheritAttrs: false })
 const store = useAppStore()
+
+// light or dark, or whatever the device is set to
+const themes = [
+  { value: 'system', label: 'auto', icon: SunMoon },
+  { value: 'light', label: 'light', icon: Sun },
+  { value: 'dark', label: 'dark', icon: Moon },
+] as const
 
 const isOpen = ref(false)
 const isBusy = ref(false)
@@ -47,7 +56,7 @@ async function handleSignOut() {
   <PopoverRoot v-model:open="isOpen">
     <PopoverTrigger
       class="btn btn-icon btn-ghost size-11"
-      aria-label="Account"
+      :aria-label="isSignInEnabled ? 'Account' : 'Settings'"
       :disabled="isBusy"
       v-bind="$attrs"
     >
@@ -60,14 +69,14 @@ async function handleSignOut() {
         align="end"
         :side-offset="8"
         :collision-padding="12"
-        class="ScotDanceAccount popover z-[60] w-[300px] rounded-[24px] bg-white p-4 text-ink shadow-float"
+        class="ScotDanceAccount popover z-[60] w-[300px] rounded-[24px] bg-card p-4 text-fg shadow-float"
       >
-        <template v-if="store.isSignedIn">
+        <template v-if="isSignInEnabled && store.isSignedIn">
           <div class="mb-3 flex items-center gap-3">
             <span class="avatar anim-pop bg-lime" aria-hidden="true">{{ initial }}</span>
             <p class="min-w-0 text-[15px] leading-snug font-medium text-muted">
               Signed in as
-              <strong class="block truncate text-[17px] font-extrabold text-ink">{{ who }}</strong>
+              <strong class="block truncate text-[17px] font-extrabold text-fg">{{ who }}</strong>
             </p>
           </div>
           <p class="mb-4 text-[15px] leading-snug font-medium text-muted">
@@ -81,7 +90,7 @@ async function handleSignOut() {
             Sign out
           </button>
         </template>
-        <template v-else>
+        <template v-else-if="isSignInEnabled">
           <p class="hd mb-2 text-[24px] lowercase">Your entries are only on this device</p>
           <p class="mb-4 text-[15px] leading-snug font-medium text-muted">
             Sign in to keep them on all your devices, and edit them later.
@@ -96,6 +105,25 @@ async function handleSignOut() {
             Sign in with ScotDance.app
           </button>
         </template>
+
+        <div :class="{ 'mt-4 border-t-2 border-line pt-3.5': isSignInEnabled }">
+          <p id="appearance" class="lbl mb-2 pl-0">appearance</p>
+          <div role="radiogroup" aria-labelledby="appearance" class="grid grid-cols-3 gap-1.5">
+            <button
+              v-for="theme in themes"
+              :key="theme.value"
+              type="button"
+              role="radio"
+              :aria-checked="themeChoice === theme.value"
+              class="chip chip-sm"
+              :class="{ 'chip-on': themeChoice === theme.value }"
+              @click="themeChoice = theme.value"
+            >
+              <component :is="theme.icon" :size="16" :stroke-width="2.6" aria-hidden="true" />
+              {{ theme.label }}
+            </button>
+          </div>
+        </div>
       </PopoverContent>
     </PopoverPortal>
   </PopoverRoot>

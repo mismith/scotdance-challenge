@@ -371,7 +371,7 @@ const readableOn = (color: string) => {
           <TransitionGroup
             tag="ol"
             name="list"
-            class="mx-4 mt-3 mb-10 rounded-[24px] bg-white px-[18px] py-0.5"
+            class="mx-4 mt-3 mb-10 rounded-[24px] bg-card px-[18px] py-0.5"
             :aria-label="`${store.label('Participant')}s`"
           >
             <li
@@ -426,7 +426,7 @@ const readableOn = (color: string) => {
         <TransitionGroup
           tag="ol"
           name="list"
-          class="mx-4 mt-3 mb-10 rounded-[24px] bg-white px-[18px] py-0.5"
+          class="mx-4 mt-3 mb-10 rounded-[24px] bg-card px-[18px] py-0.5"
           :aria-label="`${store.label('Group')}s`"
         >
           <li
@@ -476,7 +476,7 @@ const readableOn = (color: string) => {
   align-items: center;
   overflow: hidden;
   border-radius: 999px;
-  background: #fff;
+  background: var(--color-card);
   cursor: text;
   transition:
     flex-grow 0.45s var(--ease-out),
@@ -521,7 +521,7 @@ const readableOn = (color: string) => {
   justify-content: center;
   gap: 6px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--color-card);
   color: var(--color-ink);
   font-size: 15px;
   font-style: italic;

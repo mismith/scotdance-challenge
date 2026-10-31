@@ -10,6 +10,10 @@
   --font-hand: 'Caveat', 'Comic Sans MS', cursive;
 
   --color-paper: #f5f2ec;
+  /* cards, fields and plain buttons: white on paper (dark grey in dark mode) */
+  --color-card: #fff;
+  /* text on the page and on cards; ink stays dark for text on bright colours and dark stickers */
+  --color-fg: #15131a;
   --color-ink: #15131a;
   --color-ink-soft: #2a2733;
   --color-muted: #5e5868;
@@ -61,10 +65,41 @@
   --animate-pulse-dot: pulse-dot 1.8s ease-out infinite;
 }
 
+/*
+ * dark mode: the page and its cards go dark, the brand and stickers stay bright. `data-theme`
+ * is set before first paint (index.html) from the saved choice or the system's (src/lib/theme.ts)
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-paper: #16131c;
+  --color-card: #231f2b;
+  --color-fg: #f4f1f8;
+  --color-ink: #0c0a10;
+  --color-ink-soft: #2a2733;
+  --color-muted: #b5adc2;
+  --color-hint: #a29aaf;
+  --color-faint: #857d92;
+  --color-line: #2f2a38;
+  --color-chip: #2e2937;
+  --color-handle: #4a4454;
+  --color-violet-soft: #2c2452;
+  /* your own rows in Activity */
+  --color-lime-soft: #262c14;
+  --shadow-sticker: 0 1px 0 rgb(0 0 0 / 0.3), 0 10px 18px -8px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 18px 30px -16px rgb(0 0 0 / 0.8);
+  --shadow-float: 0 18px 34px -16px rgb(0 0 0 / 0.75);
+  --shadow-button: 0 12px 22px -12px rgb(0 0 0 / 0.8);
+}
+/* violet text needs to be lighter to read on the dark page */
+:root[data-theme='dark']
+  :is(.text-violet, .lbl:has(+ .pill:focus-within), .group:focus-within > .lbl) {
+  color: #a98fff;
+}
+
 @layer base {
   html,
   body {
-    @apply bg-paper font-sans text-ink antialiased;
+    @apply bg-paper font-sans text-fg antialiased;
     font-variant-numeric: tabular-nums;
     -webkit-tap-highlight-color: transparent;
     /* quick taps (e.g. +1 +1 +1) never double-tap zoom */
@@ -128,7 +163,7 @@
 
   /* a white pill field; on an input or on a wrapper round one */
   .pill {
-    @apply flex h-14 w-full min-w-0 items-center gap-2.5 rounded-[20px] bg-white px-4 text-lg font-bold text-ink;
+    @apply flex h-14 w-full min-w-0 items-center gap-2.5 rounded-[20px] bg-card px-4 text-lg font-bold text-fg;
     transition: box-shadow 0.18s var(--ease-out);
   }
   .pill::placeholder,
@@ -149,7 +184,7 @@
 
   /* small pill chips: quick amounts, filters, toggles (44px tall, a comfortable tap) */
   .chip {
-    @apply inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-chip px-[13px] text-[15px] text-ink select-none;
+    @apply inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-chip px-[13px] text-[15px] text-fg select-none;
     font-style: italic;
     font-weight: 900;
     letter-spacing: -0.02em;
@@ -162,7 +197,7 @@
     @apply px-3.5 text-sm;
   }
   .chip-white {
-    @apply bg-white;
+    @apply bg-card;
   }
   .chip-lime {
     @apply bg-lime;
@@ -186,7 +221,7 @@
 
   /* pill buttons; pick a colour with a variant */
   .btn {
-    @apply inline-flex h-[54px] shrink-0 items-center justify-center gap-2 rounded-full bg-white px-[22px] text-[20px] text-ink select-none;
+    @apply inline-flex h-[54px] shrink-0 items-center justify-center gap-2 rounded-full bg-card px-[22px] text-[20px] text-fg select-none;
     font-style: italic;
     font-weight: 900;
     letter-spacing: -0.035em;
@@ -206,7 +241,7 @@
   }
   .btn-primary {
     @apply bg-violet text-white;
-    --focus: var(--color-ink);
+    --focus: var(--color-fg);
     box-shadow: var(--shadow-button);
   }
   .btn-primary:disabled {
@@ -222,7 +257,7 @@
     @apply bg-lime text-ink;
   }
   .btn-soft {
-    @apply bg-chip text-ink;
+    @apply bg-chip text-fg;
   }
   .btn-ghost {
     @apply bg-transparent text-inherit;
@@ -243,7 +278,7 @@
 
   /* white rounded card */
   .card {
-    @apply rounded-[24px] bg-white;
+    @apply rounded-[24px] bg-card;
   }
 
   /* lifted off the page: stickers, badges, floating notes */
