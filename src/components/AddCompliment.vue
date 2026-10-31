@@ -130,7 +130,7 @@ async function handleAddCompliment() {
           id="compliment"
           v-model="newCompliment"
           class="pill"
-          :placeholder="`e.g. ${example}`"
+          placeholder="your compliment"
           autocomplete="off"
           maxlength="80"
           :aria-invalid="Boolean(error)"
