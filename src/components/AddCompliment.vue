@@ -26,8 +26,17 @@ const error = computed(() =>
 )
 const isValid = computed(() => Boolean(sanitized.value) && !error.value)
 
+// a different example each time, from the compliments dancers already see: short ones that
+// read well with a "!" after them
+const examples = compliments.filter((c) => c.length <= 24 && !/[!?.]$/.test(c))
+const pickExample = () => examples[Math.floor(Math.random() * examples.length)] ?? 'well done'
+const example = ref(pickExample())
+
 watch(isOpen, (open) => {
-  if (open) return
+  if (open) {
+    example.value = pickExample()
+    return
+  }
   newCompliment.value = ''
   isFound.value = false
 })
@@ -99,7 +108,7 @@ async function handleAddCompliment() {
 
     <AppDialog
       v-model="isOpen"
-      title="spread some cheer"
+      title="spread the love"
       description="Write a compliment. It'll pop up for someone after they log."
     >
       <template #title-icon>
@@ -121,7 +130,7 @@ async function handleAddCompliment() {
           id="compliment"
           v-model="newCompliment"
           class="pill"
-          placeholder="e.g. you're a superstar"
+          :placeholder="`e.g. ${example}`"
           autocomplete="off"
           maxlength="80"
           :aria-invalid="Boolean(error)"
@@ -145,7 +154,7 @@ async function handleAddCompliment() {
               class="hand block text-[38px] [overflow-wrap:anywhere]"
               :class="{ 'text-faint': !sanitized }"
             >
-              {{ sanitized || "you're a superstar" }}!
+              {{ sanitized || example }}!
             </span>
           </Transition>
         </div>
