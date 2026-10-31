@@ -283,7 +283,7 @@ async function undoEntry(id: string, entryValue: number) {
         class="anim-rise btn btn-dark self-start"
         :style="stagger(2)"
       >
-        see who won →
+        see who worked the hardest →
       </router-link>
     </section>
   </template>
