@@ -12,6 +12,9 @@ const model = defineModel<Moment | null>({ required: true })
 const store = useAppStore()
 
 const colors = computed(() => store.groups.map((group) => group.color))
+// the last stretch of the climb, ending with today: this entry is its newest step
+const MOMENT_DAYS = 10
+const days = computed(() => store.climbDays.slice(-MOMENT_DAYS))
 const amount = computed(() => (model.value ? `+${model.value.value.toLocaleString()}` : ''))
 const milestone = computed(() =>
   model.value?.milestone ? `#${model.value.milestone.toLocaleString()}!` : '',
@@ -112,7 +115,9 @@ useEventListener(window, 'keydown', (event: KeyboardEvent) => {
         @click="model = null"
       >
         <span class="LoggedMoment__ribbons absolute inset-0" aria-hidden="true">
-          <Ribbons variant="moment" :colors="colors" :drift="!isSpecial" :dance="isSpecial" />
+          <span class="LoggedMoment__fade absolute inset-0">
+            <Ribbons variant="moment" :days="days" :colors="colors" :dance="isSpecial" />
+          </span>
         </span>
 
         <span
@@ -253,6 +258,10 @@ useEventListener(window, 'keydown', (event: KeyboardEvent) => {
   mask-size: 300% 100%;
   mask-repeat: no-repeat;
   animation: LoggedMoment-ribbons 1.1s 0.12s var(--ease-out) both;
+}
+/* and fade out under the words up top */
+.LoggedMoment__fade {
+  mask-image: linear-gradient(to bottom, transparent 38%, #000 62%);
 }
 @keyframes LoggedMoment-ribbons {
   from {

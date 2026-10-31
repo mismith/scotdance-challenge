@@ -47,6 +47,7 @@ import {
 } from '@/lib/firebase'
 import { requestPass } from '@/lib/scotdance'
 import { crisp, orderBy } from '@/lib/utils'
+import { dailyTotals } from '@/lib/waves'
 
 export interface ChallengeItem extends Challenge {
   $isActive: boolean
@@ -206,6 +207,28 @@ export const useAppStore = defineStore('app', () => {
     }),
   )
   const entries = computed(() => raw.entries.value.filter(isVisible))
+
+  // the newest few hundred entries, for the ribbons' climb (Activity pages through its own)
+  const CLIMB_ENTRIES = 300
+  const climbQuery = (challengeId: string) =>
+    query(
+      refs.entries,
+      where('challengeId', '==', challengeId),
+      order('createdAt', 'desc'),
+      limit(CLIMB_ENTRIES),
+    )
+  const climbEntries = ref<Entry[]>([])
+  let unsubscribeClimb: Unsubscribe | undefined
+  function bindClimb(challengeId?: string) {
+    unsubscribeClimb?.()
+    unsubscribeClimb = undefined
+    climbEntries.value = []
+    if (!challengeId) return
+    unsubscribeClimb = onSnapshot(climbQuery(challengeId), (snapshot) => {
+      climbEntries.value = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Entry[]
+    })
+  }
+  const climbDays = computed(() => dailyTotals(climbEntries.value.filter(isVisible)))
 
   const challengeId = computed({
     get: () => persisted.value.challengeId,
@@ -383,6 +406,9 @@ export const useAppStore = defineStore('app', () => {
     bindGroups,
     bindParticipants,
     bindEntries,
+    bindClimb,
+    climbQuery,
+    climbDays,
     openChallengeLink,
     addChallenge,
     saveChallenge,

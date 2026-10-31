@@ -1,13 +1,11 @@
 <script setup lang="ts">
-// smooth rising ribbons in a challenge's own colours (geometry in src/lib/waves.ts)
-import { useDocumentVisibility, useElementVisibility } from '@vueuse/core'
-import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+// a challenge's climb as ribbons in its own colours (geometry in src/lib/waves.ts)
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { prefersReducedMotion } from '@/lib/motion'
 import {
   type RibbonLayout,
   type RibbonVariant,
   fallbackRibbonColors,
-  ribbonDriftVector,
   ribbonLayouts,
   ribbonPaths,
   visibleRibbonColors,
@@ -17,60 +15,46 @@ defineOptions({ name: 'ChallengeRibbons' })
 
 const props = withDefaults(
   defineProps<{
-    /** band colours, top band first; falls back to the default palette when empty */
+    /** each day's total, oldest first (`dailyTotals`); too few draw the logo's three steps */
+    days?: number[]
+    /** band colours, top band first; topped up from the default palette */
     colors?: (string | null | undefined)[]
     variant?: RibbonVariant
     /** what the ribbons sit on; colours too close to it are lightened so every band shows */
     background?: string
     /** unfurl left to right when shown */
     reveal?: boolean
-    /** a slow, gentle sway */
-    drift?: boolean
     /** a lively wiggle, e.g. for an easter egg */
     dance?: boolean
   }>(),
   {
+    days: () => [],
     colors: () => [],
     variant: 'card',
     background: '#6A3CFF',
     reveal: false,
-    drift: false,
     dance: false,
   },
 )
 
+// always a full ribbon, however few groups: their colours first, then the palette's
+const MIN_BANDS = 4
 const bandColors = computed(() => {
   const colors = props.colors.filter((color): color is string => Boolean(color))
-  return visibleRibbonColors(colors.length ? colors : fallbackRibbonColors, props.background)
+  const visible = visibleRibbonColors([...colors, ...fallbackRibbonColors], props.background)
+  return visible.slice(0, Math.max(colors.length, MIN_BANDS))
 })
 const layout = computed<RibbonLayout>(() => ribbonLayouts[props.variant])
 
-// the sway is a CSS loop sliding the bands by exactly one wavelength along their rise, where
-// they land back on themselves: no per-frame path rebuilds, and it pauses while out of sight
-const svg = useTemplateRef<SVGSVGElement>('svg')
-const isOnScreen = useElementVisibility(svg)
-const documentVisibility = useDocumentVisibility()
-const driftStyle = computed(() => {
-  if (!props.drift) return undefined
-  const { x, y } = ribbonDriftVector(props.variant)
-  return {
-    '--drift-x': `${x}px`,
-    '--drift-y': `${y}px`,
-    animationPlayState:
-      isOnScreen.value && documentVisibility.value === 'visible' ? 'running' : 'paused',
-  }
-})
-
-// the dance: phase moves along and amplitude grows, for a few seconds at a time
+// the dance: a wiggle grows along the climb and moves along it, for a few seconds at a time
+const wobble = ref(0)
 const phaseShift = ref(0)
-const ampScale = ref(1)
 const stagger = ref(0)
 const paths = computed(() =>
-  ribbonPaths(props.variant, bandColors.value.length, {
+  ribbonPaths(props.variant, bandColors.value.length, props.days, {
+    wobble: wobble.value,
     phaseShift: phaseShift.value,
-    ampScale: ampScale.value,
     stagger: stagger.value,
-    extend: props.drift,
   }),
 )
 
@@ -80,15 +64,12 @@ function tick(now: number) {
   const dt = last ? Math.min(64, now - last) / 1000 : 0
   last = now
   const dancing = props.dance
-  // ease amplitude and per-band offset towards their targets
-  const targetAmp = dancing ? 2.6 : 1
-  const targetStagger = dancing ? 0.9 : 0
-  ampScale.value += (targetAmp - ampScale.value) * Math.min(1, dt * 4)
-  stagger.value += (targetStagger - stagger.value) * Math.min(1, dt * 4)
+  // ease the wiggle and per-band offset towards their targets
+  wobble.value += ((dancing ? 1 : 0) - wobble.value) * Math.min(1, dt * 4)
+  stagger.value += ((dancing ? 0.9 : 0) - stagger.value) * Math.min(1, dt * 4)
   if (dancing) phaseShift.value -= dt * 5
-  const settled = !dancing && Math.abs(ampScale.value - 1) < 0.01 && stagger.value < 0.01
-  if (settled) {
-    ampScale.value = 1
+  if (!dancing && wobble.value < 0.01 && stagger.value < 0.01) {
+    wobble.value = 0
     stagger.value = 0
     frame = 0
     last = 0
@@ -108,7 +89,7 @@ watch(prefersReducedMotion, (reduced) => {
   cancelAnimationFrame(frame)
   frame = 0
   last = 0
-  ampScale.value = 1
+  wobble.value = 0
   stagger.value = 0
 })
 onBeforeUnmount(() => cancelAnimationFrame(frame))
@@ -116,16 +97,13 @@ onBeforeUnmount(() => cancelAnimationFrame(frame))
 
 <template>
   <svg
-    ref="svg"
     aria-hidden="true"
     :viewBox="layout.viewBox"
     :preserveAspectRatio="layout.aspect === 'none' ? 'none' : 'xMidYMid slice'"
     class="Ribbons pointer-events-none block size-full"
     :class="{ 'Ribbons-reveal': reveal }"
   >
-    <g :class="{ 'Ribbons-drift': drift }" :style="driftStyle">
-      <path v-for="(d, i) in paths" :key="i" :d="d" :fill="bandColors[i]" :style="{ '--i': i }" />
-    </g>
+    <path v-for="(d, i) in paths" :key="i" :d="d" :fill="bandColors[i]" :style="{ '--i': i }" />
   </svg>
 </template>
 
@@ -133,13 +111,5 @@ onBeforeUnmount(() => cancelAnimationFrame(frame))
 .Ribbons-reveal path {
   animation: unfurl 0.9s var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 90ms + 80ms);
-}
-.Ribbons-drift {
-  animation: ribbons-drift 18s linear infinite;
-}
-@keyframes ribbons-drift {
-  to {
-    transform: translate(var(--drift-x), var(--drift-y));
-  }
 }
 </style>

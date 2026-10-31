@@ -1,5 +1,5 @@
-// smooth ribbon geometry: a sampled sine wave that rises left to right, turned into cubic
-// Béziers with Catmull-Rom, so every band is mathematically even (never hand-drawn)
+// smooth ribbon geometry: sampled curves turned into cubic Béziers with Catmull-Rom, so every
+// band is mathematically even (never hand-drawn)
 
 export type Point = [x: number, y: number]
 
@@ -67,100 +67,123 @@ export function bandPath(options: WaveOptions & { thick: number; floor?: number 
   return `${bezierPath(top)} ${bezierPath(bottom, false)} Z`
 }
 
+// the ribbons are each challenge's climb: its running total, day by day, as a smooth curve
+// that only ever rises (every practice is a step)
+
+/** What a ribbon's entries need: when, and how much */
+export interface ClimbEntry {
+  createdAt?: { toDate(): Date } | null
+  value: number
+}
+
+/** How many days of a challenge's climb the ribbons show, at most */
+export const CLIMB_DAYS = 28
+
+/**
+ * Each day's total, oldest first, from the first day with entries (or `maxDays` before the
+ * last) to the last: quiet days in between are 0, so they draw as flats
+ */
+export function dailyTotals(entries: ClimbEntry[], maxDays = CLIMB_DAYS, now = new Date()) {
+  const dayOf = (date: Date) =>
+    Math.floor((date.getTime() - date.getTimezoneOffset() * 60_000) / 86_400_000)
+  const totals = new Map<number, number>()
+  for (const { createdAt, value } of entries) {
+    // just added, so not back from the server yet: it's today's
+    const day = dayOf(createdAt?.toDate() ?? now)
+    totals.set(day, (totals.get(day) ?? 0) + (Number(value) || 0))
+  }
+  if (!totals.size) return []
+  const days = [...totals.keys()]
+  const last = Math.max(...days)
+  const first = Math.max(Math.min(...days), last - maxDays + 1)
+  return Array.from({ length: last - first + 1 }, (_, i) => Math.max(0, totals.get(first + i) ?? 0))
+}
+
+/** A challenge with too little logged to have a climb of its own shows the logo's three steps */
+const FIRST_STEPS = [0, 1, 0, 1, 0, 1, 0]
+
+/**
+ * The climb's shape, from 0 at the start to 1 at the end: a monotone cubic through the running
+ * total (Fritsch–Carlson), so it eases through every day and never dips
+ */
+export function climbShape(days: number[]) {
+  const busyDays = days.filter((day) => day > 0).length
+  const daily = busyDays < 2 ? FIRST_STEPS : days
+  const ys = [0]
+  for (const day of daily) ys.push(ys.at(-1)! + day)
+  const max = ys.at(-1)!
+  const n = ys.length
+  const h = 1 / (n - 1)
+  const ms = ys.slice(1).map((y, i) => (y - ys[i]!) / max / h)
+  const tangents = ys.map((_, i) => {
+    if (i === 0) return ms[0]!
+    if (i === n - 1) return ms[n - 2]!
+    const [a, b] = [ms[i - 1]!, ms[i]!]
+    return a <= 0 || b <= 0 ? 0 : 2 / (1 / a + 1 / b)
+  })
+  return (t: number) => {
+    const i = Math.min(n - 2, Math.max(0, Math.floor(t / h)))
+    const s = Math.min(1, Math.max(0, (t - i * h) / h))
+    const [y0, y1] = [ys[i]! / max, ys[i + 1]! / max]
+    const s2 = s * s
+    const s3 = s2 * s
+    return (
+      (2 * s3 - 3 * s2 + 1) * y0 +
+      (s3 - 2 * s2 + s) * h * tangents[i]! +
+      (-2 * s3 + 3 * s2) * y1 +
+      (s3 - s2) * h * tangents[i + 1]!
+    )
+  }
+}
+
 export interface RibbonLayout {
   viewBox: string
   /** `none` stretches the bands sideways to fill a strip of fixed height */
   aspect?: 'slice' | 'none'
   /** bands that fit comfortably; more colours squeeze into the same room */
   max: number
-  /** the first (top) band; each next one sits `gap` lower */
-  band: WaveOptions & { thick: number }
+  /** the first (top) band: from x0 to x1, climbing from `bottom` to `top` */
+  band: { x0: number; x1: number; bottom: number; top: number; thick: number }
+  /** each next band sits this much lower */
   gap: number
+  /** how far the bands wiggle when they dance, and over what wavelength */
+  wobble: { amp: number; wl: number }
 }
 
-// fitted to the approved mocks (Z-Explore card, Y2-Log header, Z-Moment sweep, Z-Ended header)
+// the climb runs from the bottom left to the top right; whatever sits on top fades it out
 export const ribbonLayouts = {
+  // behind the Explore hero card's top and title
   card: {
-    viewBox: '0 0 380 170',
+    viewBox: '0 0 380 250',
     max: 4,
     gap: 18,
-    band: {
-      x0: -20,
-      x1: 380,
-      base: 96,
-      rise: 64,
-      amp: 5,
-      wl: 190,
-      phase: 0.6,
-      step: 30,
-      thick: 12,
-    },
+    band: { x0: -20, x1: 400, bottom: 190, top: 24, thick: 12 },
+    wobble: { amp: 8, wl: 190 },
   },
+  // the empty-state card's strip
   header: {
     viewBox: '0 -24 380 112',
     max: 3,
     gap: 15,
-    band: {
-      x0: -20,
-      x1: 380,
-      base: 70,
-      rise: 46,
-      amp: 4,
-      wl: 170,
-      phase: 0.6,
-      step: 30,
-      thick: 10,
-    },
+    band: { x0: -20, x1: 400, bottom: 66, top: 0, thick: 10 },
+    wobble: { amp: 6, wl: 170 },
   },
-  // the challenge header's own strip, below all its text: always this tall, stretched to width
+  // the bottom of the challenge header, behind its total: always this tall, stretched to width
   shell: {
-    viewBox: '0 0 380 44',
+    viewBox: '0 0 380 92',
     aspect: 'none',
     max: 3,
     gap: 10.5,
-    band: {
-      x0: -20,
-      x1: 400,
-      base: 18,
-      rise: 16,
-      amp: 2,
-      wl: 170,
-      phase: 0.6,
-      step: 30,
-      thick: 7,
-    },
+    band: { x0: -20, x1: 400, bottom: 70, top: 8, thick: 7 },
+    wobble: { amp: 3, wl: 170 },
   },
+  // the just-logged screen: the last stretch of the climb, big across the bottom
   moment: {
     viewBox: '0 0 390 844',
     max: 4,
     gap: 46,
-    band: {
-      x0: -40,
-      x1: 440,
-      base: 760,
-      rise: 430,
-      amp: 9,
-      wl: 300,
-      phase: 0.5,
-      step: 40,
-      thick: 36,
-    },
-  },
-  ended: {
-    viewBox: '0 -26 380 170',
-    max: 3,
-    gap: 15,
-    band: {
-      x0: -20,
-      x1: 380,
-      base: 108,
-      rise: 60,
-      amp: 3,
-      wl: 240,
-      phase: 0.3,
-      step: 40,
-      thick: 10,
-    },
+    band: { x0: -40, x1: 430, bottom: 780, top: 450, thick: 36 },
+    wobble: { amp: 12, wl: 300 },
   },
 } satisfies Record<string, RibbonLayout>
 export type RibbonVariant = keyof typeof ribbonLayouts
@@ -172,35 +195,18 @@ export const fallbackRibbonColors = ['#D336F4', '#3DA9FF', '#4CD964', '#FF5A4A']
 const MAX_BANDS = 10
 
 /**
- * How far to slide a layout's bands so they land back on themselves: one wavelength along,
- * and the rise over that wavelength up (the sine repeats and the rise is a straight line)
- */
-export function ribbonDriftVector(variant: RibbonVariant) {
-  const { band } = ribbonLayouts[variant]
-  return { x: band.wl, y: (-band.rise * band.wl) / (band.x1 - band.x0) }
-}
-
-/**
- * The band paths for a layout, optionally nudged (for dancing). `extend` draws one more
- * wavelength off the left edge, so the bands can slide right by `ribbonDriftVector` and
- * still fill the view
+ * The band paths for a layout, all following the climb of `days`. `wobble` (0 to 1) adds a
+ * dancing wiggle along them, moved along by `phaseShift` and offset per band by `stagger`
  */
 export function ribbonPaths(
   variant: RibbonVariant,
   count: number,
-  { phaseShift = 0, ampScale = 1, stagger = 0, extend = false } = {},
+  days: number[],
+  { wobble = 0, phaseShift = 0, stagger = 0 } = {},
 ) {
-  const layout = ribbonLayouts[variant]
-  const { gap, max } = layout
-  const drift = ribbonDriftVector(variant)
-  const band = extend
-    ? {
-        ...layout.band,
-        x0: layout.band.x0 - drift.x,
-        base: layout.band.base - drift.y,
-        rise: layout.band.rise - drift.y,
-      }
-    : layout.band
+  const layout: RibbonLayout = ribbonLayouts[variant]
+  const { band, gap, max } = layout
+  const shape = climbShape(days)
   const n = Math.max(1, Math.min(count, MAX_BANDS))
   // every colour shares the same sweep: fewer get a little fatter, more get slimmer
   const span = (max - 1) * gap + band.thick
@@ -214,15 +220,21 @@ export function ribbonPaths(
     space = thick * ratio
   }
   const offset = (span - (n * thick + (n - 1) * space)) / 2
-  return Array.from({ length: n }, (_, i) =>
-    bandPath({
-      ...band,
-      thick,
-      base: band.base + offset + i * (thick + space),
-      amp: band.amp * ampScale,
-      phase: band.phase + phaseShift + i * stagger,
-    }),
-  )
+  const samples = 80
+  const width = band.x1 - band.x0
+  return Array.from({ length: n }, (_, i) => {
+    const top = Array.from({ length: samples + 1 }, (_, j): Point => {
+      const x = band.x0 + (width * j) / samples
+      const wiggle =
+        wobble *
+        layout.wobble.amp *
+        Math.sin((2 * Math.PI * (x - band.x0)) / layout.wobble.wl + phaseShift + i * stagger)
+      const y = band.bottom - (band.bottom - band.top) * shape(j / samples)
+      return [x, y + offset + i * (thick + space) + wiggle]
+    })
+    const bottom = top.map(([x, y]): Point => [x, y + thick]).reverse()
+    return `${bezierPath(top)} ${bezierPath(bottom, false)} Z`
+  })
 }
 
 // colour maths, to keep every band visible on whatever it sits on

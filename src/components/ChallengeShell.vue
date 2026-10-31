@@ -39,7 +39,7 @@ const status = computed(() => {
   return null
 })
 
-// ribbons in the challenge's own group colours (Ribbons falls back to its palette)
+// the challenge's climb, in its own group colours (Ribbons tops them up from its palette)
 const colors = computed(() => store.groups.map((group) => group.color))
 
 const tabs = [
@@ -80,6 +80,10 @@ function handleTabClick(index: number) {
       <header
         class="anim-rise on-color relative mx-3 mt-3 overflow-hidden rounded-[28px] bg-violet text-white"
       >
+        <!-- the climb runs up behind the total, fading out under the words -->
+        <div class="ChallengeShell-ribbons absolute inset-x-0 bottom-0 h-[92px]">
+          <Ribbons variant="shell" :days="store.climbDays" :colors="colors" reveal />
+        </div>
         <div class="relative flex items-start gap-0.5 pt-2 pr-2 pl-1.5">
           <router-link v-slot="{ href }" :to="{ name: 'home' }" custom>
             <a
@@ -163,10 +167,7 @@ function handleTabClick(index: number) {
           </span>
         </div>
 
-        <!-- the ribbons get their own strip below all the text, so they never run behind it -->
-        <div class="mt-2 h-11">
-          <Ribbons variant="shell" :colors="colors" reveal />
-        </div>
+        <div aria-hidden="true" class="h-11" />
       </header>
 
       <nav
@@ -216,6 +217,9 @@ function handleTabClick(index: number) {
 </template>
 
 <style>
+.ChallengeShell-ribbons {
+  mask-image: linear-gradient(to bottom, transparent 12%, #000 64%);
+}
 /* the old tab fades away, then the new one slides in from the side its tab is on */
 .shell-tab-leave-active {
   transition: opacity 0.12s ease-in;

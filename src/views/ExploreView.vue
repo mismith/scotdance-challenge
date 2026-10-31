@@ -10,11 +10,12 @@ import ChallengeRibbons from '@/components/Ribbons.vue'
 import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import StepsMark from '@/components/StepsMark.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
-import { type Group, type Participant, refs } from '@/lib/firebase'
+import { type Entry, type Group, type Participant, refs } from '@/lib/firebase'
 import { animate, burst, easing, stagger } from '@/lib/motion'
 import { isSignInEnabled } from '@/lib/scotdance'
 import { pluralize } from '@/lib/strings'
 import { orderBy } from '@/lib/utils'
+import { dailyTotals } from '@/lib/waves'
 
 // public challenges need this many people before they make the hall of fame
 const HALL_OF_FAME_DANCERS = 5
@@ -119,14 +120,15 @@ const shownOthers = computed(() =>
   isShowingAllOthers.value ? others.value : others.value.slice(0, MORE_SHOWN),
 )
 
-// the hero's own group colours (for its ribbons) and who's in front: the store only loads
-// groups and dancers for the open challenge, so read the hero's once here
+// the hero's own climb and group colours (for its ribbons) and who's in front: the store only
+// loads these for the open challenge, so read the hero's once here
 interface HeroInfo {
+  days: number[]
   colors: string[]
   leader?: string
 }
 const heroInfo = shallowRef<HeroInfo>()
-function describe(groups: Group[], participants: Participant[]): HeroInfo {
+function describe(groups: Group[], participants: Participant[], days: number[]): HeroInfo {
   // same order as the open challenge's groups (by name), so the ribbons always match
   const colors = orderBy(
     groups.filter((group) => !group.private),
@@ -140,7 +142,7 @@ function describe(groups: Group[], participants: Participant[]): HeroInfo {
     .sort((a, b) => (b.$total ?? 0) - (a.$total ?? 0))
   const firstName = first?.name.trim().split(/\s+/)[0]
   const isAhead = first?.$total && first.$total > (second?.$total ?? 0)
-  return { colors, leader: isAhead && firstName ? `${firstName}’s in front` : undefined }
+  return { days, colors, leader: isAhead && firstName ? `${firstName}’s in front` : undefined }
 }
 watch(
   () => hero.value?.id,
@@ -149,12 +151,12 @@ watch(
     if (!id) return
     let info: HeroInfo
     if (id === store.challengeId && store.groups.length) {
-      info = describe(store.groups, store.participants)
+      info = describe(store.groups, store.participants, store.climbDays)
     } else {
       try {
         // every group (there are few, and they colour the ribbons), but only the top few
         // dancers: enough to find a clear leader, even past a private one or two
-        const [groups, participants] = await Promise.all([
+        const [groups, participants, entries] = await Promise.all([
           getDocs(query(refs.groups, where('challengeId', '==', id))),
           getDocs(
             query(
@@ -164,14 +166,16 @@ watch(
               limit(4),
             ),
           ),
+          getDocs(store.climbQuery(id)),
         ])
         info = describe(
           groups.docs.map((d) => ({ ...d.data(), id: d.id }) as Group),
           participants.docs.map((d) => ({ ...d.data(), id: d.id }) as Participant),
+          dailyTotals(entries.docs.map((d) => d.data() as Entry).filter((entry) => !entry.private)),
         )
       } catch (error) {
         console.warn(error)
-        info = { colors: [] }
+        info = { days: [], colors: [] }
       }
     }
     if (hero.value?.id === id) heroInfo.value = info
@@ -305,12 +309,11 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         :class="bit.color"
         :style="{ '--rx': '0deg', '--rz': bit.turn, '--i': index, '--delay': '200ms' }"
       >
-        {{ bit.text }}<TrendingUp
-          v-if="bit.icon"
-          :size="18"
-          :stroke-width="3"
-          aria-hidden="true"
-        /><span class="sr-only">{{ bit.end }}</span>
+        {{ bit.text
+        }}<TrendingUp v-if="bit.icon" :size="18" :stroke-width="3" aria-hidden="true" /><span
+          class="sr-only"
+          >{{ bit.end }}</span
+        >
       </span>
     </p>
 
@@ -340,17 +343,20 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
             class="Explore-hero lift relative block w-full rounded-[30px] bg-violet text-left text-white"
             @click="open(hero)"
           >
-            <!-- keeps the ribbons' own proportions, so wider cards get taller, whole waves -->
-            <span class="block aspect-[380/170] overflow-hidden rounded-t-[30px]">
+            <!-- the climb runs up behind the title, fading out under the words -->
+            <span
+              class="Explore-ribbons absolute inset-x-0 top-0 block aspect-[380/250] overflow-hidden rounded-t-[30px]"
+            >
               <ChallengeRibbons
                 v-if="heroInfo"
+                :days="heroInfo.days"
                 :colors="heroInfo.colors"
                 reveal
-                drift
                 :dance="isDancing"
               />
             </span>
-            <span class="flex flex-col gap-2 px-[18px] pt-1 pb-[58px]">
+            <span aria-hidden="true" class="block aspect-[380/170]" />
+            <span class="relative flex flex-col gap-2 px-[18px] pt-1 pb-[58px]">
               <span class="sr-only">{{ hero.$isLive ? 'Live now.' : 'Just ended.' }}</span>
               <span class="hd pr-[70px] text-[34px] text-balance break-words">{{ hero.name }}</span>
               <span class="text-sm font-semibold text-lilac">
@@ -630,6 +636,9 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
     rotate: 0deg;
     translate: 0 -10px;
   }
+}
+.Explore-ribbons {
+  mask-image: radial-gradient(130% 62% at 0% 100%, transparent 35%, #000 78%);
 }
 .Explore-hero {
   transition:
