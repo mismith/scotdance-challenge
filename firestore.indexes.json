@@ -51,7 +51,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "$total",
+          "fieldPath": "`$total`",
           "order": "DESCENDING"
         }
       ]
