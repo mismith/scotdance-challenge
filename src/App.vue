@@ -26,15 +26,23 @@ crisp('set', 'session:data', [[['AppVersion', version]]])
 store.bindChallenges()
 
 async function handleAddChallenge(challenge: EditableChallenge) {
-  const id = await store.addChallenge(challenge)
-  store.challengeId = id
-  store.challengeToEdit = null
-  router.push({ name: 'new' })
+  try {
+    const id = await store.addChallenge(challenge)
+    store.challengeId = id
+    store.challengeToEdit = null
+    router.push({ name: 'new' })
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
 async function handleSaveChallenge(challenge: EditableChallenge) {
   const id = store.challengeToEdit?.id
-  if (id) await store.saveChallenge(id, challenge)
-  store.challengeToEdit = null
+  try {
+    if (id) await store.saveChallenge(id, challenge)
+    store.challengeToEdit = null
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
 
 const isLinkDialogOpen = computed({

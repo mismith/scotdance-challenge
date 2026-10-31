@@ -61,3 +61,20 @@ test("can't delete someone else's entry", async ({ page, browser }) => {
   await expect(other.getByRole('menuitem', { name: 'Delete' })).toHaveCount(0)
   await other.close()
 })
+
+test('keeps an entry to try again when offline', async ({ page, context }) => {
+  await addChallenge(page, unique('Offline'))
+  await addEntry(page, 'Red Team', 'Ada', 5)
+
+  await page.getByLabel('Amount').fill('12')
+  await context.setOffline(true)
+  await page.getByRole('button', { name: 'Log 12 for Ada' }).click()
+  await expect(page.getByText("You're offline right now")).toBeVisible()
+  await expect(page.locator('.LoggedMoment')).toHaveCount(0)
+  await expect(page.getByLabel('Amount')).toHaveValue('12')
+
+  // back online, the same tap goes through
+  await context.setOffline(false)
+  await page.getByRole('button', { name: 'Log 12 for Ada' }).click()
+  await expect(page.locator('.LoggedMoment')).toContainText('+12')
+})

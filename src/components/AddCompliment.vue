@@ -76,8 +76,7 @@ async function handleAddCompliment() {
     crisp('do', 'chat:hide')
     setTimeout(() => store.notify('sent! thank you for spreading the love 💖'), 300)
   } catch (error) {
-    console.warn(error)
-    store.notify("That didn't send. Try again?")
+    store.notifyFailed(error)
   } finally {
     isSubmitting.value = false
   }

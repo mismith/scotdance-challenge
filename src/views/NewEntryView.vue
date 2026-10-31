@@ -134,16 +134,24 @@ function addGroup(name: string) {
   }
 }
 async function handleAddGroup(group: NewGroup) {
-  const { id } = await store.add('groups', group)
-  store.groupId = id
-  groupToEdit.value = null
+  try {
+    const { id } = await store.add('groups', group)
+    store.groupId = id
+    groupToEdit.value = null
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
-function addParticipant(name: string) {
-  return store.add('participants', {
-    name: capitalize(name),
-    challengeId: store.challengeId,
-    groupId: groupId.value,
-  })
+async function addParticipant(name: string) {
+  try {
+    return await store.add('participants', {
+      name: capitalize(name),
+      challengeId: store.challengeId,
+      groupId: groupId.value,
+    })
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
 
 async function handleAddEntry() {
@@ -172,6 +180,9 @@ async function handleAddEntry() {
     })
     history.value = [{ value: entryValue, date: new Date() }, ...history.value]
     value.value = null
+  } catch (error) {
+    // the amount and picks stay put, so another tap tries again
+    store.notifyFailed(error)
   } finally {
     setTimeout(() => (isAddEntryLoading.value = false), 500)
   }

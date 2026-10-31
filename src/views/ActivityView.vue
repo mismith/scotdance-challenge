@@ -229,16 +229,24 @@ function startEditing(entry: Entry) {
 }
 async function saveEntry() {
   if (!editedEntry.value || !isEditedValueValid.value) return
-  await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
-  editedEntry.value = null
+  try {
+    await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
+    editedEntry.value = null
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
 // the menu hands focus to the sheet it opens, rather than back to its own button
 function keepFocusInSheet(event: Event) {
   if (isEditing.value || isDeleting.value) event.preventDefault()
 }
 async function deleteEntry() {
-  if (deletedEntry.value) await store.deleteEntry(deletedEntry.value.id)
-  deletedEntry.value = null
+  try {
+    if (deletedEntry.value) await store.deleteEntry(deletedEntry.value.id)
+    deletedEntry.value = null
+  } catch (error) {
+    store.notifyFailed(error)
+  }
 }
 </script>
 

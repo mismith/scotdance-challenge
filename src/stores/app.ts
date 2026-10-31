@@ -72,6 +72,12 @@ export const defaultLabels: Record<LabelKey, string> = {
   Country: 'Country',
 }
 
+class OfflineError extends Error {
+  constructor() {
+    super('Offline')
+  }
+}
+
 export const useAppStore = defineStore('app', () => {
   const me = shallowRef<User | null>(null)
   onAuthStateChanged(auth, (user) => (me.value = user))
@@ -255,6 +261,15 @@ export const useAppStore = defineStore('app', () => {
   function notify(message: string | null) {
     toast.value = message
   }
+  /** Tell the person a write didn't go through, kindly, so they can try again */
+  function notifyFailed(error: unknown) {
+    console.warn(error)
+    notify(
+      error instanceof OfflineError
+        ? "You're offline right now. Try again once you're connected!"
+        : "That didn't save. Check your connection and try again!",
+    )
+  }
 
   function label(key: LabelKey) {
     return currentChallenge.value?.labels?.[key] || defaultLabels[key]
@@ -278,15 +293,22 @@ export const useAppStore = defineStore('app', () => {
     persisted.value.challengeId = id
   }
 
+  // offline, Firestore holds writes until it reconnects, so they'd hang with no word: stop early
+  function ensureOnline() {
+    if (!navigator.onLine) throw new OfflineError()
+  }
+
   const created = () => ({ createdAt: serverTimestamp(), createdBy: me.value?.uid ?? null })
 
   async function addChallenge(challenge: Partial<Challenge>) {
+    ensureOnline()
     const { id } = await addDoc(refs.challenges, { ...challenge, ...created() })
     if (challenge.private) addPrivateId(id)
     else isPublicDialogOpen.value = true
     return id
   }
   async function saveChallenge(id: string, challenge: Partial<Challenge>) {
+    ensureOnline()
     await updateDoc(doc(refs.challenges, id), {
       ...challenge,
       updatedAt: serverTimestamp(),
@@ -295,6 +317,7 @@ export const useAppStore = defineStore('app', () => {
   }
   /** Add a group, participant or entry to the current challenge */
   async function add(key: 'groups' | 'participants' | 'entries', item: DocumentData) {
+    ensureOnline()
     const newItem: DocumentData = { ...created(), ...item }
     if (currentChallenge.value?.private) newItem.private = true
     const added = await addDoc(refs[key], newItem)
@@ -304,6 +327,7 @@ export const useAppStore = defineStore('app', () => {
     return added
   }
   async function updateEntry(id: string, value: number) {
+    ensureOnline()
     await updateDoc(doc(refs.entries, id), {
       value,
       updatedAt: serverTimestamp(),
@@ -311,6 +335,7 @@ export const useAppStore = defineStore('app', () => {
     })
   }
   async function deleteEntry(id: string) {
+    ensureOnline()
     await deleteDoc(doc(refs.entries, id))
   }
   /**
@@ -327,6 +352,7 @@ export const useAppStore = defineStore('app', () => {
       .sort((a, b) => time(b) - time(a))
   }
   async function addCompliment(text: string) {
+    ensureOnline()
     await addDoc(refs.complimentsSubmitted, { text, ...created() })
   }
 
@@ -346,6 +372,7 @@ export const useAppStore = defineStore('app', () => {
     myChallenges,
     toast,
     notify,
+    notifyFailed,
     label,
     challengeToEdit,
     isPrivateDialogOpen,
