@@ -47,3 +47,35 @@ test('another challenge loads behind a skeleton, never empty or the last one', a
 
   expect(await page.evaluate(() => (window as unknown as { seen: string[] }).seen)).toEqual([])
 })
+
+test('a connection that died in the background comes back by itself', async ({ page, browser }) => {
+  await addChallenge(page, unique('First'))
+  await addEntry(page, 'Red Team', 'Ada', 5)
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await expect(page.locator('.StatsDancer')).toContainText('Ada')
+
+  const second = unique('Second')
+  const organiser = await browser.newPage()
+  await addChallenge(organiser, second)
+  await addEntry(organiser, 'Blue Team', 'Bea', 3)
+  await organiser.close()
+
+  await page.getByRole('link', { name: 'All challenges' }).click()
+  const more = page.getByRole('button', { name: /more challenges?$/ })
+  if (await more.isVisible()) await more.click()
+
+  // like iOS waking an app: whatever Firestore sends for a moment goes nowhere, and never answers
+  let isDead = true
+  await page.route(/google\.firestore\.v1\.Firestore\/Listen/, async (route) => {
+    if (isDead) return new Promise(() => {})
+    await route.continue()
+  })
+  setTimeout(() => (isDead = false), 1500)
+
+  await page
+    .getByRole('region', { name: 'Featured' })
+    .getByRole('button', { name: new RegExp(second) })
+    .click()
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await expect(page.locator('.StatsDancer')).toContainText('Bea', { timeout: 15_000 })
+})

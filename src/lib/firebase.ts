@@ -1,10 +1,12 @@
-import { getAnalytics, isSupported } from 'firebase/analytics'
+import { type Analytics, getAnalytics, isSupported, logEvent } from 'firebase/analytics'
 import { initializeApp } from 'firebase/app'
 import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import {
   type Timestamp,
   collection,
   connectFirestoreEmulator,
+  disableNetwork,
+  enableNetwork,
   getFirestore,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
@@ -24,13 +26,30 @@ export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const functions = getFunctions(app)
 
+let analytics: Analytics | undefined
 if (isUsingEmulators) {
   connectAuthEmulator(auth, `http://${window.location.hostname}:9099`, { disableWarnings: true })
   connectFirestoreEmulator(db, window.location.hostname, 5002)
   connectFunctionsEmulator(functions, window.location.hostname, 5001)
 } else {
-  isSupported().then((supported) => supported && getAnalytics(app))
+  isSupported().then((supported) => supported && (analytics = getAnalytics(app)))
 }
+
+// iOS freezes a Home Screen app's connection while it's in the background, and Firestore can go
+// on waiting for answers on it. Starting a fresh one asks again for everything still listened to
+let reconnecting: Promise<void> | undefined
+export function reconnect(reason: 'wake' | 'stall') {
+  if (reason === 'stall' && analytics) logEvent(analytics, 'firestore_stall')
+  reconnecting ??= disableNetwork(db)
+    .then(() => enableNetwork(db))
+    .finally(() => (reconnecting = undefined))
+  return reconnecting
+}
+let hiddenAt = 0
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) hiddenAt = Date.now()
+  else if (hiddenAt && Date.now() - hiddenAt > 30_000) reconnect('wake')
+})
 
 export const refs = {
   challenges: collection(db, 'challenges'),

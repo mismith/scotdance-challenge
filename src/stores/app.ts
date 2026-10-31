@@ -46,6 +46,7 @@ import {
   auth,
   findById,
   functions,
+  reconnect,
   refs,
 } from '@/lib/firebase'
 import { requestPass } from '@/lib/scotdance'
@@ -173,9 +174,14 @@ export const useAppStore = defineStore('app', () => {
       loadedFor.value[key] = ''
       return
     }
+    // still not in after a few seconds: the connection may have died, so start a fresh one
+    const stall = setTimeout(() => {
+      if (boundFor[key] === challengeId && loadedFor.value[key] !== challengeId) reconnect('stall')
+    }, 5000)
     try {
       await bind(key, query(refs[key], where('challengeId', '==', challengeId), ...constraints))
     } finally {
+      clearTimeout(stall)
       if (boundFor[key] === challengeId) loadedFor.value[key] = challengeId
     }
   }
