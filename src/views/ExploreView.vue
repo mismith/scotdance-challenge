@@ -502,7 +502,7 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         </span>
         <span class="flex min-w-0 flex-col gap-0.5">
           <span class="hd text-[22px] text-violet">start your own challenge</span>
-          <span class="text-sm font-semibold text-muted">for your class, studio or friends</span>
+          <span class="text-sm font-semibold text-muted">for your studio or community</span>
         </span>
       </button>
 
