@@ -106,17 +106,23 @@ async function handleSignOut() {
           </button>
         </template>
 
-        <div :class="{ 'mt-4 border-t-2 border-line pt-3.5': isSignInEnabled }">
-          <p id="appearance" class="lbl mb-2 pl-0">appearance</p>
-          <div role="radiogroup" aria-labelledby="appearance" class="grid grid-cols-3 gap-1.5">
+        <div :class="{ 'mt-4 border-t-2 border-line pt-4': isSignInEnabled }">
+          <!-- one segmented control, like the challenge tabs -->
+          <div
+            role="radiogroup"
+            aria-label="Appearance"
+            class="grid grid-cols-3 gap-px rounded-full bg-chip p-px"
+          >
             <button
               v-for="theme in themes"
               :key="theme.value"
               type="button"
               role="radio"
               :aria-checked="themeChoice === theme.value"
-              class="chip chip-sm"
-              :class="{ 'chip-on': themeChoice === theme.value }"
+              class="hd flex h-11 items-center justify-center gap-1.5 rounded-full text-[15px] transition-colors duration-300"
+              :class="
+                themeChoice === theme.value ? 'bg-ink text-white' : 'text-muted hover:text-fg'
+              "
               @click="themeChoice = theme.value"
             >
               <component :is="theme.icon" :size="16" :stroke-width="2.6" aria-hidden="true" />
