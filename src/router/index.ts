@@ -7,7 +7,6 @@ import NewEntryView from '@/views/NewEntryView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import StatisticsView from '@/views/StatisticsView.vue'
 
-const title = 'challenge'
 const tabNames = ['new', 'activity', 'statistics']
 // challenge links open the entry form, unless they say otherwise (e.g. emailed flags)
 const linkTarget = (to: unknown) => (to === 'activity' ? 'activity' : 'new')
@@ -43,7 +42,7 @@ const router = createRouter({
     return { top: 0 }
   },
   routes: [
-    { path: '/', name: 'home', component: ExploreView, meta: { title } },
+    { path: '/', name: 'home', component: ExploreView, },
     // one shell (header and tabs) around all three tabs, so it stays put while they switch:
     // keyboard focus stays on the tab just pressed. The challenge is in the URL, so any tab of
     // any challenge can be linked to, and its link opens it (see the beforeEach below)
@@ -52,18 +51,18 @@ const router = createRouter({
       component: ChallengeShell,
       children: [
         { path: '', redirect: (to) => ({ name: 'new', params: to.params }) },
-        { path: 'log', name: 'new', component: NewEntryView, meta: { title: `Log • ${title}` } },
+        { path: 'log', name: 'new', component: NewEntryView, meta: { title: 'Log' } },
         {
           path: 'activity',
           name: 'activity',
           component: ActivityView,
-          meta: { title: `Activity • ${title}` },
+          meta: { title: 'Activity' },
         },
         {
           path: 'stats',
           name: 'statistics',
           component: StatisticsView,
-          meta: { title: `Stats • ${title}` },
+          meta: { title: 'Stats' },
         },
       ],
     },
@@ -89,13 +88,13 @@ const router = createRouter({
       path: '/certificate/:participantId',
       name: 'certificate',
       component: () => import('@/views/CertificateView.vue'),
-      meta: { title: `Certificate • ${title}` },
+      meta: { title: 'Certificate' },
     },
     {
       path: '/certificates/:challengeId',
       name: 'certificates',
       component: () => import('@/views/CertificateView.vue'),
-      meta: { title: `Certificates • ${title}` },
+      meta: { title: 'Certificates' },
     },
     { path: '/:pathMatch(.*)*', name: '404', component: NotFoundView },
   ],
@@ -109,10 +108,6 @@ router.beforeEach((to) => {
     const id = String(to.params.challengeId)
     if (id !== store.challengeId || !store.currentChallenge) store.openChallenge(id)
   }
-})
-
-router.afterEach((to) => {
-  if (typeof to.meta.title === 'string') document.title = to.meta.title
 })
 
 export default router

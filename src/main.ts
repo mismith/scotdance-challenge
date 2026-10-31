@@ -1,6 +1,7 @@
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
+import { trackPageMeta } from './lib/page-meta'
 import { trackTheme } from './lib/theme'
 import { trackUpdates } from './lib/update'
 import { trackVisibleViewport } from './lib/viewport'
@@ -15,3 +16,4 @@ app.mount('#app')
 trackVisibleViewport()
 trackTheme()
 trackUpdates(router)
+trackPageMeta(router)
