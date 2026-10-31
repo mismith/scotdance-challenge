@@ -5,6 +5,7 @@ import { Lock, Plus, Trophy } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { type ChallengeItem, useAppStore } from '@/stores/app'
+import HelpButton from '@/components/HelpButton.vue'
 import ChallengeRibbons from '@/components/Ribbons.vue'
 import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import StepsMark from '@/components/StepsMark.vue'
@@ -20,6 +21,7 @@ const HALL_OF_FAME_DANCERS = 5
 const HALL_OF_FAME_PER_YEAR = 3
 // the rest of the public challenges show this many until asked for more
 const MORE_SHOWN = 5
+const CARDS_SHOWN = 3
 // year colours in the hall of fame (all at least 3:1 on white at 22px italic 900)
 const yearColors = ['#6A3CFF', '#E0338A', '#0B5C99', '#A33A00']
 
@@ -44,6 +46,23 @@ const upcoming = computed(() =>
     publicChallenges.value.filter((c) => c.$isUpcoming),
     ['startAt'],
   ),
+)
+// only a few cards up top, so starting your own challenge is never far away
+const isShowingAllCards = ref(false)
+const shownMoreLive = computed(() =>
+  isShowingAllCards.value ? moreLive.value : moreLive.value.slice(0, CARDS_SHOWN - 1),
+)
+const shownUpcoming = computed(() =>
+  isShowingAllCards.value
+    ? upcoming.value
+    : upcoming.value.slice(0, Math.max(0, CARDS_SHOWN - live.value.length)),
+)
+const hiddenCardCount = computed(
+  () =>
+    moreLive.value.length -
+    shownMoreLive.value.length +
+    upcoming.value.length -
+    shownUpcoming.value.length,
 )
 const shownAbove = computed(() => new Set([...live.value, ...upcoming.value].map(({ id }) => id)))
 const yours = computed(() =>
@@ -267,10 +286,15 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         <StepsMark :size="42" draw />
       </span>
       <h1 class="hd anim-fade min-w-0 flex-1 text-[32px] whitespace-nowrap">challenge</h1>
+      <HelpButton class="-mr-1.5" />
       <ScotDanceAccount v-if="isSignInEnabled" class="bg-chip" />
     </header>
 
-    <main class="flex flex-col gap-5 px-4 pt-[26px]">
+    <p class="anim-fade px-[18px] pt-2 text-[15px] font-semibold text-muted">
+      Log your dancing, cheer each other on and see who's leading!
+    </p>
+
+    <main class="flex flex-col gap-5 px-4 pt-5">
       <div
         v-if="!store.hasLoadedChallenges"
         class="h-[290px] animate-pulse rounded-[30px] bg-violet-soft"
@@ -345,7 +369,7 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         </div>
 
         <button
-          v-for="(challenge, index) in moreLive"
+          v-for="(challenge, index) in shownMoreLive"
           :key="challenge.id"
           type="button"
           class="Explore-card card anim-rise flex items-center gap-3 px-[18px] py-4 text-left"
@@ -377,9 +401,9 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         </button>
       </section>
 
-      <section v-if="upcoming.length" class="flex flex-col gap-3" aria-label="Starting soon">
+      <section v-if="shownUpcoming.length" class="flex flex-col gap-3" aria-label="Starting soon">
         <button
-          v-for="(challenge, index) in upcoming"
+          v-for="(challenge, index) in shownUpcoming"
           :key="challenge.id"
           type="button"
           class="Explore-card card anim-rise flex items-center gap-3 px-[18px] py-4 text-left"
@@ -422,6 +446,15 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
           Start one and get everyone dancing together!
         </p>
       </div>
+
+      <button
+        v-if="hiddenCardCount"
+        type="button"
+        class="btn btn-soft btn-sm anim-pop -mt-1 self-center"
+        @click="isShowingAllCards = true"
+      >
+        + {{ hiddenCardCount }} more {{ pluralize(hiddenCardCount, 'challenge') }}
+      </button>
 
       <!-- quieter than the challenges above: most people come here to dance, not to set one up -->
       <button

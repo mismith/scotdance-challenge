@@ -15,7 +15,7 @@ import AppDialog from '@/components/AppDialog.vue'
 import { timeTag } from '@/lib/eggs'
 import { type Entry, findById } from '@/lib/firebase'
 import { animate, easing, stagger } from '@/lib/motion'
-import { crisp } from '@/lib/utils'
+import { openChat } from '@/lib/utils'
 
 const INCREMENT = 20
 
@@ -216,10 +216,7 @@ watch([isMoreButtonVisible, isLoadingMore], ([visible, loading]) => {
 })
 
 function openLiveChat() {
-  if (flaggedEntry.value) {
-    crisp('do', 'message:send', ['text', `Flagged Entry ID: ${flaggedEntry.value.id}`])
-  }
-  crisp('do', 'chat:open')
+  openChat(flaggedEntry.value ? `Flagged Entry ID: ${flaggedEntry.value.id}` : undefined)
   flaggedEntry.value = null
 }
 function startEditing(entry: Entry) {

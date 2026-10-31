@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
+import HelpButton from '@/components/HelpButton.vue'
 import Ribbons from '@/components/Ribbons.vue'
 import ScotDanceAccount from '@/components/ScotDanceAccount.vue'
 import { getChallengeEndDate, getChallengeStartDate } from '@/lib/date'
@@ -130,6 +131,7 @@ function handleTabClick(index: number) {
             >
               <Info :size="21" :stroke-width="2.6" />
             </button>
+            <HelpButton />
             <ScotDanceAccount v-if="isSignInEnabled" />
           </div>
         </div>

@@ -30,6 +30,9 @@
     <script type="module" src="/src/main.ts"></script>
     <script type="text/javascript">
       window.$crisp = []
+      // no floating bubble: the chat opens from our own Help and feedback buttons, and hides again
+      window.$crisp.push(['do', 'chat:hide'])
+      window.$crisp.push(['on', 'chat:closed', () => window.$crisp.push(['do', 'chat:hide'])])
       window.CRISP_WEBSITE_ID = 'fbfd0f29-79a1-4bd8-aa1c-ad1d8180aa75'
       ;(function () {
         d = document

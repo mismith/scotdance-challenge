@@ -19,8 +19,12 @@ test('a private challenge only shows to people with its link', async ({ page, br
   // someone without the link can't find it
   const other = await browser.newPage()
   await other.goto('/')
-  // the featured section lists what's live (and just ended)
-  await expect(other.getByRole('region', { name: 'Featured' })).toContainText(listed)
+  // the featured section lists what's live (and just ended), a few at a time
+  const featured = other.getByRole('region', { name: 'Featured' })
+  await expect(featured).toBeVisible()
+  const more = other.getByRole('button', { name: /more challenges?$/ })
+  if (await more.isVisible()) await more.click()
+  await expect(featured).toContainText(listed)
   await expect(other.getByText(name)).toHaveCount(0)
 
   // the link unlocks and selects it, along with its entries
