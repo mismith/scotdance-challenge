@@ -27,8 +27,17 @@ const view = useLocalStorage<'dancers' | 'groups'>(storageKey('statsView'), 'dan
 // anything unexpected in storage shows dancers
 const shownView = computed(() => (view.value === 'groups' ? 'groups' : 'dancers'))
 const groupMetric = useLocalStorage<'total' | 'average'>(storageKey('groupMetric'), 'total')
-const filterDataByGroupIds = useLocalStorage<string[]>(storageKey('filterDataByGroupIds'), [])
-const filterDataByCountryIds = useLocalStorage<string[]>(storageKey('filterDataByCountryIds'), [])
+// the old app saved "undefined" when no filter was picked
+const ids = {
+  read: (raw: string) => (raw === 'undefined' ? [] : JSON.parse(raw)),
+  write: JSON.stringify,
+}
+const filterDataByGroupIds = useLocalStorage<string[]>(storageKey('filterDataByGroupIds'), [], {
+  serializer: ids,
+})
+const filterDataByCountryIds = useLocalStorage<string[]>(storageKey('filterDataByCountryIds'), [], {
+  serializer: ids,
+})
 const filterDataBySearch = useLocalStorage<string | null>(storageKey('filterDataBySearch'), '', {
   serializer: StorageSerializers.object,
 })

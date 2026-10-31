@@ -29,6 +29,8 @@ test('picks up where the old app left off', async ({ page, browser, baseURL }) =
             { name: 'scotdance-challenge.currentSlideIndex', value: '3' },
             { name: 'scotdance-challenge.filterDataBySearch', value: '"ben"' },
             { name: 'scotdance-challenge.filterDataByGroupIds', value: '[]' },
+            // what it saved when no filter was picked
+            { name: 'scotdance-challenge.filterDataByCountryIds', value: 'undefined' },
             { name: 'scotdance-challenge.orderDataById', value: 'name' },
           ],
         },
@@ -36,6 +38,8 @@ test('picks up where the old app left off', async ({ page, browser, baseURL }) =
     },
   })
   const other = await context.newPage()
+  const errors: string[] = []
+  other.on('console', (message) => message.type() === 'error' && errors.push(message.text()))
 
   // the private challenge is still unlocked, with the same selections
   await other.goto('/new')
@@ -48,5 +52,6 @@ test('picks up where the old app left off', async ({ page, browser, baseURL }) =
   await expect(other.getByRole('searchbox', { name: 'Search dancers' })).toHaveValue('ben')
   await expect(other.locator('.StatsDancer')).toHaveCount(1, { timeout: 15_000 })
   await expect(other.locator('.StatsDancer')).toContainText('Ben')
+  expect(errors.filter((error) => error.includes('JSON'))).toEqual([])
   await context.close()
 })
