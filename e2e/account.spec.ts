@@ -87,3 +87,24 @@ test('refuses a pass signed with the wrong secret', async ({ page }) => {
   await expect(page.getByText("Couldn't sign in")).toBeVisible()
   await expect(await openAccount(page)).toContainText('only on this device')
 })
+
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true })
+
+  test('a tap outside the account menu only closes it', async ({ page }) => {
+    await addChallenge(page, unique('Tap away'))
+    const tapOn = async (box: { x: number; y: number; width: number; height: number } | null) =>
+      page.touchscreen.tap(box!.x + box!.width / 2, box!.y + box!.height / 2)
+
+    // on a tab: the menu closes, and the tab isn't pressed
+    const menu = await openAccount(page)
+    await tapOn(await page.getByRole('link', { name: 'Activity' }).boundingBox())
+    await expect(menu).toBeHidden()
+    await expect(page).toHaveURL(/\/log$/)
+
+    // on plain page, too
+    await openAccount(page)
+    await tapOn(await page.locator('main').boundingBox())
+    await expect(menu).toBeHidden()
+  })
+})

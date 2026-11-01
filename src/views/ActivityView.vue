@@ -13,6 +13,7 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import TapAway from '@/components/TapAway.vue'
 import { timeTag } from '@/lib/eggs'
 import { type Entry, findById } from '@/lib/firebase'
 import { animate, easing, stagger } from '@/lib/motion'
@@ -341,7 +342,7 @@ async function deleteEntry() {
           :style="rowStyle(entry)"
         >
           <!-- the whole row opens its menu: edit or delete your own, flag anyone else's -->
-          <DropdownMenuRoot>
+          <DropdownMenuRoot v-slot="{ open }">
             <DropdownMenuTrigger
               class="ActivityItem-row grid w-full grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-2.5 py-2.5 pr-4 pl-4 text-left"
             >
@@ -395,6 +396,7 @@ async function deleteEntry() {
               </Transition>
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
+              <TapAway v-if="open" />
               <DropdownMenuContent
                 align="end"
                 :side-offset="-8"

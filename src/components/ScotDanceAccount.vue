@@ -13,6 +13,7 @@ import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka
 import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import ScotDanceMark from '@/components/ScotDanceMark.vue'
+import TapAway from '@/components/TapAway.vue'
 import { gravatarUrl } from '@/lib/gravatar'
 import { canInstall, install } from '@/lib/install'
 import { isSignInEnabled, toolkitUrl } from '@/lib/scotdance'
@@ -91,6 +92,7 @@ async function handleSignOut() {
       <UserRound v-else :size="24" :stroke-width="2.6" />
     </PopoverTrigger>
     <PopoverPortal>
+      <TapAway v-if="isOpen" />
       <PopoverContent
         align="end"
         :side-offset="8"
