@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { StorageSerializers, useLocalStorage } from '@vueuse/core'
-import { Award, ChevronDown, Download, ListFilter, Search } from 'lucide-vue-next'
+import { ArrowUpRight, Award, ChevronDown, Download, ListFilter, Search } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { type GroupItem, type ParticipantItem, useAppStore } from '@/stores/app'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
@@ -10,6 +10,7 @@ import { downloadCsv } from '@/lib/csv'
 import { getChallengeEndDate, isChallengeInFinalCountdown } from '@/lib/date'
 import { findById } from '@/lib/firebase'
 import { stagger } from '@/lib/motion'
+import { toolkitUrl } from '@/lib/scotdance'
 import { orderBy } from '@/lib/utils'
 
 interface GroupStats extends GroupItem {
@@ -456,6 +457,16 @@ const groupPodium = computed<PodiumItem[]>(() =>
               <Award :size="15" :stroke-width="2.8" aria-hidden="true" />
               certificates
             </router-link>
+            <a
+              :href="`${toolkitUrl}/#challenge`"
+              target="_blank"
+              rel="noopener"
+              class="chip bg-violet-soft text-violet"
+            >
+              <img src="/toolkit.png" alt="" class="size-4 rounded-[4px]" />
+              ScotDance Toolkit
+              <ArrowUpRight :size="15" :stroke-width="2.8" aria-hidden="true" />
+            </a>
           </div>
         </section>
       </div>

@@ -6,6 +6,9 @@ export const scotdanceUrl =
   import.meta.env.VITE_SCOTDANCE_URL ||
   (isUsingEmulators ? 'http://localhost:5279' : 'https://next.scotdance.app')
 
+// the hub for organisers: every tool links here, not to each other
+export const toolkitUrl = 'https://toolkit.scotdance.app'
+
 // VITE_SCOTDANCE_SIGN_IN=false hides sign-in, should ScotDance.app's sheet need switching off
 export const isSignInEnabled = import.meta.env.VITE_SCOTDANCE_SIGN_IN !== 'false'
 

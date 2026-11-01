@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  ArrowUpRight,
   CircleUserRound,
   LoaderCircle,
   Moon,
@@ -14,7 +15,7 @@ import { useAppStore } from '@/stores/app'
 import ScotDanceMark from '@/components/ScotDanceMark.vue'
 import { gravatarUrl } from '@/lib/gravatar'
 import { canInstall, install } from '@/lib/install'
-import { isSignInEnabled } from '@/lib/scotdance'
+import { isSignInEnabled, toolkitUrl } from '@/lib/scotdance'
 import { themeChoice } from '@/lib/theme'
 
 defineOptions({ inheritAttrs: false })
@@ -164,6 +165,29 @@ async function handleSignOut() {
               <component :is="theme.icon" :size="16" :stroke-width="2.6" aria-hidden="true" />
               {{ theme.label }}
             </button>
+          </div>
+          <!-- for the grown-ups holding the phone: where the organiser tools live -->
+          <div class="mt-3 border-t-2 border-line pt-2">
+            <a
+              :href="toolkitUrl"
+              target="_blank"
+              rel="noopener"
+              class="-mx-2 flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-chip"
+            >
+              <img src="/toolkit.png" alt="" class="size-10 shrink-0 rounded-[10px]" />
+              <span class="min-w-0 flex-1 leading-snug">
+                <strong class="block text-[15px] font-extrabold">ScotDance Toolkit</strong>
+                <span class="block text-[13px] font-medium text-muted">
+                  Free tools for Highland dance competition organisers
+                </span>
+              </span>
+              <ArrowUpRight
+                :size="16"
+                :stroke-width="2.6"
+                class="shrink-0 text-muted"
+                aria-hidden="true"
+              />
+            </a>
           </div>
         </div>
       </PopoverContent>
