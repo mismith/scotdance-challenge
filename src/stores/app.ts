@@ -104,10 +104,11 @@ export const useAppStore = defineStore('app', () => {
     functions,
     'signInWithScotDance',
   )
-  /** Sign in via ScotDance.app; entries made anonymously move to the account */
-  async function signIn() {
+  /** Sign in via ScotDance.app; entries made anonymously move to the account. `onPass`: its sheet closed with a yes */
+  async function signIn(onPass?: () => void) {
     const result = await requestPass()
     if (!result.signedIn) return null
+    onPass?.()
     const { data } = await exchangePass({ pass: result.pass })
     await signInWithCustomToken(auth, data.token)
     // the Auth user's name and email are set just before the token is made

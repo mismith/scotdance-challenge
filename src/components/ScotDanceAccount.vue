@@ -46,8 +46,8 @@ watch(
 async function handleSignIn() {
   isOpen.value = false
   try {
-    isBusy.value = true
-    const result = await store.signIn()
+    // busy once ScotDance.app's sheet closes with a yes, not while it's open
+    const result = await store.signIn(() => (isBusy.value = true))
     if (!result) return
     const moved = result.movedEntries
     store.notify(
