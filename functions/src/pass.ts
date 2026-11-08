@@ -19,8 +19,11 @@ function decode(part: string) {
   return JSON.parse(Buffer.from(part, 'base64url').toString('utf8'))
 }
 
-/** Verify a ScotDance.app pass (a compact HS256 JWT) and return its payload, or throw */
-export function verifyPass(token: string, secret: string, now = Date.now() / 1000): Pass {
+/**
+ * Verify a ScotDance.app pass (a compact HS256 JWT) and return its payload, or throw.
+ * `audience` is this tool for a sign-in; ScotDance.app's unlink passes say `<tool>:unlink`.
+ */
+export function verifyPass(token: string, secret: string, now = Date.now() / 1000, audience = AUDIENCE): Pass {
   const parts = String(token).split('.')
   if (parts.length !== 3) throw new Error('Malformed pass')
   const [header, payload, signature] = parts as [string, string, string]
@@ -35,7 +38,7 @@ export function verifyPass(token: string, secret: string, now = Date.now() / 100
 
   const pass = decode(payload) as Pass
   if (pass.iss !== ISSUER) throw new Error('Unexpected issuer')
-  if (pass.aud !== AUDIENCE) throw new Error('Unexpected audience')
+  if (pass.aud !== audience) throw new Error('Unexpected audience')
   if (typeof pass.exp !== 'number' || pass.exp + SKEW_SECONDS < now) throw new Error('Expired')
   if (typeof pass.iat === 'number' && pass.iat - SKEW_SECONDS > now) throw new Error('Issued in the future')
   if (!pass.sub || typeof pass.sub !== 'string') throw new Error('Missing subject')

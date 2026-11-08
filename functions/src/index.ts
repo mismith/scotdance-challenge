@@ -188,6 +188,26 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecr
   return { token, movedEntries }
 })
 
+/**
+ * Unlinked in ScotDance.app (its Account, or System admin): sign them out of Challenge on every device.
+ * Their refresh tokens stop working; an open tab keeps its ID token until it expires (an hour at most).
+ * Their work here stays. Signing in with ScotDance.app again links it again.
+ */
+exports.unlinkScotDance = onCall({ secrets: [toolPassSecret] }, async (request) => {
+  let pass
+  try {
+    pass = verifyPass(request.data?.pass, toolPassSecret.value(), Date.now() / 1000, 'challenge:unlink')
+  } catch (error) {
+    throw new HttpsError('unauthenticated', `Invalid pass: ${(error as Error).message}`)
+  }
+  try {
+    await getAuth(app).revokeRefreshTokens(`sd_${pass.sub}`)
+  } catch (error: any) {
+    if (error?.code !== 'auth/user-not-found') throw error
+  }
+  return { ok: true }
+})
+
 /** Who made what, for admins: names and emails stay on Auth users, never in Firestore */
 exports.describeUsers = onCall(async (request) => {
   if (request.auth?.token.admin !== true) throw new HttpsError('permission-denied', 'Admins only')
