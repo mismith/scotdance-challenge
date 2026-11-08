@@ -97,7 +97,7 @@ async function handleSignOut() {
         align="end"
         :side-offset="8"
         :collision-padding="12"
-        class="ScotDanceAccount popover z-[60] w-[300px] rounded-[24px] bg-card p-4 text-fg shadow-float"
+        class="ScotDanceAccount popover z-[60] w-[320px] rounded-[24px] bg-card p-4 text-fg shadow-float"
       >
         <template v-if="isSignInEnabled && store.isSignedIn">
           <div class="mb-3 flex items-center gap-3">
@@ -125,13 +125,14 @@ async function handleSignOut() {
           <p class="mb-4 text-[15px] leading-snug font-medium text-muted">
             Sign in to keep them on all your devices, and edit them later.
           </p>
-          <!-- ScotDance.app's own button, as on every tool: its blue, with Scott -->
+          <!-- ScotDance.app's own button, as on every tool: its blue, Scott in the round left end,
+               the words centred in the rest -->
           <button
             type="button"
-            class="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1a6fd0] px-5 font-bold text-white transition-[scale] duration-300 ease-spring active:scale-[0.96]"
+            class="relative flex h-13 w-full items-center justify-center rounded-full whitespace-nowrap bg-[#1a6fd0] pr-[26px] pl-13 font-bold text-white transition-[scale] duration-300 ease-spring active:scale-[0.96]"
             @click="handleSignIn()"
           >
-            <ScotDanceMark class="size-4" />
+            <ScotDanceMark class="absolute top-2.5 left-2.5 size-8" />
             Sign in with ScotDance.app
           </button>
         </template>
