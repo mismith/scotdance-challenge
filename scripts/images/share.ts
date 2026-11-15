@@ -18,7 +18,10 @@ createApp({
           size: 96,
           style: 'border-radius: 22px; box-shadow: 0 0 0 5px rgb(255 255 255 / 0.9)',
         }),
-        h('h1', { class: 'hd text-[96px] leading-[0.9]' }, 'ScotDance Challenge'),
+        h('h1', { class: 'hd text-[96px] leading-[0.9]' }, [
+          'ScotDance Challenge',
+          h('span', { class: 'text-lilac', 'aria-hidden': 'true' }, '.'),
+        ]),
         h('p', { class: 'text-[36px] font-bold' }, 'Log your dancing and cheer each other on'),
       ]),
     ]),

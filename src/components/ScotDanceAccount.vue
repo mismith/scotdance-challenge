@@ -179,7 +179,11 @@ async function handleSignOut() {
             >
               <img src="/toolkit.png" alt="" class="size-10 shrink-0 rounded-[10px]" />
               <span class="min-w-0 flex-1 leading-snug">
-                <strong class="block text-[15px] font-extrabold">ScotDance Toolkit</strong>
+                <strong class="block text-[15px] font-extrabold"
+                  >ScotDance Toolkit<span class="text-toolkit-blue" aria-hidden="true"
+                    >.</span
+                  ></strong
+                >
                 <span class="block text-[13px] font-medium text-muted">
                   Free tools for Highland dance competition organisers
                 </span>

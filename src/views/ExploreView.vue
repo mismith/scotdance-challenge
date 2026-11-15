@@ -312,7 +312,9 @@ onBeforeUnmount(() => clearTimeout(danceTimeout))
         <span ref="logo" class="Explore-logo ml-1.5 shrink-0" @click="tapLogo()">
           <StepsMark :size="42" draw />
         </span>
-        <h1 class="hd anim-fade ml-1.5 min-w-0 text-[32px] whitespace-nowrap">challenge</h1>
+        <h1 class="hd anim-fade ml-1.5 min-w-0 text-[32px] whitespace-nowrap">
+          challenge<span class="text-violet" aria-hidden="true">.</span>
+        </h1>
       </AppBar>
     </header>
 
