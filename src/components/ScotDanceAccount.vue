@@ -130,9 +130,16 @@ async function handleSignOut() {
           <button
             type="button"
             class="relative flex h-13 w-full items-center justify-center rounded-full whitespace-nowrap bg-[#1a6fd0] pr-[26px] pl-13 font-bold text-white transition-[scale] duration-300 ease-spring active:scale-[0.96]"
+            :disabled="isBusy"
+            :aria-busy="isBusy || undefined"
             @click="handleSignIn()"
           >
-            <ScotDanceMark class="absolute top-2.5 left-2.5 size-8" />
+            <LoaderCircle
+              v-if="isBusy"
+              class="absolute top-2.5 left-2.5 size-8 p-1 animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            <ScotDanceMark v-else class="absolute top-2.5 left-2.5 size-8" />
             Sign in with ScotDance.app
           </button>
         </template>
