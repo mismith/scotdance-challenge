@@ -6,6 +6,7 @@ import { useAppStore } from '@/stores/app'
 import AddCompliment from '@/components/AddCompliment.vue'
 import AppCombobox from '@/components/AppCombobox.vue'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import EditGroup, { type NewGroup, groupColors } from '@/components/EditGroup.vue'
 import LoggedMoment from '@/components/LoggedMoment.vue'
 import ParticipantGoal from '@/components/ParticipantGoal.vue'
@@ -14,6 +15,8 @@ import { type Moment, buildMoment } from '@/lib/eggs'
 import { animate, burst, easing, stagger } from '@/lib/motion'
 import { isUnusual } from '@/lib/progress'
 import { capitalize, pluralize } from '@/lib/strings'
+
+const pendingHandleAddEntry = ref(false)
 
 const MAX_AMOUNT = 9999
 
@@ -156,13 +159,18 @@ function addGroup(name: string) {
     challengeId: store.challengeId,
   }
 }
+const savingGroup = ref(false)
 async function handleAddGroup(group: NewGroup) {
+  if (savingGroup.value) return
+  savingGroup.value = true
   try {
     const { id } = await store.add('groups', group)
     store.groupId = id
     groupToEdit.value = null
   } catch (error) {
     store.notifyFailed(error)
+  } finally {
+    savingGroup.value = false
   }
 }
 async function addParticipant(name: string) {
@@ -183,45 +191,51 @@ onBeforeUnmount(() => {
   if (undoAction && store.toastAction === undoAction) store.notify(null)
 })
 async function handleAddEntry() {
-  if (isAddEntryLoading.value) return // don't allow dupes
-  if (!isValid.value || !isActive.value) return // don't allow submissions to inactive challenges
-  if (isUnusual(amount.value, usualValue.value) && checkedAmount !== amount.value) {
-    isCheckingAmount.value = true
-    return
-  }
-
+  if (pendingHandleAddEntry.value) return
+  pendingHandleAddEntry.value = true
   try {
-    isAddEntryLoading.value = true
-    const entryValue = amount.value
-    const name = firstName.value
-    const countBefore = challenge.value?.$count
-    await historyLoad
-    const earlier = [...history.value]
-    const { id } = await store.add('entries', {
-      challengeId: store.challengeId,
-      groupId: groupId.value,
-      participantId: participantId.value,
-      value: entryValue,
-    })
-    logged.value = buildMoment({
-      value: entryValue,
-      name,
-      compliments: store.compliments,
-      earlier,
-      countBefore,
-      totalBefore: participant.value?.$total ?? 0,
-      goal: participant.value?.goal,
-    })
-    history.value = [{ value: entryValue, date: new Date() }, ...history.value]
-    value.value = null
-    checkedAmount = null
-    undoAction = { label: 'undo', run: () => undoEntry(id, entryValue) }
-    store.notify(`logged ${entryValue.toLocaleString()} for ${name}`, undoAction)
-  } catch (error) {
-    // the amount and picks stay put, so another tap tries again
-    store.notifyFailed(error)
+    if (isAddEntryLoading.value) return // don't allow dupes
+    if (!isValid.value || !isActive.value) return // don't allow submissions to inactive challenges
+    if (isUnusual(amount.value, usualValue.value) && checkedAmount !== amount.value) {
+      isCheckingAmount.value = true
+      return
+    }
+
+    try {
+      isAddEntryLoading.value = true
+      const entryValue = amount.value
+      const name = firstName.value
+      const countBefore = challenge.value?.$count
+      await historyLoad
+      const earlier = [...history.value]
+      const { id } = await store.add('entries', {
+        challengeId: store.challengeId,
+        groupId: groupId.value,
+        participantId: participantId.value,
+        value: entryValue,
+      })
+      logged.value = buildMoment({
+        value: entryValue,
+        name,
+        compliments: store.compliments,
+        earlier,
+        countBefore,
+        totalBefore: participant.value?.$total ?? 0,
+        goal: participant.value?.goal,
+      })
+      history.value = [{ value: entryValue, date: new Date() }, ...history.value]
+      value.value = null
+      checkedAmount = null
+      undoAction = { label: 'undo', run: () => undoEntry(id, entryValue) }
+      store.notify(`logged ${entryValue.toLocaleString()} for ${name}`, undoAction)
+    } catch (error) {
+      // the amount and picks stay put, so another tap tries again
+      store.notifyFailed(error)
+    } finally {
+      setTimeout(() => (isAddEntryLoading.value = false), 500)
+    }
   } finally {
-    setTimeout(() => (isAddEntryLoading.value = false), 500)
+    pendingHandleAddEntry.value = false
   }
 }
 
@@ -321,7 +335,7 @@ async function undoEntry(id: string, entryValue: number) {
         />{{ item.$name }}
       </template>
     </AppCombobox>
-    <EditGroup v-model="groupToEdit" @add="handleAddGroup" />
+    <EditGroup :busy="savingGroup" v-model="groupToEdit" @add="handleAddGroup" />
 
     <AppCombobox
       v-model="participantId"
@@ -402,11 +416,12 @@ async function undoEntry(id: string, entryValue: number) {
       </div>
     </div>
 
-    <button
+    <AsyncButton
       type="submit"
       class="anim-rise btn btn-primary btn-lg mt-1.5"
       :style="stagger(3)"
       :disabled="!isValid || isAddEntryLoading"
+      :busy="pendingHandleAddEntry"
     >
       <Transition name="rise" mode="out-in">
         <span :key="isValid && participant ? 'ready' : 'idle'" class="min-w-0 truncate">
@@ -415,7 +430,7 @@ async function undoEntry(id: string, entryValue: number) {
           }}
         </span>
       </Transition>
-    </button>
+    </AsyncButton>
   </form>
 
   <AddCompliment class="mt-auto flex justify-center pt-8 pb-[26px]" />

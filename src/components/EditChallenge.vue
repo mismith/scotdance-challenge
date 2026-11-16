@@ -4,6 +4,7 @@ import { Calendar, Globe, Lock } from 'lucide-vue-next'
 import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from 'vue'
 import { defaultLabels, useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import type { Challenge, LabelKey } from '@/lib/firebase'
 import { prefersReducedMotion } from '@/lib/motion'
 
@@ -154,7 +155,9 @@ function openPicker(event: Event) {
   }
 }
 
+const props = defineProps<{ busy?: boolean }>()
 function handleSubmit() {
+  if (props.busy) return
   if (!isValid.value) return
   // Firestore rejects `undefined` values; empty dates are stored as null, like the old app did
   const data = Object.fromEntries(
@@ -379,9 +382,14 @@ function handleSubmit() {
         </template>
       </dl>
 
-      <button type="submit" class="btn btn-dark btn-lg mt-2 lowercase" :disabled="!isValid">
+      <AsyncButton
+        :busy="busy"
+        type="submit"
+        class="btn btn-dark btn-lg mt-2 lowercase"
+        :disabled="!isValid"
+      >
         {{ isNew ? 'Create + get the link' : 'Save' }}
-      </button>
+      </AsyncButton>
     </form>
   </AppDialog>
 </template>

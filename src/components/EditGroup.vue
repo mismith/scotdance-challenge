@@ -18,6 +18,7 @@ import { Check, ChevronDown, Plus } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import { availableCountries, fetchCountryCode } from '@/lib/country'
 import type { Group } from '@/lib/firebase'
 import { stagger } from '@/lib/motion'
@@ -73,7 +74,9 @@ async function showCountry() {
   }
 }
 
+const props = defineProps<{ busy?: boolean }>()
 function handleSubmit() {
+  if (props.busy) return
   if (!isValid.value) return
   // Firestore rejects `undefined` values
   const { country, ...rest } = group.value
@@ -184,9 +187,14 @@ function handleSubmit() {
         </div>
       </Transition>
 
-      <button type="submit" class="btn btn-dark btn-lg mt-2 lowercase" :disabled="!isValid">
+      <AsyncButton
+        :busy="busy"
+        type="submit"
+        class="btn btn-dark btn-lg mt-2 lowercase"
+        :disabled="!isValid"
+      >
         Add
-      </button>
+      </AsyncButton>
     </form>
   </AppDialog>
 </template>

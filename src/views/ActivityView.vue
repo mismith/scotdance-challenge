@@ -13,10 +13,13 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import TapAway from '@/components/TapAway.vue'
 import { timeTag } from '@/lib/eggs'
 import { type Entry, findById } from '@/lib/firebase'
 import { animate, easing, stagger } from '@/lib/motion'
+const pendingSendFlag = ref(false)
+const pendingSaveEntry = ref(false)
 
 const INCREMENT = 20
 
@@ -237,17 +240,23 @@ function startFlagging(entry: Entry) {
   flagReason.value = ''
 }
 async function sendFlag() {
-  const reason = flagReason.value.trim()
-  if (!flaggedEntry.value || !reason || isSendingFlag.value) return
+  if (pendingSendFlag.value) return
+  pendingSendFlag.value = true
   try {
-    isSendingFlag.value = true
-    await store.addFlag(flaggedEntry.value, reason)
-    flaggedEntry.value = null
-    store.notify("Thanks! We'll take a look.")
-  } catch (error) {
-    store.notifyFailed(error)
+    const reason = flagReason.value.trim()
+    if (!flaggedEntry.value || !reason || isSendingFlag.value) return
+    try {
+      isSendingFlag.value = true
+      await store.addFlag(flaggedEntry.value, reason)
+      flaggedEntry.value = null
+      store.notify("Thanks! We'll take a look.")
+    } catch (error) {
+      store.notifyFailed(error)
+    } finally {
+      isSendingFlag.value = false
+    }
   } finally {
-    isSendingFlag.value = false
+    pendingSendFlag.value = false
   }
 }
 async function resolveFlag(id: string) {
@@ -263,12 +272,18 @@ function startEditing(entry: Entry) {
   editedWho.value = [participantOf(entry)?.name, groupOf(entry)?.$name].filter(Boolean).join(' · ')
 }
 async function saveEntry() {
-  if (!editedEntry.value || !isEditedValueValid.value) return
+  if (pendingSaveEntry.value) return
+  pendingSaveEntry.value = true
   try {
-    await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
-    editedEntry.value = null
-  } catch (error) {
-    store.notifyFailed(error)
+    if (!editedEntry.value || !isEditedValueValid.value) return
+    try {
+      await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
+      editedEntry.value = null
+    } catch (error) {
+      store.notifyFailed(error)
+    }
+  } finally {
+    pendingSaveEntry.value = false
   }
 }
 // the menu hands focus to the sheet it opens, rather than back to its own button
@@ -428,13 +443,13 @@ async function deleteEntry() {
           >
             <Flag :size="17" :stroke-width="2.6" class="shrink-0" aria-hidden="true" />
             <p class="min-w-0 flex-1 text-[14px] font-bold break-words">{{ flag.reason }}</p>
-            <button
+            <AsyncButton
               type="button"
               class="chip shrink-0 bg-white text-ink"
               @click="resolveFlag(flag.id)"
             >
               dismiss
-            </button>
+            </AsyncButton>
           </div>
         </li>
       </TransitionGroup>
@@ -446,7 +461,7 @@ async function deleteEntry() {
     ref="moreButton"
     class="flex justify-center py-8"
   >
-    <button
+    <AsyncButton
       type="button"
       class="btn btn-icon btn-soft"
       aria-label="More"
@@ -454,7 +469,7 @@ async function deleteEntry() {
       @click="loadMore()"
     >
       <LoaderCircle :size="22" :stroke-width="2.6" :class="{ 'animate-spin': isLoadingMore }" />
-    </button>
+    </AsyncButton>
   </div>
   <div v-else class="h-10" />
 
@@ -476,13 +491,14 @@ async function deleteEntry() {
           class="pill h-auto min-h-[96px] resize-none py-3 text-base font-semibold"
         />
       </div>
-      <button
+      <AsyncButton
         type="submit"
         class="btn btn-primary btn-lg"
         :disabled="!flagReason.trim() || isSendingFlag"
+        :busy="pendingSendFlag"
       >
         flag
-      </button>
+      </AsyncButton>
     </form>
   </AppDialog>
 
@@ -509,9 +525,14 @@ async function deleteEntry() {
           >{{ isEditedValueValid ? '' : 'Whole numbers from 1 to 9,999, please!' }}</span
         >
       </div>
-      <button type="submit" class="btn btn-primary btn-lg" :disabled="!isEditedValueValid">
+      <AsyncButton
+        type="submit"
+        class="btn btn-primary btn-lg"
+        :disabled="!isEditedValueValid"
+        :busy="pendingSaveEntry"
+      >
         save
-      </button>
+      </AsyncButton>
     </form>
   </AppDialog>
 
@@ -520,7 +541,9 @@ async function deleteEntry() {
     title="delete entry"
     description="Did you make a mistake? You can remove this entry, then log a new one if you need to."
   >
-    <button type="button" class="btn btn-pink btn-lg mt-2" @click="deleteEntry()">delete</button>
+    <AsyncButton type="button" class="btn btn-pink btn-lg mt-2" @click="deleteEntry()"
+      >delete</AsyncButton
+    >
   </AppDialog>
 </template>
 

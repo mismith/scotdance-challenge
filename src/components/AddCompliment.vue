@@ -3,7 +3,9 @@
 import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import { animate, burst, partyColors, prefersReducedMotion, ripple } from '@/lib/motion'
+const pendingHandleAddCompliment = ref(false)
 
 const heartPath =
   'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z'
@@ -73,27 +75,33 @@ async function handleFind() {
 }
 
 async function handleAddCompliment() {
-  if (!isValid.value || isSubmitting.value) return
+  if (pendingHandleAddCompliment.value) return
+  pendingHandleAddCompliment.value = true
   try {
-    isSubmitting.value = true
-    const text = sanitized.value
-    await store.addCompliment(text)
-    if (sendEl.value) {
-      burst(sendEl.value, { shape: 'hearts', colors: partyColors, count: 12, spread: 90 })
+    if (!isValid.value || isSubmitting.value) return
+    try {
+      isSubmitting.value = true
+      const text = sanitized.value
+      await store.addCompliment(text)
+      if (sendEl.value) {
+        burst(sendEl.value, { shape: 'hearts', colors: partyColors, count: 12, spread: 90 })
+      }
+      isOpen.value = false
+      setTimeout(() => store.notify('sent! thank you for spreading the love 💖'), 300)
+    } catch (error) {
+      store.notifyFailed(error)
+    } finally {
+      isSubmitting.value = false
     }
-    isOpen.value = false
-    setTimeout(() => store.notify('sent! thank you for spreading the love 💖'), 300)
-  } catch (error) {
-    store.notifyFailed(error)
   } finally {
-    isSubmitting.value = false
+    pendingHandleAddCompliment.value = false
   }
 }
 </script>
 
 <template>
   <div>
-    <button
+    <AsyncButton
       type="button"
       class="AddCompliment flex size-11 items-center justify-center rounded-full"
       :class="{ 'AddCompliment--found': isFound }"
@@ -103,7 +111,7 @@ async function handleAddCompliment() {
       <svg ref="heartEl" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
         <path :d="heartPath" stroke-width="2.2" stroke-linejoin="round" />
       </svg>
-    </button>
+    </AsyncButton>
 
     <AppDialog
       v-model="isOpen"
@@ -158,14 +166,15 @@ async function handleAddCompliment() {
           </Transition>
         </div>
 
-        <button
+        <AsyncButton
           ref="sendEl"
           type="submit"
           class="btn btn-pink btn-lg h-[60px] text-[21px]"
           :disabled="!isValid || isSubmitting"
+          :busy="pendingHandleAddCompliment"
         >
           send it
-        </button>
+        </AsyncButton>
       </form>
     </AppDialog>
   </div>

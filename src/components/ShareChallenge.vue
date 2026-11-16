@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import QrCode from '@/components/QrCode.vue'
 import type { Challenge } from '@/lib/firebase'
 
@@ -89,7 +90,7 @@ async function share() {
         :value="url"
         @focus="($event.target as HTMLInputElement).select()"
       />
-      <button
+      <AsyncButton
         v-if="canCopy"
         type="button"
         class="btn btn-lime h-11 gap-1 px-3.5 text-[15px] lowercase"
@@ -102,13 +103,13 @@ async function share() {
           </span>
           <span v-else key="copy">Copy</span>
         </Transition>
-      </button>
+      </AsyncButton>
       <!-- the button's own label change isn't reliably read out, so say it here too -->
       <span class="sr-only" aria-live="polite">{{ copied ? 'Link copied' : '' }}</span>
     </div>
 
     <div class="mt-1 flex gap-2">
-      <button
+      <AsyncButton
         v-if="canShare || canCopy"
         type="button"
         class="btn btn-primary h-[58px] flex-1 lowercase [--focus:#fff]"
@@ -116,7 +117,7 @@ async function share() {
       >
         <Share :size="20" :stroke-width="2.8" aria-hidden="true" />
         Share…
-      </button>
+      </AsyncButton>
       <button type="button" class="btn h-[58px] flex-1 lowercase" @click="isOpen = false">
         Got It
       </button>

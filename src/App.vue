@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import AppToast from '@/components/AppToast.vue'
@@ -13,6 +13,7 @@ import { crisp } from '@/lib/utils'
 
 const store = useAppStore()
 const router = useRouter()
+const savingChallenge = ref(false)
 
 watch(
   () => store.challengeId,
@@ -30,21 +31,29 @@ if (isUsingEmulators) document.documentElement.classList.add('debug-stripes')
 store.bindChallenges()
 
 async function handleAddChallenge(challenge: EditableChallenge) {
+  if (savingChallenge.value) return
+  savingChallenge.value = true
   try {
     const id = await store.addChallenge(challenge)
     store.challengeToEdit = null
     router.push({ name: 'new', params: { challengeId: id } })
   } catch (error) {
     store.notifyFailed(error)
+  } finally {
+    savingChallenge.value = false
   }
 }
 async function handleSaveChallenge(challenge: EditableChallenge) {
+  if (savingChallenge.value) return
+  savingChallenge.value = true
   const id = store.challengeToEdit?.id
   try {
     if (id) await store.saveChallenge(id, challenge)
     store.challengeToEdit = null
   } catch (error) {
     store.notifyFailed(error)
+  } finally {
+    savingChallenge.value = false
   }
 }
 
@@ -63,6 +72,7 @@ const isLinkDialogOpen = computed({
 
     <EditChallenge
       v-model="store.challengeToEdit"
+      :busy="savingChallenge"
       @add="handleAddChallenge"
       @save="handleSaveChallenge"
     />

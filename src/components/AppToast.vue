@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { useAppStore } from '@/stores/app'
+import AsyncButton from '@/components/AsyncButton.vue'
 
 const store = useAppStore()
 
@@ -13,10 +14,11 @@ watch(
   },
 )
 
-function runAction() {
+async function runAction() {
   const action = store.toastAction
-  store.notify(null)
-  action?.run()
+  clearTimeout(timeout)
+  await action?.run()
+  if (store.toastAction === action) store.notify(null)
 }
 </script>
 
@@ -34,9 +36,13 @@ function runAction() {
         class="on-color pointer-events-auto flex max-w-sm items-center gap-3 rounded-[24px] bg-ink py-2 pr-2 pl-5 text-[15px] font-bold text-white shadow-[var(--shadow-float)]"
       >
         <span class="min-w-0">{{ store.toast }}</span>
-        <button type="button" class="btn btn-sm shrink-0 bg-lime text-ink" @click="runAction()">
+        <AsyncButton
+          type="button"
+          class="btn btn-sm shrink-0 bg-lime text-ink"
+          @click="runAction()"
+        >
           {{ store.toastAction.label }}
-        </button>
+        </AsyncButton>
       </div>
       <button
         v-else-if="store.toast"

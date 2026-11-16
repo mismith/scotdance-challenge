@@ -12,6 +12,7 @@ import {
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
+import AsyncButton from '@/components/AsyncButton.vue'
 import ScotDanceMark from '@/components/ScotDanceMark.vue'
 import TapAway from '@/components/TapAway.vue'
 import { gravatarUrl } from '@/lib/gravatar'
@@ -112,13 +113,13 @@ async function handleSignOut() {
           <p class="mb-4 text-[15px] leading-snug font-medium text-muted">
             Your entries are on all your devices.
           </p>
-          <button
+          <AsyncButton
             type="button"
             class="btn btn-soft btn-sm w-full lowercase"
             @click="handleSignOut()"
           >
             Sign out
-          </button>
+          </AsyncButton>
         </template>
         <template v-else-if="isSignInEnabled">
           <p class="hd mb-2 text-[24px] lowercase">Your entries are only on this device</p>

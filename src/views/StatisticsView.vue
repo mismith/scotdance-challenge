@@ -4,6 +4,7 @@ import { ArrowUpRight, Award, ChevronDown, Download, ListFilter, Search } from '
 import { computed } from 'vue'
 import { type GroupItem, type ParticipantItem, useAppStore } from '@/stores/app'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
 import StatsPodium, { type PodiumItem } from '@/components/StatsPodium.vue'
 import { availableCountries, getName } from '@/lib/country'
 import { downloadCsv } from '@/lib/csv'
@@ -446,10 +447,10 @@ const groupPodium = computed<PodiumItem[]>(() =>
               <Download :size="15" :stroke-width="2.8" aria-hidden="true" />
               totals (csv)
             </button>
-            <button type="button" class="chip" @click="exportEntries()">
+            <AsyncButton type="button" class="chip" @click="exportEntries()">
               <Download :size="15" :stroke-width="2.8" aria-hidden="true" />
               all entries (csv)
-            </button>
+            </AsyncButton>
             <router-link
               :to="{ name: 'certificates', params: { challengeId: store.challengeId } }"
               class="chip"

@@ -3,6 +3,9 @@ import { Target } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { type ParticipantItem, useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
+import AsyncButton from '@/components/AsyncButton.vue'
+
+const pendingSaveGoal = ref(false)
 
 const props = defineProps<{ participant: ParticipantItem }>()
 const store = useAppStore()
@@ -24,12 +27,18 @@ function startEditing() {
   isEditing.value = true
 }
 async function saveGoal() {
-  if (!isNewGoalValid.value) return
+  if (pendingSaveGoal.value) return
+  pendingSaveGoal.value = true
   try {
-    await store.setGoal(props.participant.id, Number(newGoal.value) || null)
-    isEditing.value = false
-  } catch (error) {
-    store.notifyFailed(error)
+    if (!isNewGoalValid.value) return
+    try {
+      await store.setGoal(props.participant.id, Number(newGoal.value) || null)
+      isEditing.value = false
+    } catch (error) {
+      store.notifyFailed(error)
+    }
+  } finally {
+    pendingSaveGoal.value = false
   }
 }
 </script>
@@ -84,9 +93,14 @@ async function saveGoal() {
             :aria-invalid="!isNewGoalValid"
           />
         </div>
-        <button type="submit" class="btn btn-primary btn-lg" :disabled="!isNewGoalValid">
+        <AsyncButton
+          type="submit"
+          class="btn btn-primary btn-lg"
+          :disabled="!isNewGoalValid"
+          :busy="pendingSaveGoal"
+        >
           save
-        </button>
+        </AsyncButton>
       </form>
     </AppDialog>
   </div>
