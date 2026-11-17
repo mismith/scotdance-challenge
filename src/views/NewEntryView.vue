@@ -16,8 +16,6 @@ import { animate, burst, easing, stagger } from '@/lib/motion'
 import { isUnusual } from '@/lib/progress'
 import { capitalize, pluralize } from '@/lib/strings'
 
-const pendingHandleAddEntry = ref(false)
-
 const MAX_AMOUNT = 9999
 
 const store = useAppStore()
@@ -191,51 +189,45 @@ onBeforeUnmount(() => {
   if (undoAction && store.toastAction === undoAction) store.notify(null)
 })
 async function handleAddEntry() {
-  if (pendingHandleAddEntry.value) return
-  pendingHandleAddEntry.value = true
-  try {
-    if (isAddEntryLoading.value) return // don't allow dupes
-    if (!isValid.value || !isActive.value) return // don't allow submissions to inactive challenges
-    if (isUnusual(amount.value, usualValue.value) && checkedAmount !== amount.value) {
-      isCheckingAmount.value = true
-      return
-    }
+  if (isAddEntryLoading.value) return // don't allow dupes
+  if (!isValid.value || !isActive.value) return // don't allow submissions to inactive challenges
+  if (isUnusual(amount.value, usualValue.value) && checkedAmount !== amount.value) {
+    isCheckingAmount.value = true
+    return
+  }
 
-    try {
-      isAddEntryLoading.value = true
-      const entryValue = amount.value
-      const name = firstName.value
-      const countBefore = challenge.value?.$count
-      await historyLoad
-      const earlier = [...history.value]
-      const { id } = await store.add('entries', {
-        challengeId: store.challengeId,
-        groupId: groupId.value,
-        participantId: participantId.value,
-        value: entryValue,
-      })
-      logged.value = buildMoment({
-        value: entryValue,
-        name,
-        compliments: store.compliments,
-        earlier,
-        countBefore,
-        totalBefore: participant.value?.$total ?? 0,
-        goal: participant.value?.goal,
-      })
-      history.value = [{ value: entryValue, date: new Date() }, ...history.value]
-      value.value = null
-      checkedAmount = null
-      undoAction = { label: 'undo', run: () => undoEntry(id, entryValue) }
-      store.notify(`logged ${entryValue.toLocaleString()} for ${name}`, undoAction)
-    } catch (error) {
-      // the amount and picks stay put, so another tap tries again
-      store.notifyFailed(error)
-    } finally {
-      setTimeout(() => (isAddEntryLoading.value = false), 500)
-    }
+  try {
+    isAddEntryLoading.value = true
+    const entryValue = amount.value
+    const name = firstName.value
+    const countBefore = challenge.value?.$count
+    await historyLoad
+    const earlier = [...history.value]
+    const { id } = await store.add('entries', {
+      challengeId: store.challengeId,
+      groupId: groupId.value,
+      participantId: participantId.value,
+      value: entryValue,
+    })
+    logged.value = buildMoment({
+      value: entryValue,
+      name,
+      compliments: store.compliments,
+      earlier,
+      countBefore,
+      totalBefore: participant.value?.$total ?? 0,
+      goal: participant.value?.goal,
+    })
+    history.value = [{ value: entryValue, date: new Date() }, ...history.value]
+    value.value = null
+    checkedAmount = null
+    undoAction = { label: 'undo', run: () => undoEntry(id, entryValue) }
+    store.notify(`logged ${entryValue.toLocaleString()} for ${name}`, undoAction)
+  } catch (error) {
+    // the amount and picks stay put, so another tap tries again
+    store.notifyFailed(error)
   } finally {
-    pendingHandleAddEntry.value = false
+    setTimeout(() => (isAddEntryLoading.value = false), 500)
   }
 }
 
@@ -420,8 +412,8 @@ async function undoEntry(id: string, entryValue: number) {
       type="submit"
       class="anim-rise btn btn-primary btn-lg mt-1.5"
       :style="stagger(3)"
-      :disabled="!isValid || isAddEntryLoading"
-      :busy="pendingHandleAddEntry"
+      :disabled="!isValid"
+      :busy="isAddEntryLoading"
     >
       <Transition name="rise" mode="out-in">
         <span :key="isValid && participant ? 'ready' : 'idle'" class="min-w-0 truncate">

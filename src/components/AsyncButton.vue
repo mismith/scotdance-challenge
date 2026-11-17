@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { LoaderCircle as Spinner } from 'lucide-vue-next'
+import { ref } from 'vue'
 import { type ButtonAction, useButtonAction } from '@/lib/buttonAction'
 const props = defineProps<{
   busy?: boolean
@@ -7,16 +8,21 @@ const props = defineProps<{
   onClick?: ButtonAction | ButtonAction[]
 }>()
 const action = useButtonAction(props)
+
+// the real <button>, for callers that animate from it
+const el = ref<HTMLButtonElement>()
+defineExpose({ el })
 </script>
 <template>
   <button
+    ref="el"
     class="pending-action"
     :disabled="action.disabled.value"
     :aria-busy="action.busy.value || undefined"
     @click="action.click"
   >
-    <slot v-if="!action.busy.value" />
-    <span v-else class="pending-label"><slot /></span>
+    <!-- one slot, hidden with CSS while busy, so what's inside is never remounted -->
+    <span class="pending-label"><slot /></span>
     <span v-if="action.busy.value" class="pending-indicator" aria-hidden="true"><Spinner /></span>
   </button>
 </template>

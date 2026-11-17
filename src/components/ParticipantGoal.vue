@@ -5,13 +5,12 @@ import { type ParticipantItem, useAppStore } from '@/stores/app'
 import AppDialog from '@/components/AppDialog.vue'
 import AsyncButton from '@/components/AsyncButton.vue'
 
-const pendingSaveGoal = ref(false)
-
 const props = defineProps<{ participant: ParticipantItem }>()
 const store = useAppStore()
 
 const newGoal = ref<string | number | null>(null)
 const isEditing = ref(false)
+const isSaving = ref(false)
 
 const total = computed(() => props.participant.$total ?? 0)
 const goal = computed(() => props.participant.goal ?? null)
@@ -27,18 +26,15 @@ function startEditing() {
   isEditing.value = true
 }
 async function saveGoal() {
-  if (pendingSaveGoal.value) return
-  pendingSaveGoal.value = true
+  if (!isNewGoalValid.value || isSaving.value) return
   try {
-    if (!isNewGoalValid.value) return
-    try {
-      await store.setGoal(props.participant.id, Number(newGoal.value) || null)
-      isEditing.value = false
-    } catch (error) {
-      store.notifyFailed(error)
-    }
+    isSaving.value = true
+    await store.setGoal(props.participant.id, Number(newGoal.value) || null)
+    isEditing.value = false
+  } catch (error) {
+    store.notifyFailed(error)
   } finally {
-    pendingSaveGoal.value = false
+    isSaving.value = false
   }
 }
 </script>
@@ -97,7 +93,7 @@ async function saveGoal() {
           type="submit"
           class="btn btn-primary btn-lg"
           :disabled="!isNewGoalValid"
-          :busy="pendingSaveGoal"
+          :busy="isSaving"
         >
           save
         </AsyncButton>

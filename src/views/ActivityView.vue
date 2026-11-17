@@ -18,8 +18,6 @@ import TapAway from '@/components/TapAway.vue'
 import { timeTag } from '@/lib/eggs'
 import { type Entry, findById } from '@/lib/firebase'
 import { animate, easing, stagger } from '@/lib/motion'
-const pendingSendFlag = ref(false)
-const pendingSaveEntry = ref(false)
 
 const INCREMENT = 20
 
@@ -31,6 +29,7 @@ const isLoadingMore = ref(false)
 const flaggedEntry = ref<Entry | null>(null)
 const flagReason = ref('')
 const isSendingFlag = ref(false)
+const isSavingEntry = ref(false)
 const deletedEntry = ref<Entry | null>(null)
 const editedEntry = ref<Entry | null>(null)
 const editedValue = ref<string | number | null>(null)
@@ -240,23 +239,17 @@ function startFlagging(entry: Entry) {
   flagReason.value = ''
 }
 async function sendFlag() {
-  if (pendingSendFlag.value) return
-  pendingSendFlag.value = true
+  const reason = flagReason.value.trim()
+  if (!flaggedEntry.value || !reason || isSendingFlag.value) return
   try {
-    const reason = flagReason.value.trim()
-    if (!flaggedEntry.value || !reason || isSendingFlag.value) return
-    try {
-      isSendingFlag.value = true
-      await store.addFlag(flaggedEntry.value, reason)
-      flaggedEntry.value = null
-      store.notify("Thanks! We'll take a look.")
-    } catch (error) {
-      store.notifyFailed(error)
-    } finally {
-      isSendingFlag.value = false
-    }
+    isSendingFlag.value = true
+    await store.addFlag(flaggedEntry.value, reason)
+    flaggedEntry.value = null
+    store.notify("Thanks! We'll take a look.")
+  } catch (error) {
+    store.notifyFailed(error)
   } finally {
-    pendingSendFlag.value = false
+    isSendingFlag.value = false
   }
 }
 async function resolveFlag(id: string) {
@@ -272,18 +265,15 @@ function startEditing(entry: Entry) {
   editedWho.value = [participantOf(entry)?.name, groupOf(entry)?.$name].filter(Boolean).join(' · ')
 }
 async function saveEntry() {
-  if (pendingSaveEntry.value) return
-  pendingSaveEntry.value = true
+  if (!editedEntry.value || !isEditedValueValid.value || isSavingEntry.value) return
   try {
-    if (!editedEntry.value || !isEditedValueValid.value) return
-    try {
-      await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
-      editedEntry.value = null
-    } catch (error) {
-      store.notifyFailed(error)
-    }
+    isSavingEntry.value = true
+    await store.updateEntry(editedEntry.value.id, Number(editedValue.value))
+    editedEntry.value = null
+  } catch (error) {
+    store.notifyFailed(error)
   } finally {
-    pendingSaveEntry.value = false
+    isSavingEntry.value = false
   }
 }
 // the menu hands focus to the sheet it opens, rather than back to its own button
@@ -494,8 +484,8 @@ async function deleteEntry() {
       <AsyncButton
         type="submit"
         class="btn btn-primary btn-lg"
-        :disabled="!flagReason.trim() || isSendingFlag"
-        :busy="pendingSendFlag"
+        :disabled="!flagReason.trim()"
+        :busy="isSendingFlag"
       >
         flag
       </AsyncButton>
@@ -529,7 +519,7 @@ async function deleteEntry() {
         type="submit"
         class="btn btn-primary btn-lg"
         :disabled="!isEditedValueValid"
-        :busy="pendingSaveEntry"
+        :busy="isSavingEntry"
       >
         save
       </AsyncButton>
