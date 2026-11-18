@@ -15,8 +15,6 @@ import { isSignedLink, signLink } from './identity'
 
 // the approve/reject links are signed with their own secret
 const linkSecret = defineSecret('COMPLIMENT_LINK_SECRET')
-// LEGACY(tool-pass-secret): links emailed before COMPLIMENT_LINK_SECRET were signed with this
-const toolPassSecret = defineSecret('TOOL_PASS_SECRET')
 
 const profanity = new RegExpMatcher({
   ...englishDataset.build(),
@@ -29,7 +27,7 @@ export const toKey = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]
 type Action = 'approve' | 'reject'
 const sign = (id: string, action: Action) => signLink(linkSecret.value(), id, action)
 const isSigned = (id: string, action: Action, signature: string) =>
-  isSignedLink([linkSecret.value(), toolPassSecret.value()], id, action, signature)
+  isSignedLink(linkSecret.value(), id, action, signature)
 const approvedRef = () => getFirestore().collection('compliments').doc('approved')
 
 /** Drop duplicates and swearing; email the admins one-tap links for the rest */
@@ -71,7 +69,7 @@ const page = (body: string) =>
  * The emailed links: GET asks to confirm (so link scanners can't approve anything), POST does it.
  * Served at /api/moderate-compliment by a Hosting rewrite.
  */
-export const moderateCompliment = onRequest({ secrets: [linkSecret, toolPassSecret] }, async (req, res) => {
+export const moderateCompliment = onRequest({ secrets: [linkSecret] }, async (req, res) => {
   const { id, action, sig } = { ...req.query, ...req.body } as Record<string, string>
   if (!id || (action !== 'approve' && action !== 'reject') || !sig || !isSigned(id, action, sig)) {
     res.status(403).send(page('That link has expired or is broken.'))

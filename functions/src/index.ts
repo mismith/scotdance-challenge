@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { Timestamp, getFirestore } from 'firebase-admin/firestore'
-import { defineSecret } from 'firebase-functions/params'
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https'
 import { deleteAccountRequest, deleteChallengeAccount, isDeleted } from './account'
@@ -128,8 +127,6 @@ exports.syncAggregateStatistics = onRequest((req, res) => {
   }) as any
 })
 
-// LEGACY(tool-pass-secret): the old shared secret, still accepted until ScotDance.app signs with its key
-const toolPassSecret = defineSecret('TOOL_PASS_SECRET')
 const emulator = () => process.env.FUNCTIONS_EMULATOR === 'true'
 
 /** Keep the account's email and name on its Auth user, not in (publicly readable) Firestore */
@@ -169,13 +166,12 @@ async function moveCreatedBy(fromUid: string, toUid: string) {
   return moved
 }
 
-exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecret] }, async (request) => {
+exports.signInWithScotDance = onCall({ secrets: [adminEmailsSecret] }, async (request) => {
   let pass
   try {
     pass = verifyPass(request.data?.pass, {
       keys: trustedKeys(emulator()),
       audience: 'challenge',
-      legacySecret: toolPassSecret.value(),
     })
   } catch (error) {
     throw new HttpsError('unauthenticated', `Invalid pass: ${(error as Error).message}`)
@@ -205,15 +201,12 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecr
  * Their refresh tokens stop working; an open tab keeps its ID token until it expires (an hour at most).
  * Their work here stays. Signing in with ScotDance.app again links it again.
  */
-exports.unlinkScotDance = onCall({ secrets: [toolPassSecret] }, async (request) => {
+exports.unlinkScotDance = onCall(async (request) => {
   let uid
   try {
-    uid = await unlinkUid(request.data, emulator(), (pass) =>
-      // LEGACY(tool-pass-secret): only the old signed kind is accepted here
-      verifyPass(pass, { keys: [], audience: 'challenge:unlink', legacySecret: toolPassSecret.value() }),
-    )
+    uid = await unlinkUid(request.data, emulator())
   } catch (error) {
-    throw new HttpsError('unauthenticated', `Invalid pass: ${(error as Error).message}`)
+    throw new HttpsError('unauthenticated', `Invalid request: ${(error as Error).message}`)
   }
   try {
     await getAuth(app).revokeRefreshTokens(`sd_${uid}`)

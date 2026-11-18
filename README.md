@@ -46,7 +46,6 @@ curl https://us-central1-scotdance-challenge.cloudfunctions.net/syncAggregateSta
 Function secrets, set once each with `firebase functions:secrets:set <NAME>`:
 
 - `COMPLIMENT_LINK_SECRET`: signs the emailed approve/reject links
-- `TOOL_PASS_SECRET`: same value as ScotDance.app's. `LEGACY(tool-pass-secret)`: only for the old passes, accepted during the transition; delete with `grep LEGACY` once ScotDance.app signs with its key. Old compliment links signed with it still work until then
 - `ADMIN_EMAILS`: comma-separated ScotDance.app account emails that are admins here and get every alert
 - `POSTMARK_SERVER_TOKEN`: for flag and compliment emails, sent from `challenge@scotdance.app` (scotdance.app is a verified Postmark domain)
 

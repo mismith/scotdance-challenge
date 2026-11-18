@@ -1,4 +1,4 @@
-import { createHmac, randomUUID, sign, timingSafeEqual, verify, type KeyObject } from 'node:crypto'
+import { randomUUID, sign, verify, type KeyObject } from 'node:crypto'
 import { keyId } from './passKeys'
 
 // A ScotDance.app sign-in pass: a two-minute JWT saying who someone is, for one tool alone. ScotDance.app signs
@@ -24,8 +24,6 @@ export interface PassCheck {
   audience: string | readonly string[]
   /** Seconds. */
   now?: number
-  /** LEGACY(tool-pass-secret): the old shared secret, accepted until ScotDance.app signs with its key. */
-  legacySecret?: string
 }
 
 const ISSUER = 'https://scotdance.app'
@@ -46,19 +44,12 @@ export function verifyPass<T extends Pass = Pass>(token: unknown, check: PassChe
   // One pass, one spelling: receipts keyed on a pass must not be dodged by re-encoding its signature
   if (given.toString('base64url') !== signature) throw new Error('Bad signature')
 
-  // The header picks the check, and each check only ever sees its own kind of key. A public key is never
-  // used as an HMAC secret, which is how "sign it yourself with the public key" forgeries work.
+  // Only ever a signature made with one of ScotDance.app's keys: no other algorithm, and no shared secrets
   const head = decode(header)
-  if (head.alg === 'EdDSA') {
-    const key = check.keys.find((candidate) => keyId(candidate) === head.kid)
-    if (!key || key.type !== 'public' || key.asymmetricKeyType !== 'ed25519') throw new Error('Unknown key')
-    if (!verify(null, signed, key, given)) throw new Error('Bad signature')
-  } else if (head.alg === 'HS256' && check.legacySecret) {
-    const expected = createHmac('sha256', check.legacySecret).update(signed).digest()
-    if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw new Error('Bad signature')
-  } else {
-    throw new Error('Unexpected algorithm')
-  }
+  if (head.alg !== 'EdDSA') throw new Error('Unexpected algorithm')
+  const key = check.keys.find((candidate) => keyId(candidate) === head.kid)
+  if (!key || key.type !== 'public' || key.asymmetricKeyType !== 'ed25519') throw new Error('Unknown key')
+  if (!verify(null, signed, key, given)) throw new Error('Bad signature')
 
   const pass = decode(payload) as T
   const now = check.now ?? Date.now() / 1000

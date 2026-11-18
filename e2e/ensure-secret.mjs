@@ -4,8 +4,6 @@ import { appendFileSync, existsSync, readFileSync } from 'node:fs'
 
 const file = new URL('../functions/.secret.local', import.meta.url)
 const testValues = {
-  // LEGACY(tool-pass-secret): still bound by the functions while the old passes are accepted
-  TOOL_PASS_SECRET: 'e2e-test-secret',
   COMPLIMENT_LINK_SECRET: 'e2e-test-link-secret',
   // e2e/scotdance.ts signs in as this account to test admin powers
   ADMIN_EMAILS: 'admin@example.com',

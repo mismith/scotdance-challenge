@@ -22,34 +22,20 @@ export function needsEmailVerified(
   return Boolean(pass.email) && pass.emailVerified !== true && adminEmails.includes(pass.email!.toLowerCase())
 }
 
-/**
- * The ScotDance.app uid to sign out. With `service` it comes from the body, believed because of who sent it;
- * without, from the old signed pass. `verifyLegacyPass` throws if the pass is bad.
- */
-export async function unlinkUid(
-  data: any,
-  emulator: boolean,
-  verifyLegacyPass: (pass: unknown) => { sub: string },
-): Promise<string> {
-  if (data?.service !== undefined && data?.service !== null) {
-    await verifyService(data.service, UNLINK_AUDIENCE, [SERVICES.hub], emulator)
-    const uid = data.uid
-    if (typeof uid !== 'string' || !uid || uid.length > 200) throw new Error('Invalid uid')
-    return uid
-  }
-  // LEGACY(tool-pass-secret)
-  return verifyLegacyPass(data?.pass).sub
+/** The ScotDance.app uid to sign out: from the body, believed because the hub's service proof checks out. */
+export async function unlinkUid(data: any, emulator: boolean): Promise<string> {
+  await verifyService(data?.service, UNLINK_AUDIENCE, [SERVICES.hub], emulator)
+  const uid = data.uid
+  if (typeof uid !== 'string' || !uid || uid.length > 200) throw new Error('Invalid uid')
+  return uid
 }
 
 /** The signature on an emailed approve/reject link. */
 export const signLink = (secret: string, id: string, action: string) =>
   createHmac('sha256', secret).update(`compliments:${id}:${action}`).digest('base64url')
 
-/** `secrets` is the new secret, then (LEGACY(tool-pass-secret)) the old one, so links already emailed still work. */
-export function isSignedLink(secrets: readonly string[], id: string, action: string, signature: string) {
+export function isSignedLink(secret: string, id: string, action: string, signature: string) {
   const actual = Buffer.from(signature)
-  return secrets.some((secret) => {
-    const expected = Buffer.from(signLink(secret, id, action))
-    return actual.length === expected.length && timingSafeEqual(actual, expected)
-  })
+  const expected = Buffer.from(signLink(secret, id, action))
+  return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
