@@ -21,7 +21,7 @@ npm run dev       # emulators (auth, firestore, functions) + functions watcher +
 npm run dev:prod  # Vite against the live Firebase project (careful: writes are real)
 ```
 
-Signing in uses ScotDance.app's `embed.js` (from `VITE_SCOTDANCE_URL`; in dev, `http://localhost:5279`). Its passes are checked by the `signInWithScotDance` function with the shared `TOOL_PASS_SECRET`; locally the emulator reads it from `functions/.secret.local` (git-ignored, same value as ScotDance.app's local secret). `npm run test:e2e` adds a test-only value there if none is set.
+Signing in uses ScotDance.app's `embed.js` (from `VITE_SCOTDANCE_URL`; in dev, `http://localhost:5279`). Its passes are signed with ScotDance.app's private key and checked by the `signInWithScotDance` function with the public keys in `functions/src/passKeys.ts` (no secret held here); on the emulators a fixed, public test key stands in. ScotDance.app's server calls `unlinkScotDance` with a Google service identity token in `data.service`. Admin access also needs a verified email. `npm run test:e2e` adds test-only secret values to `functions/.secret.local` (git-ignored) if none are set.
 
 Local emulator data lives in `.firebase/emulator-data` (git-ignored) and is saved on exit.
 
@@ -45,7 +45,8 @@ curl https://us-central1-scotdance-challenge.cloudfunctions.net/syncAggregateSta
 
 Function secrets, set once each with `firebase functions:secrets:set <NAME>`:
 
-- `TOOL_PASS_SECRET`: same value as ScotDance.app's
+- `COMPLIMENT_LINK_SECRET`: signs the emailed approve/reject links
+- `TOOL_PASS_SECRET`: same value as ScotDance.app's. `LEGACY(tool-pass-secret)`: only for the old passes, accepted during the transition; delete with `grep LEGACY` once ScotDance.app signs with its key. Old compliment links signed with it still work until then
 - `ADMIN_EMAILS`: comma-separated ScotDance.app account emails that are admins here and get every alert
 - `POSTMARK_SERVER_TOKEN`: for flag and compliment emails, sent from `challenge@scotdance.app` (scotdance.app is a verified Postmark domain)
 

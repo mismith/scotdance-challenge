@@ -1,3 +1,4 @@
+import { generateKeyPairSync } from 'node:crypto'
 import { addChallenge, addEntry, expect, test, total, unique } from './helpers'
 import { newAccount, openAccount, signIn, stubEmbed } from './scotdance'
 
@@ -80,9 +81,9 @@ test('stays anonymous when the sheet is closed', async ({ page }) => {
   await expect(await openAccount(page)).toContainText('only on this device')
 })
 
-test('refuses a pass signed with the wrong secret', async ({ page }) => {
+test('refuses a pass signed with the wrong key', async ({ page }) => {
   await addChallenge(page, unique('Forged'))
-  await stubEmbed(page, newAccount(), { signingSecret: 'not-the-secret' })
+  await stubEmbed(page, newAccount(), { signingKey: generateKeyPairSync('ed25519').privateKey })
   await signIn(page)
   await expect(page.getByText("Couldn't sign in")).toBeVisible()
   await expect(await openAccount(page)).toContainText('only on this device')

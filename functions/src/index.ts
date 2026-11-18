@@ -7,7 +7,9 @@ import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https'
 import { moderateCompliment, onComplimentSubmitted } from './compliments'
 import { adminEmailsSecret, getAdminEmails } from './email'
 import { onFlagCreated } from './flags'
+import { isAdminPass, needsEmailVerified, unlinkUid } from './identity'
 import { verifyPass } from './pass'
+import { trustedKeys } from './passKeys'
 
 const app = initializeApp()
 const db = getFirestore(app)
@@ -125,7 +127,9 @@ exports.syncAggregateStatistics = onRequest((req, res) => {
   }) as any
 })
 
+// LEGACY(tool-pass-secret): the old shared secret, still accepted until ScotDance.app signs with its key
 const toolPassSecret = defineSecret('TOOL_PASS_SECRET')
+const emulator = () => process.env.FUNCTIONS_EMULATOR === 'true'
 
 /** Keep the account's email and name on its Auth user, not in (publicly readable) Firestore */
 async function upsertUser(uid: string, email: string, displayName: string | null) {
@@ -167,15 +171,20 @@ async function moveCreatedBy(fromUid: string, toUid: string) {
 exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecret] }, async (request) => {
   let pass
   try {
-    pass = verifyPass(request.data?.pass, toolPassSecret.value())
+    pass = verifyPass(request.data?.pass, {
+      keys: trustedKeys(emulator()),
+      audience: 'challenge',
+      legacySecret: toolPassSecret.value(),
+    })
   } catch (error) {
     throw new HttpsError('unauthenticated', `Invalid pass: ${(error as Error).message}`)
   }
 
   const uid = `sd_${pass.sub}`
-  await upsertUser(uid, pass.email, pass.name ?? null)
+  await upsertUser(uid, pass.email ?? '', pass.name ?? null)
   // admins can see and fix everything (see firestore.rules)
-  const isAdmin = Boolean(pass.email) && getAdminEmails().includes(pass.email.toLowerCase())
+  const adminEmails = getAdminEmails()
+  const isAdmin = isAdminPass(pass, adminEmails)
   await getAuth(app).setCustomUserClaims(uid, isAdmin ? { admin: true } : null)
 
   const caller = request.auth
@@ -185,7 +194,7 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecr
     : 0
 
   const token = await getAuth(app).createCustomToken(uid)
-  return { token, movedEntries }
+  return { token, movedEntries, ...(needsEmailVerified(pass, adminEmails) ? { verifyEmail: true } : {}) }
 })
 
 /**
@@ -194,14 +203,17 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecr
  * Their work here stays. Signing in with ScotDance.app again links it again.
  */
 exports.unlinkScotDance = onCall({ secrets: [toolPassSecret] }, async (request) => {
-  let pass
+  let uid
   try {
-    pass = verifyPass(request.data?.pass, toolPassSecret.value(), Date.now() / 1000, 'challenge:unlink')
+    uid = await unlinkUid(request.data, emulator(), (pass) =>
+      // LEGACY(tool-pass-secret): only the old signed kind is accepted here
+      verifyPass(pass, { keys: [], audience: 'challenge:unlink', legacySecret: toolPassSecret.value() }),
+    )
   } catch (error) {
     throw new HttpsError('unauthenticated', `Invalid pass: ${(error as Error).message}`)
   }
   try {
-    await getAuth(app).revokeRefreshTokens(`sd_${pass.sub}`)
+    await getAuth(app).revokeRefreshTokens(`sd_${uid}`)
   } catch (error: any) {
     if (error?.code !== 'auth/user-not-found') throw error
   }

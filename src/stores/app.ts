@@ -100,7 +100,7 @@ export const useAppStore = defineStore('app', () => {
   watch(me, async (user) => {
     isAdmin.value = Boolean(user && (await user.getIdTokenResult()).claims.admin)
   })
-  const exchangePass = httpsCallable<{ pass: string }, { token: string; movedEntries: number }>(
+  const exchangePass = httpsCallable<{ pass: string }, { token: string; movedEntries: number; verifyEmail?: boolean }>(
     functions,
     'signInWithScotDance',
   )

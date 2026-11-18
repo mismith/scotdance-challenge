@@ -56,6 +56,7 @@ async function handleSignIn() {
         ? `Signed in as ${who.value}. ${moved} ${moved === 1 ? 'entry' : 'entries'} moved to your account.`
         : `Signed in as ${who.value}`,
     )
+    if (result.verifyEmail) store.notify('Verify your email on ScotDance.app to get admin access.')
   } catch (error) {
     console.warn(error)
     store.notify("Couldn't sign in. Please try again.")

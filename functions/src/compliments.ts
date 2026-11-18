@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
@@ -12,8 +11,11 @@ import {
   postmarkTokenSecret,
   sendEmail,
 } from './email'
+import { isSignedLink, signLink } from './identity'
 
-// the approve/reject links are signed with a key derived from this, so it needs no secret of its own
+// the approve/reject links are signed with their own secret
+const linkSecret = defineSecret('COMPLIMENT_LINK_SECRET')
+// LEGACY(tool-pass-secret): links emailed before COMPLIMENT_LINK_SECRET were signed with this
 const toolPassSecret = defineSecret('TOOL_PASS_SECRET')
 
 const profanity = new RegExpMatcher({
@@ -25,22 +27,16 @@ const profanity = new RegExpMatcher({
 export const toKey = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
 
 type Action = 'approve' | 'reject'
-const sign = (id: string, action: Action) =>
-  createHmac('sha256', toolPassSecret.value())
-    .update(`compliments:${id}:${action}`)
-    .digest('base64url')
-function isSigned(id: string, action: Action, signature: string) {
-  const expected = Buffer.from(sign(id, action))
-  const actual = Buffer.from(signature)
-  return actual.length === expected.length && timingSafeEqual(actual, expected)
-}
+const sign = (id: string, action: Action) => signLink(linkSecret.value(), id, action)
+const isSigned = (id: string, action: Action, signature: string) =>
+  isSignedLink([linkSecret.value(), toolPassSecret.value()], id, action, signature)
 const approvedRef = () => getFirestore().collection('compliments').doc('approved')
 
 /** Drop duplicates and swearing; email the admins one-tap links for the rest */
 export const onComplimentSubmitted = onDocumentCreated(
   {
     document: 'complimentsSubmitted/{id}',
-    secrets: [adminEmailsSecret, postmarkTokenSecret, toolPassSecret],
+    secrets: [adminEmailsSecret, postmarkTokenSecret, linkSecret],
   },
   async (event) => {
     const snapshot = event.data
@@ -75,7 +71,7 @@ const page = (body: string) =>
  * The emailed links: GET asks to confirm (so link scanners can't approve anything), POST does it.
  * Served at /api/moderate-compliment by a Hosting rewrite.
  */
-export const moderateCompliment = onRequest({ secrets: [toolPassSecret] }, async (req, res) => {
+export const moderateCompliment = onRequest({ secrets: [linkSecret, toolPassSecret] }, async (req, res) => {
   const { id, action, sig } = { ...req.query, ...req.body } as Record<string, string>
   if (!id || (action !== 'approve' && action !== 'reject') || !sig || !isSigned(id, action, sig)) {
     res.status(403).send(page('That link has expired or is broken.'))

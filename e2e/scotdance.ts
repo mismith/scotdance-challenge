@@ -1,14 +1,10 @@
-import { createHmac, randomUUID } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { type KeyObject, randomUUID } from 'node:crypto'
 import type { Page } from '@playwright/test'
+import { signPass as signWith } from '../functions/src/pass'
+import { emulatorKey } from '../functions/src/passKeys'
 
 // where the app loads embed.js from in dev (see src/lib/scotdance.ts)
 const SCOTDANCE = 'http://localhost:5279'
-
-/** The secret the Functions emulator verifies passes with */
-export const secret = readFileSync(new URL('../functions/.secret.local', import.meta.url), 'utf8')
-  .match(/^TOOL_PASS_SECRET=(.*)$/m)![1]!
-  .trim()
 
 export interface Account {
   sub: string
@@ -21,39 +17,26 @@ export function newAccount(name: string | null = 'Test Dancer'): Account {
   return { sub, email: `${sub}@example.com`, name }
 }
 
-/** A pass as ScotDance.app would sign it */
-export function signPass(account: Account, signingSecret = secret) {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url')
-  const iat = Math.floor(Date.now() / 1000)
-  const header = encode({ alg: 'HS256', typ: 'JWT' })
-  const payload = encode({
-    iss: 'https://scotdance.app',
-    aud: 'challenge',
-    sub: account.sub,
-    email: account.email,
-    name: account.name,
-    iat,
-    exp: iat + 120,
-    jti: randomUUID(),
-  })
-  const signature = createHmac('sha256', signingSecret)
-    .update(`${header}.${payload}`)
-    .digest('base64url')
-  return `${header}.${payload}.${signature}`
+/** A pass as ScotDance.app would sign it (the emulator trusts its fixed test key) */
+export function signPass(account: Account, signingKey: KeyObject = emulatorKey().privateKey) {
+  return signWith(
+    { aud: 'challenge', sub: account.sub, email: account.email, emailVerified: true, name: account.name },
+    signingKey,
+  )
 }
 
 /** Stand in for ScotDance.app's embed.js: its sheet "signs in" as the account, or is closed */
 export async function stubEmbed(
   page: Page,
   account: Account | null,
-  { signingSecret = secret } = {},
+  { signingKey }: { signingKey?: KeyObject } = {},
 ) {
   await page.unroute(`${SCOTDANCE}/embed.js`)
   await page.route(`${SCOTDANCE}/embed.js`, (route) => {
     const result = account
       ? {
           signedIn: true,
-          pass: signPass(account, signingSecret),
+          pass: signPass(account, signingKey),
           uid: account.sub,
           email: account.email,
           name: account.name,
