@@ -4,6 +4,7 @@ import { Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https'
+import { deleteAccountRequest, deleteChallengeAccount, isDeleted } from './account'
 import { moderateCompliment, onComplimentSubmitted } from './compliments'
 import { adminEmailsSecret, getAdminEmails } from './email'
 import { onFlagCreated } from './flags'
@@ -181,6 +182,8 @@ exports.signInWithScotDance = onCall({ secrets: [toolPassSecret, adminEmailsSecr
   }
 
   const uid = `sd_${pass.sub}`
+  // deleted in ScotDance.app: the pass is genuine but the account is gone
+  if (await isDeleted(db, uid)) throw new HttpsError('permission-denied', 'This ScotDance.app account was deleted')
   await upsertUser(uid, pass.email ?? '', pass.name ?? null)
   // admins can see and fix everything (see firestore.rules)
   const adminEmails = getAdminEmails()
@@ -217,6 +220,21 @@ exports.unlinkScotDance = onCall({ secrets: [toolPassSecret] }, async (request) 
   } catch (error: any) {
     if (error?.code !== 'auth/user-not-found') throw error
   }
+  return { ok: true }
+})
+
+/**
+ * Deleted in ScotDance.app: remove the sign-in and take the person's name off what they made. Challenge history
+ * (participants, entries, groups, challenges) stays. Called by ScotDance.app's server; safe to repeat.
+ */
+exports.deleteScotDanceAccount = onCall(async (request) => {
+  let account
+  try {
+    account = await deleteAccountRequest(request.data, emulator())
+  } catch (error) {
+    throw new HttpsError('unauthenticated', `Invalid request: ${(error as Error).message}`)
+  }
+  await deleteChallengeAccount(db, getAuth(app), `sd_${account.uid}`, account.deletedAt)
   return { ok: true }
 })
 

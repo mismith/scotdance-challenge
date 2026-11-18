@@ -97,6 +97,10 @@ service cloud.firestore {
         && request.resource.data.text is string
         && request.resource.data.text.size() <= 100;
     }
+    // deleted ScotDance.app accounts: the functions only
+    match /deletedAccounts/{uid} {
+      allow read, write: if false;
+    }
     match /compliments/{doc} {
       allow read: if true;
     }

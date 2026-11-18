@@ -21,7 +21,7 @@ npm run dev       # emulators (auth, firestore, functions) + functions watcher +
 npm run dev:prod  # Vite against the live Firebase project (careful: writes are real)
 ```
 
-Signing in uses ScotDance.app's `embed.js` (from `VITE_SCOTDANCE_URL`; in dev, `http://localhost:5279`). Its passes are signed with ScotDance.app's private key and checked by the `signInWithScotDance` function with the public keys in `functions/src/passKeys.ts` (no secret held here); on the emulators a fixed, public test key stands in. ScotDance.app's server calls `unlinkScotDance` with a Google service identity token in `data.service`. Admin access also needs a verified email. `npm run test:e2e` adds test-only secret values to `functions/.secret.local` (git-ignored) if none are set.
+Signing in uses ScotDance.app's `embed.js` (from `VITE_SCOTDANCE_URL`; in dev, `http://localhost:5279`). Its passes are signed with ScotDance.app's private key and checked by the `signInWithScotDance` function with the public keys in `functions/src/passKeys.ts` (no secret held here); on the emulators a fixed, public test key stands in. ScotDance.app's server calls `unlinkScotDance` with a Google service identity token in `data.service`. When a ScotDance.app account is deleted its server calls `deleteScotDanceAccount` (service proof): the sign-in and the person's pending compliment submissions are deleted and their name is taken off what they made; challenges, groups, participants, entries and approved compliments stay. Admin access also needs a verified email. `npm run test:e2e` adds test-only secret values to `functions/.secret.local` (git-ignored) if none are set.
 
 Local emulator data lives in `.firebase/emulator-data` (git-ignored) and is saved on exit.
 
